@@ -2,8 +2,7 @@
 
 import React, { useState } from 'react';
 import FadeUp from '../components/FadeUp';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import emailjs from '@emailjs/browser';
 
 type Option = {
   id: string;
@@ -25,9 +24,9 @@ export default function PriceCalculator() {
   const [selections, setSelections] = useState<Record<number, any>>({});
   const [customColors, setCustomColors] = useState(["#ffffff", "#888888", "#000000"]);
   
-  // Müşteri Bilgileri ve Yükleme Durumu
   const [clientInfo, setClientInfo] = useState({ name: '', company: '', email: '' });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const steps: Step[] = [
     {
@@ -170,7 +169,7 @@ export default function PriceCalculator() {
 
   const { upfront, monthly } = calculateTotal();
 
-  const getSelectedItemsForPDF = () => {
+  const getSelectedItemsForEmail = () => {
     let items: { label: string, price: string }[] = [];
     Object.entries(selections).forEach(([stepIdx, val]) => {
       const step = steps[parseInt(stepIdx)];
@@ -200,35 +199,83 @@ export default function PriceCalculator() {
   const handleGenerateDocument = async () => {
     setIsGenerating(true);
     try {
-      const element = document.getElementById('pdf-template');
-      if (!element) throw new Error("Template not found");
+      // E-posta için şık HTML tablosunu oluşturuyoruz
+      const itemsHtml = getSelectedItemsForEmail().map(item => `
+        <tr>
+          <td style="padding: 12px 0; border-bottom: 1px solid #eeeeee; color: #333333; font-size: 14px;">${item.label}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #eeeeee; text-align: right; font-weight: bold; color: #000000; font-size: 14px; font-family: monospace;">${item.price}</td>
+        </tr>
+      `).join('');
 
-      // HTML'i resme çevir
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-      });
+      const visionText = selections[steps.length - 1] && selections[steps.length - 1].length > 2 
+        ? `<div style="margin-top: 30px; padding: 20px; background-color: #fafafa; border-radius: 8px;">
+            <p style="margin: 0 0 10px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Client Vision Notes</p>
+            <p style="margin: 0; font-size: 14px; color: #555555; font-style: italic;">"${selections[steps.length - 1]}"</p>
+           </div>` 
+        : '';
 
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
+      const htmlProposal = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
+          <div style="background-color: #000000; padding: 40px 30px; text-align: center;">
+            
+            <img 
+              src="https://i.postimg.cc/NMqsRc9X/duotone.png" 
+              alt="Obsidian" 
+              width="45" 
+              height="45" 
+              style="display: block; margin: 0 auto 16px auto; width: 45px !important; height: 45px !important; border: 0; outline: none; text-decoration: none; opacity: 1 !important; filter: none !important; -webkit-filter: none !important;" 
+            />
+            
+            <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #ffffff; text-transform: uppercase; font-style: italic; letter-spacing: 2px;">OBSIDIAN</h1>
+            <p style="margin: 10px 0 0 0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-family: monospace;">Digital Project Proposal</p>
+          </div>
+          
+          <div style="padding: 40px 30px;">
+            <p style="margin: 0 0 5px 0; font-size: 16px; color: #000000;">Hello <strong>${clientInfo.name}</strong>,</p>
+            <p style="margin: 0 0 30px 0; font-size: 14px; color: #666666; line-height: 1.6;">Thank you for using the Obsidian Configurator. Below is the detailed estimate for <strong>${clientInfo.company || 'your project'}</strong>.</p>
+            
+            <h2 style="margin: 0 0 15px 0; font-size: 14px; color: #000000; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #000000; padding-bottom: 10px;">Scope of Work</h2>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+              ${itemsHtml}
+            </table>
+            
+            ${visionText}
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #dddddd; text-align: right;">
+              ${monthly > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">Recurring Services: <span style="font-size: 18px; color: #000000; font-weight: bold; font-family: monospace;">+ €${monthly.toFixed(2)} <span style="font-size: 12px; color: #888;">/ mo</span></span></p>` : ''}
+              <p style="margin: 0 0 5px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Total Estimated Investment</p>
+              <p style="margin: 0; font-size: 42px; font-weight: 900; color: #000000; line-height: 1;">€${upfront.toFixed(2)}</p>
+              <p style="margin: 10px 0 0 0; font-size: 10px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 1px;">Prices exclude VAT where applicable.</p>
+            </div>
+          </div>
+          
+          <div style="background-color: #fafafa; padding: 20px; text-align: center; border-top: 1px solid #eaeaea;">
+            <p style="margin: 0; font-size: 12px; color: #000000; font-weight: bold;">Obsidian Studio</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #888888;">Dilbeek, Belgium • obsidian.studio.hq@gmail.com</p>
+            <p style="margin: 15px 0 0 0; font-size: 10px; color: #bbbbbb; text-transform: uppercase; letter-spacing: 1px; font-family: monospace;">Generated via Obsidian Engine. Not a final legal contract.</p>
+          </div>
+        </div>
+      `;
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const templateParams = {
+        client_name: clientInfo.name,
+        client_email: clientInfo.email,
+        html_proposal: htmlProposal
+      };
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      
-      const fileName = `Obsidian_Proposal_${clientInfo.company ? clientInfo.company.replace(/\s+/g, '_') : 'Client'}.pdf`;
-      pdf.save(fileName);
+      await emailjs.send(
+        'service_ra7x10v',   
+        'template_ucd79qi',  
+        templateParams,
+        'gKoFLF4zfxzIxyQ8F'    // Buraya Account sekmesindeki Public Key'ini yapıştırmayı unutma
+      );
+
+      setIsSuccess(true);
 
     } catch (error) {
-      console.error('PDF Error:', error);
-      alert('Failed to generate document. Please try again.');
+      console.error('Error:', error);
+      alert('Failed to send proposal. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -236,107 +283,6 @@ export default function PriceCalculator() {
 
   return (
     <main className="max-w-4xl mx-auto px-6 pb-40 relative">
-      
-      {/* -----------------------------------------------------------------------
-        GİZLİ PDF ŞABLONU (Tailwind Sınıflarından Arındırılmış, 100% HEX Uyumlu)
-        -----------------------------------------------------------------------
-      */}
-      <div className="absolute -left-[10000px] top-0 flex justify-center pointer-events-none">
-        <div 
-          id="pdf-template" 
-          style={{ 
-            width: '800px', 
-            minHeight: '1131px', 
-            backgroundColor: '#ffffff', 
-            color: '#000000',
-            padding: '80px', 
-            boxSizing: 'border-box',
-            fontFamily: 'sans-serif',
-            display: 'flex',
-            flexDirection: 'column'
-          }}
-        >
-          {/* Tailwind LAB Renk Hatasını Bastıran Gizli CSS */}
-          <style dangerouslySetInnerHTML={{__html: `
-            #pdf-template * {
-              border-color: #e5e5e5 !important;
-              outline-color: #e5e5e5 !important;
-            }
-          `}} />
-
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid #d4d4d4', paddingBottom: '32px', marginBottom: '40px' }}>
-            <div>
-              <h1 style={{ color: '#000000', fontSize: '48px', fontWeight: 900, textTransform: 'uppercase', fontStyle: 'italic', margin: 0 }}>Obsidian</h1>
-              <p style={{ color: '#737373', fontSize: '14px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '2px', margin: '8px 0 0 0' }}>Digital Project Proposal</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ color: '#737373', fontSize: '14px', fontFamily: 'monospace', margin: 0 }}>{new Date().toLocaleDateString('en-GB')}</p>
-              <p style={{ color: '#000000', fontSize: '14px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', margin: '8px 0 0 0' }}>CONFIDENTIAL</p>
-            </div>
-          </div>
-
-          {/* Client Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', backgroundColor: '#fafafa', border: '1px solid #e5e5e5', borderRadius: '16px', padding: '32px', marginBottom: '48px' }}>
-            <div>
-              <p style={{ color: '#737373', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px 0' }}>Prepared For</p>
-              <p style={{ color: '#000000', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{clientInfo.name || 'Valued Client'}</p>
-              <p style={{ color: '#404040', fontSize: '16px', margin: '4px 0' }}>{clientInfo.company || 'N/A'}</p>
-              <p style={{ color: '#737373', fontSize: '14px', margin: 0 }}>{clientInfo.email || 'N/A'}</p>
-            </div>
-            <div>
-              <p style={{ color: '#737373', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px 0' }}>Prepared By</p>
-              <p style={{ color: '#000000', fontSize: '20px', fontWeight: 'bold', margin: 0 }}>Obsidian Studio</p>
-              <p style={{ color: '#404040', fontSize: '16px', margin: '4px 0' }}>Dilbeek, Belgium</p>
-              <p style={{ color: '#737373', fontSize: '14px', margin: 0 }}>hello@obsidian.com</p>
-            </div>
-          </div>
-
-          {/* Selected Features List */}
-          <div style={{ flex: 1, marginBottom: '48px' }}>
-            <h2 style={{ color: '#000000', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '2px', borderBottom: '1px solid #d4d4d4', paddingBottom: '16px', margin: '0 0 16px 0' }}>Scope of Work & Features</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {getSelectedItemsForPDF().map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f5f5f5', paddingBottom: '8px' }}>
-                  <span style={{ color: '#262626', fontSize: '16px' }}>{item.label}</span>
-                  <span style={{ color: '#000000', fontSize: '14px', fontFamily: 'monospace' }}>{item.price}</span>
-                </div>
-              ))}
-            </div>
-            
-            {/* Vision Text */}
-            {selections[steps.length - 1] && (
-              <div style={{ marginTop: '32px', paddingTop: '32px', borderTop: '1px solid #e5e5e5' }}>
-                <p style={{ color: '#737373', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px 0' }}>Client Vision Notes</p>
-                <p style={{ color: '#525252', fontSize: '14px', fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: 1.6, margin: 0 }}>
-                  "{selections[steps.length - 1]}"
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Totals Box */}
-          <div style={{ borderTop: '1px solid #d4d4d4', paddingTop: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
-            <div>
-              <p style={{ color: '#737373', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px 0' }}>Recurring Services</p>
-              <p style={{ color: '#000000', fontSize: '24px', fontFamily: 'monospace', margin: 0 }}>+ €{monthly.toFixed(2)} <span style={{ color: '#737373', fontSize: '14px' }}>/ mo</span></p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ color: '#737373', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', margin: '0 0 8px 0' }}>Total Estimated Investment</p>
-              <p style={{ color: '#000000', fontSize: '64px', fontWeight: 900, lineHeight: 1, margin: 0 }}>€{upfront.toFixed(2)}</p>
-              <p style={{ color: '#737373', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', margin: '8px 0 0 0' }}>Prices exclude VAT where applicable.</p>
-            </div>
-          </div>
-
-          <div style={{ textAlign: 'center', color: '#a3a3a3', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '2px', fontFamily: 'monospace', borderTop: '1px solid #e5e5e5', paddingTop: '24px', paddingBottom: '16px' }}>
-            Generated via Obsidian Engine. This is an estimate, not a final legal contract.
-          </div>
-        </div>
-      </div>
-      {/* ----------------------------------------------------------------------- */}
-
-
-      {/* VISIBLE UI START */}
       <FadeUp>
         <div className="mb-20 space-y-6">
           <div className="flex justify-between items-end">
@@ -367,7 +313,6 @@ export default function PriceCalculator() {
                 <p className="text-neutral-500 font-light">{steps[currentStep].subtitle}</p>
               </div>
 
-              {/* SINGLE SELECT */}
               {steps[currentStep].type === 'select' && (
                 <div className="grid grid-cols-1 gap-4">
                   {steps[currentStep].options?.map((opt) => (
@@ -394,7 +339,6 @@ export default function PriceCalculator() {
                 </div>
               )}
 
-              {/* MULTI SELECT */}
               {steps[currentStep].type === 'multi-select' && (
                 <div className="grid grid-cols-1 gap-4">
                   {steps[currentStep].options?.map((opt) => {
@@ -431,7 +375,6 @@ export default function PriceCalculator() {
                 </div>
               )}
 
-              {/* STYLE & COLOR TYPE */}
               {steps[currentStep].type === 'style' && (
                 <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -466,7 +409,7 @@ export default function PriceCalculator() {
                       : 'bg-black border-white/10 text-white'
                     }`}
                   >
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                       <div className="space-y-1">
                         <h4 className="text-sm font-bold uppercase tracking-widest">Custom Palette Builder</h4>
                         <p className="text-xs text-neutral-500 font-light">Define your own 3-color brand identity.</p>
@@ -479,10 +422,10 @@ export default function PriceCalculator() {
                       </button>
                     </div>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 mb-8">
                       {customColors.map((color, index) => (
                         <div key={index} className="flex-1 flex flex-col gap-2">
-                          <div className="relative h-16 w-full rounded-xl border border-white/10 overflow-hidden group">
+                          <div className="relative h-20 w-full rounded-2xl border border-white/10 overflow-hidden group">
                             <input 
                               type="color" 
                               value={color}
@@ -496,11 +439,21 @@ export default function PriceCalculator() {
                         </div>
                       ))}
                     </div>
+
+                    <button
+                      onClick={() => handleSelect(`Custom Palette: ${customColors.join(' | ')}`, false)}
+                      className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 ${
+                        selections[currentStep]?.startsWith('Custom')
+                        ? 'bg-white text-black scale-[0.98]' 
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                      }`}
+                    >
+                      {selections[currentStep]?.startsWith('Custom') ? '✓ Palette Selected' : 'Apply This Palette'}
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* TEXT TYPE */}
               {steps[currentStep].type === 'text' && (
                 <textarea
                   value={selections[currentStep] || ""}
@@ -535,50 +488,57 @@ export default function PriceCalculator() {
                 </div>
               )}
 
-              {/* Müşteri Bilgileri Formu */}
-              <div className="max-w-md mx-auto space-y-4 pt-8 relative z-10 text-left">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Full Name</label>
-                  <input 
-                    type="text" 
-                    value={clientInfo.name}
-                    onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
-                    placeholder="John Doe"
-                  />
+              {!isSuccess ? (
+                <div className="max-w-md mx-auto space-y-4 pt-8 relative z-10 text-left">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Full Name</label>
+                    <input 
+                      type="text" 
+                      value={clientInfo.name}
+                      onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Company / Brand</label>
+                    <input 
+                      type="text" 
+                      value={clientInfo.company}
+                      onChange={(e) => setClientInfo({...clientInfo, company: e.target.value})}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
+                      placeholder="Acme Corp"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={clientInfo.email}
+                      onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                  <div className="pt-6">
+                    <button 
+                      disabled={!clientInfo.name || !clientInfo.email || isGenerating}
+                      onClick={handleGenerateDocument}
+                      className="w-full py-7 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-neutral-200 transition-all cursor-none shadow-xl shadow-white/5 disabled:opacity-50"
+                    >
+                      {isGenerating ? 'Sending Proposal...' : 'Send Proposal to Email'}
+                    </button>
+                    <p className="text-[10px] text-neutral-600 uppercase tracking-widest text-center mt-6">A detailed overview will be sent to the email address provided.</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Company / Brand</label>
-                  <input 
-                    type="text" 
-                    value={clientInfo.company}
-                    onChange={(e) => setClientInfo({...clientInfo, company: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
-                    placeholder="Acme Corp"
-                  />
+              ) : (
+                <div className="max-w-md mx-auto pt-8 relative z-10">
+                  <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
+                    <h3 className="text-xl font-bold text-white mb-2">Proposal Sent</h3>
+                    <p className="text-neutral-400 text-sm">Please check your inbox (and spam folder) for the detailed estimate. We will be in touch shortly.</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Email Address</label>
-                  <input 
-                    type="email" 
-                    value={clientInfo.email}
-                    onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
-                    className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
-                    placeholder="john@example.com"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-10 space-y-6 relative z-10 max-w-md mx-auto">
-                <button 
-                  disabled={!clientInfo.name || !clientInfo.email || isGenerating}
-                  onClick={handleGenerateDocument}
-                  className="w-full py-7 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-neutral-200 transition-all cursor-none shadow-xl shadow-white/5 disabled:opacity-50"
-                >
-                  {isGenerating ? 'Generating Document...' : 'Generate Project Overview'}
-                </button>
-                <p className="text-[10px] text-neutral-600 uppercase tracking-widest">A detailed PDF proposal will be generated automatically.</p>
-              </div>
+              )}
 
               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 pointer-events-none" />
             </div>
@@ -607,7 +567,6 @@ export default function PriceCalculator() {
           </button>
         )}
       </div>
-
     </main>
   );
 }
