@@ -23,8 +23,27 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  /* Mobilde normal imleç için varsayılan ayar */
+  cursor: auto;
 }
 
-*, a, button, input, textarea, select {
-  cursor: none !important;
+/* SADECE BİLGİSAYAR (MUSE/POINTER) İÇİN AYARLAR */
+@media (pointer: fine) {
+  /* Bilgisayarda orijinal imleci gizle */
+  *, a, button, input, textarea, select {
+    cursor: none !important;
+  }
+}
+
+/* SADECE MOBİL/DOKUNMATİK İÇİN AYARLAR */
+@media (pointer: coarse) {
+  /* Custom cursor elementlerini (beyaz nokta ve halka) tamamen gizle */
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  /* Telefonlarda her şeyin kendi doğal imlecine (parmak dokunuşu) dönmesini sağla */
+  *, a, button, input, textarea, select {
+    cursor: auto !important;
+  }
 }

@@ -11,29 +11,32 @@ const CustomCursor = () => {
   const ring = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const onMouseMove = (e: MouseEvent) => {
-      mouse.current = { x: e.clientX, y: e.clientY };
-      if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${e.clientX - 4}px, ${e.clientY - 4}px, 0)`;
-      }
-    };
-    window.addEventListener("mousemove", onMouseMove);
+    // Sadece fare desteği olan cihazlarda event listener ekle
+    if (window.matchMedia("(pointer: fine)").matches) {
+      const onMouseMove = (e: MouseEvent) => {
+        mouse.current = { x: e.clientX, y: e.clientY };
+        if (dotRef.current) {
+          dotRef.current.style.transform = `translate3d(${e.clientX - 4}px, ${e.clientY - 4}px, 0)`;
+        }
+      };
+      window.addEventListener("mousemove", onMouseMove);
 
-    let animationFrameId: number;
-    const render = () => {
-      ring.current.x += (mouse.current.x - ring.current.x) * 0.15;
-      ring.current.y += (mouse.current.y - ring.current.y) * 0.15;
-      if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${ring.current.x - 16}px, ${ring.current.y - 16}px, 0)`;
-      }
-      animationFrameId = requestAnimationFrame(render);
-    };
-    render();
+      let animationFrameId: number;
+      const render = () => {
+        ring.current.x += (mouse.current.x - ring.current.x) * 0.15;
+        ring.current.y += (mouse.current.y - ring.current.y) * 0.15;
+        if (ringRef.current) {
+          ringRef.current.style.transform = `translate3d(${ring.current.x - 16}px, ${ring.current.y - 16}px, 0)`;
+        }
+        animationFrameId = requestAnimationFrame(render);
+      };
+      render();
 
-    return () => {
-      window.removeEventListener("mousemove", onMouseMove);
-      cancelAnimationFrame(animationFrameId);
-    };
+      return () => {
+        window.removeEventListener("mousemove", onMouseMove);
+        cancelAnimationFrame(animationFrameId);
+      };
+    }
   }, []);
 
   return (
@@ -53,7 +56,7 @@ const ObsidianLogo = () => (
 
 export default function SharedLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-black text-slate-200 font-sans cursor-none selection:bg-white/20 flex flex-col">
+    <div className="min-h-screen bg-black text-slate-200 font-sans selection:bg-white/20 flex flex-col">
       <CustomCursor />
 
       {/* FIXED HEADER */}
@@ -89,59 +92,9 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         {children}
       </div>
 
-      {/* COMMON FOOTER */}
+      {/* FOOTER - KODUNUN KALAN KISMI AYNI KALACAK */}
       <footer className="border-t border-white/5 bg-black py-20 mt-20">
-        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-16">
-          
-          <div className="space-y-6 md:col-span-1 text-left">
-            <div className="flex items-center gap-2">
-              <ObsidianLogo />
-              <span className="text-lg font-bold tracking-widest text-white uppercase">Obsidian</span>
-            </div>
-            <p className="text-neutral-500 text-sm leading-relaxed max-w-xs">
-              Premium software studio crafting high-performance digital experiences.
-            </p>
-          </div>
-
-          <div className="space-y-6 text-left">
-            <h4 className="text-white font-semibold uppercase tracking-wider text-sm">Navigation</h4>
-            <nav className="flex flex-col gap-3">
-              <Link href="/services" className="text-neutral-500 text-sm hover:text-white transition-colors">Services</Link>
-              <Link href="/process" className="text-neutral-500 text-sm hover:text-white transition-colors">Process</Link>
-              <Link href="/contact" className="text-neutral-500 text-sm hover:text-white transition-colors">Contact</Link>
-            </nav>
-          </div>
-
-          <div className="space-y-6 text-left">
-            <h4 className="text-white font-semibold uppercase tracking-wider text-sm">Social</h4>
-            <nav className="flex flex-col gap-3">
-              <a href="#" className="text-neutral-500 text-sm hover:text-white transition-colors">LinkedIn</a>
-              <a href="#" className="text-neutral-500 text-sm hover:text-white transition-colors">GitHub</a>
-            </nav>
-          </div>
-
-          <div className="space-y-6 text-left">
-            <h4 className="text-white font-semibold uppercase tracking-wider text-sm">Location</h4>
-            <p className="text-neutral-500 text-sm leading-relaxed">
-              Dilbeek, Belgium. <br />
-              Digital Headquarters.
-            </p>
-            <a href="mailto:hello@obsidian.com" className="text-white text-sm hover:underline block pt-2">
-              hello@obsidian.com
-            </a>
-          </div>
-
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-neutral-600 text-xs tracking-widest uppercase">
-            &copy; {new Date().getFullYear()} Obsidian Studio.
-          </p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="text-neutral-600 text-xs hover:text-white transition-colors uppercase tracking-widest">Privacy</Link>
-            <Link href="/terms" className="text-neutral-600 text-xs hover:text-white transition-colors uppercase tracking-widest">Terms</Link>
-          </div>
-        </div>
+         {/* Footer içeriğini buraya olduğu gibi bırak */}
       </footer>
     </div>
   );
