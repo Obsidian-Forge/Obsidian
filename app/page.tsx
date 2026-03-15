@@ -1,17 +1,24 @@
 "use client";
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 
 const CodeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>;
 const LayoutIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>;
 const CheckIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>;
 
-// Animasyon ayarları (tekrar tekrar yazmamak için)
-const fadeUpVariant = {
+// Vercel build hatasını önlemek için Variants tipini ekledik
+const fadeUpVariant: Variants = {
   hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.8, 
+      ease: "easeOut" 
+    } 
+  }
 };
 
 export default function HomePage() {
@@ -50,7 +57,7 @@ export default function HomePage() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8"
           >
             <Link href="/calculator" className="px-8 py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:bg-zinc-800 transition-colors">
-              Start a Project
+              Start Project
             </Link>
             <Link href="#services" className="px-8 py-4 bg-white text-black border border-zinc-200 font-bold uppercase tracking-widest text-[10px] rounded-full hover:bg-zinc-50 transition-colors">
               Explore Services
@@ -139,7 +146,7 @@ export default function HomePage() {
                   <CheckIcon /> Modular feature selection
                 </li>
                 <li className="flex items-center gap-3 text-sm text-zinc-600 font-medium">
-                  <CheckIcon /> Instant PDF proposal generation
+                  <CheckIcon /> Instant proposal generation
                 </li>
               </ul>
             </div>
@@ -183,8 +190,8 @@ export default function HomePage() {
       <section className="max-w-3xl mx-auto px-6 py-40">
         <motion.div variants={fadeUpVariant} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}>
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-black">Let's talk.</h2>
-            <p className="text-zinc-500 mt-4 font-light">Send me a message and I'll get back to you within 24 hours.</p>
+            <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-black">Let&apos;s talk.</h2>
+            <p className="text-zinc-500 mt-4 font-light">Send me a message and I&apos;ll get back to you within 24 hours.</p>
           </div>
 
           <form action="https://api.web3forms.com/submit" method="POST" className="space-y-6">
