@@ -91,13 +91,13 @@ export default function PriceCalculator() {
       subtitle: "How fast do you need this project launched?",
       type: 'select',
       options: [
-        { id: "timeline-standard", label: "Standard Pace (4-6 Weeks)", price: 0.00, description: "Our standard, high-quality development cycle." },
-        { id: "timeline-rush", label: "Priority Rush (1-2 Weeks)", price: 750.00, description: "Skip the queue. We work overtime to deliver ASAP." }
+        { id: "timeline-standard", label: "Standard Pace (4-6 Weeks)", price: 0.00, description: "My standard, high-quality development cycle." },
+        { id: "timeline-rush", label: "Priority Rush (1-2 Weeks)", price: 750.00, description: "Skip the queue. I work overtime to deliver ASAP." }
       ]
     },
     {
       title: "The Vision",
-      subtitle: "Tell us more about your specific needs or references.",
+      subtitle: "Tell me more about your specific needs or references.",
       type: 'text'
     }
   ];
@@ -198,8 +198,8 @@ export default function PriceCalculator() {
 
   const handleGenerateDocument = async () => {
     setIsGenerating(true);
+    
     try {
-      // E-posta için şık HTML tablosunu oluşturuyoruz
       const itemsHtml = getSelectedItemsForEmail().map(item => `
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #eeeeee; color: #333333; font-size: 14px;">${item.label}</td>
@@ -217,15 +217,13 @@ export default function PriceCalculator() {
       const htmlProposal = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
           <div style="background-color: #000000; padding: 40px 30px; text-align: center;">
-            
             <img 
               src="https://i.postimg.cc/NMqsRc9X/duotone.png" 
               alt="Obsidian" 
               width="45" 
               height="45" 
-              style="display: block; margin: 0 auto 16px auto; width: 45px !important; height: 45px !important; border: 0; outline: none; text-decoration: none; opacity: 1 !important; filter: none !important; -webkit-filter: none !important;" 
+              style="display: block; margin: 0 auto 16px auto; width: 45px !important; height: 45px !important; border: 0; outline: none; text-decoration: none;" 
             />
-            
             <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #ffffff; text-transform: uppercase; font-style: italic; letter-spacing: 2px;">OBSIDIAN</h1>
             <p style="margin: 10px 0 0 0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-family: monospace;">Digital Project Proposal</p>
           </div>
@@ -268,10 +266,11 @@ export default function PriceCalculator() {
         'service_ra7x10v',   
         'template_ucd79qi',  
         templateParams,
-        'gKoFLF4zfxzIxyQ8F'    // Buraya Account sekmesindeki Public Key'ini yapıştırmayı unutma
+        'gKoFLF4zfxzIxyQ8F'
       );
 
       setIsSuccess(true);
+      console.log("Başarılı!");
 
     } catch (error) {
       console.error('Error:', error);
@@ -282,290 +281,295 @@ export default function PriceCalculator() {
   };
 
   return (
-    <main className="max-w-4xl mx-auto px-6 pb-40 relative">
-      <FadeUp>
-        <div className="mb-20 space-y-6">
-          <div className="flex justify-between items-end">
-            <div className="space-y-2">
-              <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white italic">
-                Project <span className="text-neutral-500 font-light not-italic italic">Configurator.</span>
-              </h1>
-              <p className="text-xs text-neutral-500 font-mono tracking-widest uppercase">
-                Step {currentStep + 1} of {steps.length + 1} // Precision Pricing
-              </p>
+    <main className="w-full bg-white min-h-screen">
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-40 relative">
+        <FadeUp>
+          <div className="mb-20 space-y-6">
+            <div className="flex justify-between items-end">
+              <div className="space-y-2">
+                <h1 className="text-4xl md:text-6xl font-medium uppercase tracking-tight text-black leading-none">
+                  Project <br/>
+                  <span className="text-zinc-400 font-light italic">Configurator.</span>
+                </h1>
+                <p className="text-[10px] text-zinc-400 font-bold tracking-[0.2em] uppercase mt-4">
+                  Step {currentStep + 1} of {steps.length + 1} // Precision Pricing
+                </p>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden mt-8">
+              <div 
+                className="h-full bg-black transition-all duration-700 ease-out" 
+                style={{ width: `${((currentStep + 1) / (steps.length + 1)) * 100}%` }}
+              />
             </div>
           </div>
-          <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-white transition-all duration-700 ease-out" 
-              style={{ width: `${((currentStep + 1) / (steps.length + 1)) * 100}%` }}
-            />
-          </div>
-        </div>
-      </FadeUp>
+        </FadeUp>
 
-      <div className="min-h-[500px]">
-        {currentStep < steps.length ? (
-          <FadeUp key={currentStep}>
-            <div className="space-y-12 text-left">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold text-white tracking-tight">{steps[currentStep].title}</h2>
-                <p className="text-neutral-500 font-light">{steps[currentStep].subtitle}</p>
-              </div>
-
-              {steps[currentStep].type === 'select' && (
-                <div className="grid grid-cols-1 gap-4">
-                  {steps[currentStep].options?.map((opt) => (
-                    <button
-                      key={opt.id}
-                      onClick={() => handleSelect(opt.id, false)}
-                      className={`group p-8 rounded-3xl border transition-all text-left cursor-none ${
-                        selections[currentStep] === opt.id 
-                        ? 'bg-white text-black border-white' 
-                        : 'bg-white/[0.02] border-white/5 text-white hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-xl font-bold uppercase tracking-tight">{opt.label}</span>
-                        <span className="font-mono text-sm">
-                          {opt.price === 0 ? 'Included' : `+ €${opt.price.toFixed(2)}`}
-                        </span>
-                      </div>
-                      <p className={`text-sm font-light ${selections[currentStep] === opt.id ? 'text-black/60' : 'text-neutral-500'}`}>
-                        {opt.description}
-                      </p>
-                    </button>
-                  ))}
+        <div className="min-h-[500px]">
+          {currentStep < steps.length ? (
+            <FadeUp key={currentStep}>
+              <div className="space-y-12 text-left">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold text-black tracking-tight">{steps[currentStep].title}</h2>
+                  <p className="text-zinc-500 font-light">{steps[currentStep].subtitle}</p>
                 </div>
-              )}
 
-              {steps[currentStep].type === 'multi-select' && (
-                <div className="grid grid-cols-1 gap-4">
-                  {steps[currentStep].options?.map((opt) => {
-                    const isSelected = (selections[currentStep] || []).includes(opt.id);
-                    return (
+                {steps[currentStep].type === 'select' && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {steps[currentStep].options?.map((opt) => (
                       <button
                         key={opt.id}
-                        onClick={() => handleSelect(opt.id, true)}
-                        className={`group p-8 rounded-3xl border transition-all text-left cursor-none relative overflow-hidden ${
-                          isSelected 
-                          ? 'bg-white/10 text-white border-white/50' 
-                          : 'bg-white/[0.02] border-white/5 text-white hover:border-white/20'
+                        onClick={() => handleSelect(opt.id, false)}
+                        className={`group p-8 rounded-[24px] border transition-all text-left cursor-none ${
+                          selections[currentStep] === opt.id 
+                          ? 'bg-black text-white border-black shadow-lg' 
+                          : 'bg-white border-zinc-200 text-black hover:border-zinc-300 hover:bg-zinc-50'
                         }`}
                       >
                         <div className="flex justify-between items-center mb-2">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-white border-white' : 'border-white/30'}`}>
-                              {isSelected && <div className="w-2.5 h-2.5 bg-black rounded-sm" />}
-                            </div>
-                            <span className="text-xl font-bold uppercase tracking-tight">{opt.label}</span>
-                          </div>
-                          <span className="font-mono text-sm">
-                            {opt.monthlyPrice 
-                              ? `€${opt.monthlyPrice.toFixed(2)} / mo` 
-                              : `+ €${opt.price.toFixed(2)}`}
+                          <span className="text-xl font-bold tracking-tight">{opt.label}</span>
+                          <span className="font-mono text-sm opacity-80">
+                            {opt.price === 0 ? 'Included' : `+ €${opt.price.toFixed(2)}`}
                           </span>
                         </div>
-                        <p className={`text-sm font-light ml-9 ${isSelected ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                        <p className={`text-sm font-light ${selections[currentStep] === opt.id ? 'text-zinc-300' : 'text-zinc-500'}`}>
                           {opt.description}
-                        </p>
-                      </button>
-                    )
-                  })}
-                </div>
-              )}
-
-              {steps[currentStep].type === 'style' && (
-                <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {stylePalettes.map((p) => (
-                      <button
-                        key={p.name}
-                        onClick={() => handleSelect(p.name, false)}
-                        className={`p-8 rounded-3xl border transition-all text-left cursor-none ${
-                          selections[currentStep] === p.name 
-                          ? 'bg-white text-black border-white' 
-                          : 'bg-white/[0.03] border-white/5 text-white hover:border-white/20'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center mb-4">
-                          <span className="font-bold uppercase tracking-widest text-[10px]">{p.name}</span>
-                          <div className="flex -space-x-2">
-                            {p.colors.map((c, i) => (
-                              <div key={i} className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: c }} />
-                            ))}
-                          </div>
-                        </div>
-                        <p className={`text-xs font-light ${selections[currentStep] === p.name ? 'text-black/60' : 'text-neutral-500'}`}>
-                          {p.desc}
                         </p>
                       </button>
                     ))}
                   </div>
+                )}
 
-                  <div className={`p-8 rounded-3xl border transition-all ${
-                      selections[currentStep]?.startsWith('Custom') 
-                      ? 'bg-white/[0.05] border-white text-white' 
-                      : 'bg-black border-white/10 text-white'
-                    }`}
-                  >
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-bold uppercase tracking-widest">Custom Palette Builder</h4>
-                        <p className="text-xs text-neutral-500 font-light">Define your own 3-color brand identity.</p>
-                      </div>
-                      <button 
-                        onClick={handleRandomPalette}
-                        className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full transition-all cursor-none"
-                      >
-                        Shuffle Colors
-                      </button>
-                    </div>
-
-                    <div className="flex gap-4 mb-8">
-                      {customColors.map((color, index) => (
-                        <div key={index} className="flex-1 flex flex-col gap-2">
-                          <div className="relative h-20 w-full rounded-2xl border border-white/10 overflow-hidden group">
-                            <input 
-                              type="color" 
-                              value={color}
-                              onChange={(e) => handleCustomColorChange(index, e.target.value)}
-                              className="absolute -inset-2 w-[200%] h-[200%] cursor-none"
-                            />
+                {steps[currentStep].type === 'multi-select' && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {steps[currentStep].options?.map((opt) => {
+                      const isSelected = (selections[currentStep] || []).includes(opt.id);
+                      return (
+                        <button
+                          key={opt.id}
+                          onClick={() => handleSelect(opt.id, true)}
+                          className={`group p-8 rounded-[24px] border transition-all text-left cursor-none relative overflow-hidden ${
+                            isSelected 
+                            ? 'bg-black text-white border-black shadow-lg' 
+                            : 'bg-white border-zinc-200 text-black hover:border-zinc-300 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${isSelected ? 'bg-white border-white' : 'border-zinc-300 bg-white'}`}>
+                                {isSelected && <div className="w-2.5 h-2.5 bg-black rounded-sm" />}
+                              </div>
+                              <span className="text-xl font-bold tracking-tight">{opt.label}</span>
+                            </div>
+                            <span className="font-mono text-sm opacity-80">
+                              {opt.monthlyPrice 
+                                ? `€${opt.monthlyPrice.toFixed(2)} / mo` 
+                                : `+ €${opt.price.toFixed(2)}`}
+                            </span>
                           </div>
-                          <span className="text-[10px] text-neutral-500 font-mono uppercase tracking-widest text-center">
-                            {color}
-                          </span>
-                        </div>
+                          <p className={`text-sm font-light ml-9 ${isSelected ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                            {opt.description}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {steps[currentStep].type === 'style' && (
+                  <div className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {stylePalettes.map((p) => (
+                        <button
+                          key={p.name}
+                          onClick={() => handleSelect(p.name, false)}
+                          className={`p-8 rounded-[24px] border transition-all text-left cursor-none ${
+                            selections[currentStep] === p.name 
+                            ? 'bg-black text-white border-black shadow-lg' 
+                            : 'bg-white border-zinc-200 text-black hover:border-zinc-300 hover:bg-zinc-50'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center mb-4">
+                            <span className="font-bold tracking-tight">{p.name}</span>
+                            <div className="flex -space-x-2">
+                              {p.colors.map((c, i) => (
+                                <div key={i} className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: c }} />
+                              ))}
+                            </div>
+                          </div>
+                          <p className={`text-xs font-light ${selections[currentStep] === p.name ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                            {p.desc}
+                          </p>
+                        </button>
                       ))}
                     </div>
 
-                    <button
-                      onClick={() => handleSelect(`Custom Palette: ${customColors.join(' | ')}`, false)}
-                      className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 ${
-                        selections[currentStep]?.startsWith('Custom')
-                        ? 'bg-white text-black scale-[0.98]' 
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                    <div className={`p-8 rounded-[24px] border transition-all ${
+                        selections[currentStep]?.startsWith('Custom') 
+                        ? 'bg-zinc-50 border-zinc-300 text-black shadow-inner' 
+                        : 'bg-zinc-50 border-zinc-200 text-black'
                       }`}
                     >
-                      {selections[currentStep]?.startsWith('Custom') ? '✓ Palette Selected' : 'Apply This Palette'}
-                    </button>
-                  </div>
-                </div>
-              )}
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-bold tracking-tight">Custom Palette Builder</h4>
+                          <p className="text-xs text-zinc-500 font-light">Define your own 3-color brand identity.</p>
+                        </div>
+                        <button 
+                          onClick={handleRandomPalette}
+                          className="px-4 py-2 bg-white border border-zinc-200 hover:border-black text-black text-[10px] font-bold uppercase tracking-widest rounded-full transition-all cursor-none"
+                        >
+                          Shuffle Colors
+                        </button>
+                      </div>
 
-              {steps[currentStep].type === 'text' && (
-                <textarea
-                  value={selections[currentStep] || ""}
-                  onChange={(e) => handleSelect(e.target.value, false)}
-                  placeholder="Tell us about your brand personality, desired features, or reference websites you love..."
-                  className="w-full h-64 bg-white/[0.02] border border-white/10 rounded-[2.5rem] p-10 text-white focus:outline-none focus:border-white/30 transition-all cursor-none resize-none font-light leading-relaxed"
-                />
-              )}
-            </div>
-          </FadeUp>
-        ) : (
-          <FadeUp>
-            <div className="p-12 md:p-20 rounded-[4rem] bg-gradient-to-br from-neutral-900/50 to-black border border-white/10 text-center space-y-12 shadow-2xl relative overflow-hidden">
-              <div className="space-y-4 relative z-10">
-                <h2 className="text-3xl font-black text-white uppercase tracking-widest italic">Estimate Generated</h2>
-                <div className="h-px w-20 bg-white/20 mx-auto" />
+                      <div className="flex gap-4 mb-8">
+                        {customColors.map((color, index) => (
+                          <div key={index} className="flex-1 flex flex-col gap-2">
+                            <div className="relative h-20 w-full rounded-2xl border border-zinc-200 overflow-hidden group">
+                              <input 
+                                type="color" 
+                                value={color}
+                                onChange={(e) => handleCustomColorChange(index, e.target.value)}
+                                className="absolute -inset-2 w-[200%] h-[200%] cursor-none"
+                              />
+                            </div>
+                            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest text-center">
+                              {color}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => handleSelect(`Custom Palette: ${customColors.join(' | ')}`, false)}
+                        className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 ${
+                          selections[currentStep]?.startsWith('Custom')
+                          ? 'bg-black text-white shadow-lg' 
+                          : 'bg-white border border-zinc-200 text-black hover:border-black'
+                        }`}
+                      >
+                        {selections[currentStep]?.startsWith('Custom') ? '✓ Palette Selected' : 'Apply This Palette'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {steps[currentStep].type === 'text' && (
+                  <textarea
+                    value={selections[currentStep] || ""}
+                    onChange={(e) => handleSelect(e.target.value, false)}
+                    placeholder="Tell me about your brand personality, desired features, or reference websites you love..."
+                    className="w-full h-64 bg-zinc-50 border border-zinc-200 rounded-[32px] p-10 text-black focus:outline-none focus:border-black transition-all cursor-none resize-none font-light leading-relaxed placeholder:text-zinc-400"
+                  />
+                )}
               </div>
-
-              <div className="space-y-2 relative z-10">
-                <span className="text-[10px] text-neutral-600 uppercase tracking-[0.5em] font-bold">Total Investment</span>
-                <div className="text-7xl md:text-[8rem] font-black text-white tracking-tighter leading-none">
-                  €{upfront.toFixed(2)}
+            </FadeUp>
+          ) : (
+            <FadeUp>
+              <div className="p-12 md:p-20 rounded-[48px] bg-zinc-50 border border-zinc-100 text-center space-y-12 shadow-sm relative overflow-hidden">
+                <div className="space-y-4 relative z-10">
+                  <h2 className="text-3xl font-medium text-black tracking-tight italic">Estimate Generated</h2>
+                  <div className="h-px w-20 bg-zinc-200 mx-auto" />
                 </div>
+
+                <div className="space-y-2 relative z-10">
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold">Total Investment</span>
+                  <div className="text-7xl md:text-[8rem] font-medium text-black tracking-tighter leading-none">
+                    €{upfront.toFixed(2)}
+                  </div>
+                </div>
+
+                {monthly > 0 && (
+                  <div className="inline-block px-8 py-4 rounded-3xl bg-white border border-zinc-200 relative z-10 shadow-sm">
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-[0.2em] block mb-1 font-bold">Recurring Support & Hosting</span>
+                    <div className="text-2xl font-mono text-black tracking-tight font-medium">
+                      + €{monthly.toFixed(2)} <span className="text-sm text-zinc-400 font-sans">/ month</span>
+                    </div>
+                  </div>
+                )}
+
+                {!isSuccess ? (
+                  <div className="max-w-md mx-auto space-y-4 pt-8 relative z-10 text-left">
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">Full Name</label>
+                      <input 
+                        type="text" 
+                        value={clientInfo.name}
+                        onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
+                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">Company / Brand</label>
+                      <input 
+                        type="text" 
+                        value={clientInfo.company}
+                        onChange={(e) => setClientInfo({...clientInfo, company: e.target.value})}
+                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
+                        placeholder="Acme Corp"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">Email Address</label>
+                      <input 
+                        type="email" 
+                        value={clientInfo.email}
+                        onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
+                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
+                        placeholder="john@example.com"
+                      />
+                    </div>
+                    <div className="pt-6">
+                      <button 
+                        disabled={!clientInfo.name || !clientInfo.email || isGenerating}
+                        onClick={handleGenerateDocument}
+                        className="w-full py-6 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-zinc-800 transition-all cursor-none shadow-lg disabled:opacity-50"
+                      >
+                        {isGenerating ? 'Sending Proposal...' : 'Send Proposal to Email'}
+                      </button>
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-widest text-center mt-6">
+                        A detailed overview will be sent to your email.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="max-w-md mx-auto pt-8 relative z-10">
+                    <div className="p-8 rounded-[32px] bg-white border border-zinc-200 shadow-sm">
+                      <h3 className="text-xl font-bold text-black mb-2">Proposal Sent</h3>
+                      <p className="text-zinc-500 text-sm leading-relaxed">Please check your inbox (and spam folder) for the detailed estimate. I will be in touch shortly.</p>
+                    </div>
+                  </div>
+                )}
               </div>
+            </FadeUp>
+          )}
+        </div>
 
-              {monthly > 0 && (
-                <div className="inline-block px-8 py-4 rounded-2xl bg-white/[0.02] border border-white/10 relative z-10">
-                  <span className="text-[10px] text-neutral-500 uppercase tracking-[0.3em] block mb-1">Recurring Support & Hosting</span>
-                  <div className="text-2xl font-mono text-white tracking-tight">
-                    + €{monthly.toFixed(2)} <span className="text-sm text-neutral-500">/ month</span>
-                  </div>
-                </div>
-              )}
-
-              {!isSuccess ? (
-                <div className="max-w-md mx-auto space-y-4 pt-8 relative z-10 text-left">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Full Name</label>
-                    <input 
-                      type="text" 
-                      value={clientInfo.name}
-                      onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Company / Brand</label>
-                    <input 
-                      type="text" 
-                      value={clientInfo.company}
-                      onChange={(e) => setClientInfo({...clientInfo, company: e.target.value})}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
-                      placeholder="Acme Corp"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase text-neutral-500 tracking-[0.2em] font-bold">Email Address</label>
-                    <input 
-                      type="email" 
-                      value={clientInfo.email}
-                      onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
-                      className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-white/40 outline-none cursor-none"
-                      placeholder="john@example.com"
-                    />
-                  </div>
-                  <div className="pt-6">
-                    <button 
-                      disabled={!clientInfo.name || !clientInfo.email || isGenerating}
-                      onClick={handleGenerateDocument}
-                      className="w-full py-7 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-neutral-200 transition-all cursor-none shadow-xl shadow-white/5 disabled:opacity-50"
-                    >
-                      {isGenerating ? 'Sending Proposal...' : 'Send Proposal to Email'}
-                    </button>
-                    <p className="text-[10px] text-neutral-600 uppercase tracking-widest text-center mt-6">A detailed overview will be sent to the email address provided.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="max-w-md mx-auto pt-8 relative z-10">
-                  <div className="p-8 rounded-2xl bg-white/5 border border-white/10">
-                    <h3 className="text-xl font-bold text-white mb-2">Proposal Sent</h3>
-                    <p className="text-neutral-400 text-sm">Please check your inbox (and spam folder) for the detailed estimate. We will be in touch shortly.</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80 pointer-events-none" />
-            </div>
-          </FadeUp>
-        )}
-      </div>
-
-      <div className="mt-24 flex justify-between items-center border-t border-white/5 pt-12">
-        <button
-          onClick={prevStep}
-          disabled={currentStep === 0 || currentStep === steps.length}
-          className={`text-[10px] font-bold uppercase tracking-[0.3em] transition-all cursor-none ${currentStep === 0 || currentStep === steps.length ? 'opacity-0 pointer-events-none' : 'text-neutral-500 hover:text-white'}`}
-        >
-          // Previous Step
-        </button>
-        
-        {currentStep < steps.length && (
+        <div className="mt-24 flex justify-between items-center border-t border-zinc-100 pt-12">
           <button
-            onClick={nextStep}
-            disabled={!isStepValid()}
-            className={`px-12 py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all cursor-none ${
-              isStepValid() ? 'bg-white text-black hover:bg-neutral-200' : 'bg-white/5 text-neutral-700'
-            }`}
+            onClick={prevStep}
+            disabled={currentStep === 0 || currentStep === steps.length}
+            className={`text-[10px] font-bold uppercase tracking-[0.3em] transition-all cursor-none ${currentStep === 0 || currentStep === steps.length ? 'opacity-0 pointer-events-none' : 'text-zinc-400 hover:text-black'}`}
           >
-            {currentStep === steps.length - 1 ? 'See Final Estimate' : 'Continue'}
+            // Previous Step
           </button>
-        )}
+          
+          {currentStep < steps.length && (
+            <button
+              onClick={nextStep}
+              disabled={!isStepValid()}
+              className={`px-12 py-5 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all cursor-none ${
+                isStepValid() ? 'bg-black text-white hover:bg-zinc-800 shadow-lg' : 'bg-zinc-100 text-zinc-400'
+              }`}
+            >
+              {currentStep === steps.length - 1 ? 'See Final Estimate' : 'Continue'}
+            </button>
+          )}
+        </div>
       </div>
     </main>
   );
