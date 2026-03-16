@@ -1,14 +1,46 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import FadeUp from '../components/FadeUp'; // Kendi FadeUp bileşenini kullandığını varsayıyorum
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function ContactPage() {
   const { t } = useLanguage();
-  
-  // Çevirileri 'data' değişkenine atıyoruz ki kodu daha temiz yazabilelim
   const data = t.contactPage;
+
+  // Form durumlarını takip etmek için state'ler ekliyoruz
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Sayfa yenilenmesini engelleyip veriyi arka planda gönderen fonksiyon
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    // Kendi Access Key'ini buraya yazacaksın
+    formData.append("access_key", "0ca2b8a6-eeb6-4866-841b-ac00ee601416");
+    formData.append("subject", "New Inquiry from Obsidian Website");
+    formData.append("from_name", "Obsidian Studio Contact Form");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        setIsSuccess(true); // Başarılı olursa formu gizle, mesajı göster
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error submitting form.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Eğer translations.ts içinde 'contactPage' henüz yoksa sayfanın çökmesini engellemek için güvenlik kontrolü
   if (!data) return <div className="pt-40 text-center text-zinc-500">Loading translations...</div>;
@@ -73,48 +105,64 @@ export default function ContactPage() {
             </div>
           </FadeUp>
 
-          {/* Right Side: Contact Form (Web3Forms Integrated) */}
+          {/* Right Side: Contact Form (AJAX Integrated) */}
           <FadeUp delay={200}>
-            <div className="p-10 md:p-14 rounded-[40px] bg-zinc-50 border border-zinc-100 shadow-sm">
-              <form action="https://api.web3forms.com/submit" method="POST" className="space-y-8">
-                {/* Web3Forms Access Key */}
-                <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE" />
-                <input type="hidden" name="subject" value="New Inquiry from Obsidian Website" />
-                <input type="hidden" name="from_name" value="Obsidian Studio Contact Form" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-10 md:p-14 rounded-[40px] bg-zinc-50 border border-zinc-100 shadow-sm min-h-[500px] flex flex-col justify-center">
+              
+              {!isSuccess ? (
+                // FORM HENÜZ GÖNDERİLMEDİYSE FORMU GÖSTER
+                <form onSubmit={handleSubmit} className="space-y-8" suppressHydrationWarning>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3 text-left">
+                      <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.nameLabel}</label>
+                      <input type="text" name="name" required placeholder={data.form.namePlaceholder} className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black text-sm focus:border-black transition-all outline-none" suppressHydrationWarning />
+                    </div>
+                    <div className="space-y-3 text-left">
+                      <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.emailLabel}</label>
+                      <input type="email" name="email" required placeholder={data.form.emailPlaceholder} className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black text-sm focus:border-black transition-all outline-none" suppressHydrationWarning />
+                    </div>
+                  </div>
+                  
+                  {/* Fixed Category Display */}
                   <div className="space-y-3 text-left">
-                    <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.nameLabel}</label>
-                    <input type="text" name="name" required placeholder={data.form.namePlaceholder} className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black text-sm focus:border-black transition-all outline-none" />
+                    <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.categoryLabel}</label>
+                    <div className="w-full bg-white border border-zinc-100 rounded-2xl px-5 py-4 text-zinc-500 text-sm font-medium" suppressHydrationWarning>
+                      {data.form.categoryValue}
+                    </div>
+                    {/* Hidden input to pass the category to email */}
+                    <input type="hidden" name="category" value={data.form.categoryValue} suppressHydrationWarning />
                   </div>
+
                   <div className="space-y-3 text-left">
-                    <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.emailLabel}</label>
-                    <input type="email" name="email" required placeholder={data.form.emailPlaceholder} className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black text-sm focus:border-black transition-all outline-none" />
+                    <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.briefLabel}</label>
+                    <textarea name="message" required rows={4} placeholder={data.form.briefPlaceholder} className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black text-sm focus:border-black transition-all outline-none resize-none" suppressHydrationWarning></textarea>
                   </div>
-                </div>
-                
-                {/* Fixed Category Display */}
-                <div className="space-y-3 text-left">
-                  <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.categoryLabel}</label>
-                  <div className="w-full bg-white border border-zinc-100 rounded-2xl px-5 py-4 text-zinc-500 text-sm font-medium">
-                    {data.form.categoryValue}
+
+                  <button 
+                    type="submit" 
+                    disabled={isSubmitting}
+                    className="w-full py-5 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-zinc-800 transition-colors shadow-lg shadow-black/10 disabled:opacity-50"
+                    suppressHydrationWarning
+                  >
+                    {isSubmitting ? "Sending..." : data.form.submit}
+                  </button>
+                </form>
+              ) : (
+                // FORM BAŞARIYLA GÖNDERİLDİYSE BU ŞIK EKRANI GÖSTER
+                <div className="text-center space-y-6 py-10 animate-in fade-in zoom-in duration-500">
+                  <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mx-auto shadow-xl">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                   </div>
-                  {/* Hidden input to pass the category to email */}
-                  <input type="hidden" name="category" value={data.form.categoryValue} />
+                  <h3 className="text-3xl font-bold text-black tracking-tight">Message Sent.</h3>
+                  <p className="text-zinc-500 font-light leading-relaxed max-w-sm mx-auto">
+                    Thank you for reaching out. I have received your project brief and will get back to you within 24 hours.
+                  </p>
+                  <button onClick={() => setIsSuccess(false)} className="mt-8 px-6 py-3 border border-zinc-200 text-zinc-500 text-[10px] font-bold uppercase tracking-widest rounded-full hover:border-black hover:text-black transition-colors">
+                    Send another message
+                  </button>
                 </div>
+              )}
 
-                <div className="space-y-3 text-left">
-                  <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.briefLabel}</label>
-                  <textarea name="message" required rows={4} placeholder={data.form.briefPlaceholder} className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black text-sm focus:border-black transition-all outline-none resize-none"></textarea>
-                </div>
-
-                {/* Optional success redirection */}
-                <input type="hidden" name="redirect" value="https://web3forms.com/success" />
-
-                <button type="submit" className="w-full py-5 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-zinc-800 transition-colors shadow-lg shadow-black/10">
-                  {data.form.submit}
-                </button>
-              </form>
             </div>
           </FadeUp>
         </div>

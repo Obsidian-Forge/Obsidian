@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
@@ -20,6 +20,38 @@ const fadeUpVariant: Variants = {
 
 export default function HomePage() {
   const { t } = useLanguage();
+
+  // Form durumlarını tutan state'ler
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Formu arka planda (AJAX) gönderen fonksiyon
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    const formData = new FormData(event.currentTarget);
+    formData.append("access_key", "0ca2b8a6-eeb6-4866-841b-ac00ee601416");
+    formData.append("subject", "New Inquiry from Obsidian Homepage");
+
+    try {
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        setIsSuccess(true);
+      } else {
+        alert("Something went wrong. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error submitting form.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="w-full bg-white selection:bg-black/10">
@@ -152,17 +184,33 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-black">{t.contact.title}</h2>
             <p className="text-zinc-500 mt-4 font-light">{t.contact.subtitle}</p>
           </div>
-          <form action="https://api.web3forms.com/submit" method="POST" className="space-y-6">
-            <input type="hidden" name="access_key" value="YOUR_ACCESS_KEY_HERE" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <input type="text" name="name" placeholder={t.contact.namePlaceholder} required className="w-full bg-zinc-50 border border-zinc-200 rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors" />
-              <input type="email" name="email" placeholder={t.contact.emailPlaceholder} required className="w-full bg-zinc-50 border border-zinc-200 rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors" />
+
+          {!isSuccess ? (
+            <form onSubmit={handleSubmit} className="space-y-6" suppressHydrationWarning>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <input type="text" name="name" placeholder={t.contact.namePlaceholder} required className="w-full bg-zinc-50 border border-zinc-200 rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors" suppressHydrationWarning />
+                <input type="email" name="email" placeholder={t.contact.emailPlaceholder} required className="w-full bg-zinc-50 border border-zinc-200 rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors" suppressHydrationWarning />
+              </div>
+              <textarea name="message" rows={5} placeholder={t.contact.messagePlaceholder} required className="w-full bg-zinc-50 border border-zinc-200 rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors resize-none" suppressHydrationWarning></textarea>
+              <button type="submit" disabled={isSubmitting} className="w-full bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full py-5 hover:bg-zinc-800 transition-colors disabled:opacity-50" suppressHydrationWarning>
+                {isSubmitting ? "Sending..." : t.contact.button}
+              </button>
+            </form>
+          ) : (
+            <div className="text-center space-y-6 py-12 animate-in fade-in zoom-in duration-500 bg-zinc-50 border border-zinc-100 rounded-[32px] p-10">
+              <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto shadow-xl">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+              <h3 className="text-3xl font-bold text-black tracking-tight">Message Sent.</h3>
+              <p className="text-zinc-500 font-light leading-relaxed max-w-sm mx-auto">
+                Thank you for reaching out. I have received your message and will get back to you within 24 hours.
+              </p>
+              <button onClick={() => setIsSuccess(false)} className="mt-4 px-6 py-3 border border-zinc-200 text-zinc-500 text-[10px] font-bold uppercase tracking-widest rounded-full hover:border-black hover:text-black transition-colors">
+                Send another message
+              </button>
             </div>
-            <textarea name="message" rows={5} placeholder={t.contact.messagePlaceholder} required className="w-full bg-zinc-50 border border-zinc-200 rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors resize-none"></textarea>
-            <button type="submit" className="w-full bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full py-5 hover:bg-zinc-800 transition-colors">
-              {t.contact.button}
-            </button>
-          </form>
+          )}
+
         </motion.div>
       </section>
     </div>

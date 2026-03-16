@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+// Hata veren satırı relative path ile düzelttik
 import { useLanguage } from '../../context/LanguageContext';
 
 const CustomCursor = () => {
@@ -177,7 +178,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                {t.footer.builtIn}
              </p>
              
-             {/* EKLENEN KISIM: Yasal Linkler */}
+             {/* Yasal Linkler */}
              <div className="flex items-center gap-4 mt-2">
                <Link href="/terms" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
                  {t.nav.terms}
@@ -205,8 +206,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
              </div>
 
              <div className="flex gap-8">
-                <a href="#" target="_blank" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
-                <a href="#" target="_blank" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">GitHub</a>
+                <a href="https://www.linkedin.com/company/obsidian-be/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
              </div>
           </div>
         </div>
