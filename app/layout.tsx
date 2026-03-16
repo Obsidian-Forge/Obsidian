@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SharedLayout from "./components/SharedLayout";
+import { LanguageProvider } from "../context/LanguageContext"; // Provider'ı içeri aldık
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,10 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}>
-        <SharedLayout>
-          {children}
-        </SharedLayout>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}>
+        <LanguageProvider>
+          <SharedLayout>
+            {children}
+          </SharedLayout>
+        </LanguageProvider>
       </body>
     </html>
   );

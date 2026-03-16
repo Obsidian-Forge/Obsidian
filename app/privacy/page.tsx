@@ -3,9 +3,10 @@
 import React from 'react';
 import FadeUp from '../components/FadeUp'; // Kendi FadeUp bileşenini kullandığını varsayıyorum
 import Link from 'next/link';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function PrivacyPage() {
-  const lastUpdated = "March 2026";
+  const { t } = useLanguage();
 
   return (
     <main className="w-full bg-white min-h-screen">
@@ -15,16 +16,16 @@ export default function PrivacyPage() {
         <FadeUp>
           <div className="space-y-6 border-b border-zinc-100 pb-12">
             <h1 className="text-5xl md:text-7xl font-medium tracking-tight text-black leading-none">
-              Zero Data <br />
-              <span className="text-zinc-400 italic font-light">Focus.</span>
+              {t.privacy.title} <br />
+              <span className="text-zinc-400 italic font-light">{t.privacy.subtitle}</span>
             </h1>
             <div className="flex items-center gap-4">
                <p className="text-zinc-400 font-bold text-[10px] tracking-[0.2em] uppercase">
-                 Privacy First // Obsidian
+                 {t.privacy.tag}
                </p>
                <span className="w-1 h-1 bg-zinc-300 rounded-full" />
                <p className="text-zinc-400 font-bold text-[10px] tracking-[0.2em] uppercase">
-                 Last Updated: {lastUpdated}
+                 {t.privacy.lastUpdated}
                </p>
             </div>
           </div>
@@ -35,13 +36,13 @@ export default function PrivacyPage() {
           {/* 01. Veri Toplamama Sözü */}
           <FadeUp delay={100}>
             <section className="space-y-6">
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">01. No Personal Data</h2>
+              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">{t.privacy.sec1Title}</h2>
               <div className="space-y-6 text-zinc-500 font-light leading-relaxed">
                 <p className="text-lg">
-                  I do not collect your name, phone number, or physical address automatically. My business is building fast, high-quality websites, not trading user data.
+                  {t.privacy.sec1Desc}
                 </p>
                 <div className="p-8 rounded-[24px] bg-zinc-50 border border-zinc-100 text-black text-sm font-medium">
-                  Notice: This site works without asking who you are. I believe your digital footprint belongs only to you.
+                  {t.privacy.sec1Notice}
                 </div>
               </div>
             </section>
@@ -50,22 +51,22 @@ export default function PrivacyPage() {
           {/* 02. İletişim Formu ve Email */}
           <FadeUp delay={150}>
             <section className="space-y-6">
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">02. Minimal Contact</h2>
+              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">{t.privacy.sec2Title}</h2>
               <p className="text-zinc-500 font-light text-lg leading-relaxed">
-                When you use my contact form or calculator, I only ask for project details and an email address so I can reply to you directly.
+                {t.privacy.sec2Desc}
               </p>
               <ul className="space-y-4 text-zinc-500 font-light ml-2 border-l border-zinc-100 pl-6">
                 <li className="flex items-center gap-3">
                   <span className="w-1.5 h-1.5 bg-zinc-300 rounded-full"></span>
-                  No newsletters.
+                  {t.privacy.rule1}
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="w-1.5 h-1.5 bg-zinc-300 rounded-full"></span>
-                  No marketing emails.
+                  {t.privacy.rule2}
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="w-1.5 h-1.5 bg-zinc-300 rounded-full"></span>
-                  No sharing your email with third parties.
+                  {t.privacy.rule3}
                 </li>
               </ul>
             </section>
@@ -74,9 +75,9 @@ export default function PrivacyPage() {
           {/* 03. Çerez ve Takip Yok */}
           <FadeUp delay={200}>
             <section className="space-y-6">
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">03. No Tracking</h2>
+              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">{t.privacy.sec3Title}</h2>
               <p className="text-zinc-500 font-light text-lg leading-relaxed">
-                I do not use tracking pixels, Google Analytics, or invasive cookies. Website speed and user privacy are my top priorities, and removing tracking scripts is the best way to keep things fast and clean.
+                {t.privacy.sec3Desc}
               </p>
             </section>
           </FadeUp>
@@ -84,9 +85,9 @@ export default function PrivacyPage() {
           {/* 04. Güvenlik */}
           <FadeUp delay={250}>
             <section className="space-y-6">
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">04. Security</h2>
+              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em]">{t.privacy.sec4Title}</h2>
               <p className="text-zinc-500 font-light text-lg leading-relaxed">
-                Every interaction on this site is encrypted via SSL. Your project ideas and communication are treated with the same level of security and confidentiality as my own internal code.
+                {t.privacy.sec4Desc}
               </p>
             </section>
           </FadeUp>
@@ -96,9 +97,9 @@ export default function PrivacyPage() {
         {/* Footer CTA */}
         <FadeUp delay={300}>
           <div className="mt-32 pt-16 border-t border-zinc-100 text-center space-y-8">
-            <p className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">Privacy is a right, not a feature.</p>
+            <p className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">{t.privacy.footerTag}</p>
             <Link href="/contact" className="inline-block px-10 py-5 bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:bg-zinc-800 transition-colors shadow-lg">
-              Start a Private Conversation
+              {t.privacy.cta}
             </Link>
           </div>
         </FadeUp>

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import FadeUp from '../components/FadeUp';
 import emailjs from '@emailjs/browser';
+import { useLanguage } from '../../context/LanguageContext';
 
 type Option = {
   id: string;
@@ -20,6 +21,9 @@ type Step = {
 };
 
 export default function PriceCalculator() {
+  const { t } = useLanguage();
+  const cData = t.calculator;
+
   const [currentStep, setCurrentStep] = useState(0);
   const [selections, setSelections] = useState<Record<number, any>>({});
   const [customColors, setCustomColors] = useState(["#ffffff", "#888888", "#000000"]);
@@ -28,85 +32,87 @@ export default function PriceCalculator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  if (!cData) return <div className="pt-40 text-center text-zinc-500">Loading...</div>;
+
   const steps: Step[] = [
     {
-      title: "Base Architecture",
-      subtitle: "Select the foundation of your digital presence.",
+      title: cData.stepsData[0].title,
+      subtitle: cData.stepsData[0].subtitle,
       type: 'select',
       options: [
-        { id: "landing", label: "High-Conversion Landing", price: 1250.00, description: "Single-page scroll experience. (1 Page Only)" },
-        { id: "business", label: "Multi-Page Business Site", price: 2850.00, description: "Professional corporate architecture. (Up to 8 Pages)" },
-        { id: "standard-store", label: "Standard Store Setup", price: 2250.00, description: "Basic e-commerce capabilities. (Up to 50 Products)" },
-        { id: "advanced-api", label: "Advanced API Store", price: 3850.00, description: "Complex store with external integrations. (Unlimited)" },
-        { id: "ecommerce", label: "Premium E-Commerce", price: 4750.00, description: "The ultimate bespoke shopping experience. (Custom Architecture)" }
+        { id: "landing", price: 1250.00, label: cData.stepsData[0].options[0].label, description: cData.stepsData[0].options[0].desc },
+        { id: "business", price: 2850.00, label: cData.stepsData[0].options[1].label, description: cData.stepsData[0].options[1].desc },
+        { id: "standard-store", price: 2250.00, label: cData.stepsData[0].options[2].label, description: cData.stepsData[0].options[2].desc },
+        { id: "advanced-api", price: 3850.00, label: cData.stepsData[0].options[3].label, description: cData.stepsData[0].options[3].desc },
+        { id: "ecommerce", price: 4750.00, label: cData.stepsData[0].options[4].label, description: cData.stepsData[0].options[4].desc }
       ]
     },
     {
-      title: "Visual Identity",
-      subtitle: "Choose a professional palette or build your own from scratch.",
+      title: cData.stepsData[1].title,
+      subtitle: cData.stepsData[1].subtitle,
       type: 'style'
     },
     {
-      title: "Design & Branding",
-      subtitle: "Enhance your visual assets. (You can select multiple)",
+      title: cData.stepsData[2].title,
+      subtitle: cData.stepsData[2].subtitle,
       type: 'multi-select',
       options: [
-        { id: "logo", label: "Professional Logo Design", price: 400.00, description: "Custom brand mark and typography." },
-        { id: "custom-ui", label: "Custom Graphics & UI Elements", price: 500.00, description: "Bespoke illustrations and interface details." }
+        { id: "logo", price: 400.00, label: cData.stepsData[2].options[0].label, description: cData.stepsData[2].options[0].desc },
+        { id: "custom-ui", price: 500.00, label: cData.stepsData[2].options[1].label, description: cData.stepsData[2].options[1].desc }
       ]
     },
     {
-      title: "Content & SEO",
-      subtitle: "Boost your reach and messaging. (You can select multiple)",
+      title: cData.stepsData[3].title,
+      subtitle: cData.stepsData[3].subtitle,
       type: 'multi-select',
       options: [
-        { id: "seo-basic", label: "Basic SEO Setup", price: 350.00, description: "Foundational metadata and search engine indexing." },
-        { id: "copywriting", label: "Professional Content Writing", price: 450.00, description: "Engaging, conversion-focused copywriting." },
-        { id: "seo-adv", label: "Advanced SEO Strategy", price: 750.00, description: "Deep keyword targeting and technical SEO optimization." }
+        { id: "seo-basic", price: 350.00, label: cData.stepsData[3].options[0].label, description: cData.stepsData[3].options[0].desc },
+        { id: "copywriting", price: 450.00, label: cData.stepsData[3].options[1].label, description: cData.stepsData[3].options[1].desc },
+        { id: "seo-adv", price: 750.00, label: cData.stepsData[3].options[2].label, description: cData.stepsData[3].options[2].desc }
       ]
     },
     {
-      title: "Functional Features",
-      subtitle: "Add specific capabilities to your site. (You can select multiple)",
+      title: cData.stepsData[4].title,
+      subtitle: cData.stepsData[4].subtitle,
       type: 'multi-select',
       options: [
-        { id: "contact-form", label: "Advanced Contact Form", price: 150.00, description: "Complex conditional logic and multi-step forms." },
-        { id: "newsletter", label: "Newsletter System", price: 200.00, description: "Capture leads and grow your audience." },
-        { id: "email-marketing", label: "Email Marketing Integration", price: 250.00, description: "Connect directly to Mailchimp, ActiveCampaign, etc." }
+        { id: "contact-form", price: 150.00, label: cData.stepsData[4].options[0].label, description: cData.stepsData[4].options[0].desc },
+        { id: "newsletter", price: 200.00, label: cData.stepsData[4].options[1].label, description: cData.stepsData[4].options[1].desc },
+        { id: "email-marketing", price: 250.00, label: cData.stepsData[4].options[2].label, description: cData.stepsData[4].options[2].desc }
       ]
     },
     {
-      title: "Performance & Support",
-      subtitle: "Speed upgrades and ongoing maintenance. (You can select multiple)",
+      title: cData.stepsData[5].title,
+      subtitle: cData.stepsData[5].subtitle,
       type: 'multi-select',
       options: [
-        { id: "speed-basic", label: "Basic Speed Optimization", price: 250.00, description: "Asset minification and basic caching." },
-        { id: "speed-ultra", label: "Ultra-Fast Performance Bundle", price: 550.00, description: "Server-side optimizations for maximum speed." },
-        { id: "hosting", label: "Premium Hosting Management", price: 0.00, monthlyPrice: 45.00, description: "Secure, high-uptime cloud hosting." },
-        { id: "maintenance", label: "Monthly Maintenance & Support", price: 0.00, monthlyPrice: 125.00, description: "Regular updates, backups, and priority support." }
+        { id: "speed-basic", price: 250.00, label: cData.stepsData[5].options[0].label, description: cData.stepsData[5].options[0].desc },
+        { id: "speed-ultra", price: 550.00, label: cData.stepsData[5].options[1].label, description: cData.stepsData[5].options[1].desc },
+        { id: "hosting", price: 0.00, monthlyPrice: 45.00, label: cData.stepsData[5].options[2].label, description: cData.stepsData[5].options[2].desc },
+        { id: "maintenance", price: 0.00, monthlyPrice: 125.00, label: cData.stepsData[5].options[3].label, description: cData.stepsData[5].options[3].desc }
       ]
     },
     {
-      title: "Delivery Timeline",
-      subtitle: "How fast do you need this project launched?",
+      title: cData.stepsData[6].title,
+      subtitle: cData.stepsData[6].subtitle,
       type: 'select',
       options: [
-        { id: "timeline-standard", label: "Standard Pace (4-6 Weeks)", price: 0.00, description: "My standard, high-quality development cycle." },
-        { id: "timeline-rush", label: "Priority Rush (1-2 Weeks)", price: 750.00, description: "Skip the queue. I work overtime to deliver ASAP." }
+        { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
+        { id: "timeline-rush", price: 750.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
       ]
     },
     {
-      title: "The Vision",
-      subtitle: "Tell me more about your specific needs or references.",
+      title: cData.stepsData[7].title,
+      subtitle: cData.stepsData[7].subtitle,
       type: 'text'
     }
   ];
 
   const stylePalettes = [
-    { name: "Obsidian Dark", colors: ["#000000", "#1a1a1a", "#ffffff"], desc: "The signature look. Deep, premium, and bold." },
-    { name: "Nordic Clean", colors: ["#ffffff", "#f8fafc", "#0f172a"], desc: "Airy, minimalist, and focuses on typography." },
-    { name: "Midnight Tech", colors: ["#020617", "#3b82f6", "#1e293b"], desc: "Modern blue tones for tech-focused startups." },
-    { name: "Industrial Gold", colors: ["#1c1917", "#fbbf24", "#ffffff"], desc: "High-contrast with elegant golden accents." }
+    { name: cData.palettes[0].name, colors: ["#000000", "#1a1a1a", "#ffffff"], desc: cData.palettes[0].desc },
+    { name: cData.palettes[1].name, colors: ["#ffffff", "#f8fafc", "#0f172a"], desc: cData.palettes[1].desc },
+    { name: cData.palettes[2].name, colors: ["#020617", "#3b82f6", "#1e293b"], desc: cData.palettes[2].desc },
+    { name: cData.palettes[3].name, colors: ["#1c1917", "#fbbf24", "#ffffff"], desc: cData.palettes[3].desc }
   ];
 
   const handleSelect = (val: string, isMulti: boolean = false) => {
@@ -126,14 +132,14 @@ export default function PriceCalculator() {
     const newColors = [...customColors];
     newColors[index] = val;
     setCustomColors(newColors);
-    handleSelect(`Custom Palette: ${newColors.join(' | ')}`, false);
+    handleSelect(`${cData.customPalette}: ${newColors.join(' | ')}`, false);
   };
 
   const handleRandomPalette = () => {
     const randomHex = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
     const newColors = [randomHex(), randomHex(), randomHex()];
     setCustomColors(newColors);
-    handleSelect(`Custom Palette: ${newColors.join(' | ')}`, false);
+    handleSelect(`${cData.customPalette}: ${newColors.join(' | ')}`, false);
   };
 
   const calculateTotal = () => {
@@ -181,7 +187,7 @@ export default function PriceCalculator() {
           const option = step.options?.find(o => o.id === id);
           if (option) {
             if (option.price > 0) items.push({ label: option.label, price: `€${option.price.toFixed(2)}` });
-            if (option.monthlyPrice && option.monthlyPrice > 0) items.push({ label: option.label, price: `€${option.monthlyPrice.toFixed(2)} / mo` });
+            if (option.monthlyPrice && option.monthlyPrice > 0) items.push({ label: option.label, price: `€${option.monthlyPrice.toFixed(2)} / ${cData.monthly}` });
           }
         });
       } else if (step.type === 'style') {
@@ -190,7 +196,7 @@ export default function PriceCalculator() {
          if (matchedPalette) {
            styleText = `${val} (${matchedPalette.colors.join(', ')})`;
          }
-         items.push({ label: `Style: ${styleText}`, price: 'Included' });
+         items.push({ label: `Style: ${styleText}`, price: cData.included });
       }
     });
     return items;
@@ -209,7 +215,7 @@ export default function PriceCalculator() {
 
       const visionText = selections[steps.length - 1] && selections[steps.length - 1].length > 2 
         ? `<div style="margin-top: 30px; padding: 20px; background-color: #fafafa; border-radius: 8px;">
-            <p style="margin: 0 0 10px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Client Vision Notes</p>
+            <p style="margin: 0 0 10px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Client Vision</p>
             <p style="margin: 0; font-size: 14px; color: #555555; font-style: italic;">"${selections[steps.length - 1]}"</p>
            </div>` 
         : '';
@@ -225,14 +231,14 @@ export default function PriceCalculator() {
               style="display: block; margin: 0 auto 16px auto; width: 45px !important; height: 45px !important; border: 0; outline: none; text-decoration: none;" 
             />
             <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #ffffff; text-transform: uppercase; font-style: italic; letter-spacing: 2px;">OBSIDIAN</h1>
-            <p style="margin: 10px 0 0 0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-family: monospace;">Digital Project Proposal</p>
+            <p style="margin: 10px 0 0 0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-family: monospace;">${cData.emailSubject}</p>
           </div>
           
           <div style="padding: 40px 30px;">
             <p style="margin: 0 0 5px 0; font-size: 16px; color: #000000;">Hello <strong>${clientInfo.name}</strong>,</p>
             <p style="margin: 0 0 30px 0; font-size: 14px; color: #666666; line-height: 1.6;">Thank you for using the Obsidian Configurator. Below is the detailed estimate for <strong>${clientInfo.company || 'your project'}</strong>.</p>
             
-            <h2 style="margin: 0 0 15px 0; font-size: 14px; color: #000000; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #000000; padding-bottom: 10px;">Scope of Work</h2>
+            <h2 style="margin: 0 0 15px 0; font-size: 14px; color: #000000; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #000000; padding-bottom: 10px;">${cData.emailScope}</h2>
             
             <table style="width: 100%; border-collapse: collapse;">
               ${itemsHtml}
@@ -241,17 +247,17 @@ export default function PriceCalculator() {
             ${visionText}
             
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #dddddd; text-align: right;">
-              ${monthly > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">Recurring Services: <span style="font-size: 18px; color: #000000; font-weight: bold; font-family: monospace;">+ €${monthly.toFixed(2)} <span style="font-size: 12px; color: #888;">/ mo</span></span></p>` : ''}
-              <p style="margin: 0 0 5px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Total Estimated Investment</p>
+              ${monthly > 0 ? `<p style="margin: 0 0 10px 0; font-size: 12px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">${cData.emailRecurring} <span style="font-size: 18px; color: #000000; font-weight: bold; font-family: monospace;">+ €${monthly.toFixed(2)} <span style="font-size: 12px; color: #888;">/ ${cData.monthly}</span></span></p>` : ''}
+              <p style="margin: 0 0 5px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">${cData.emailTotal}</p>
               <p style="margin: 0; font-size: 42px; font-weight: 900; color: #000000; line-height: 1;">€${upfront.toFixed(2)}</p>
-              <p style="margin: 10px 0 0 0; font-size: 10px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 1px;">Prices exclude VAT where applicable.</p>
+              <p style="margin: 10px 0 0 0; font-size: 10px; color: #aaaaaa; text-transform: uppercase; letter-spacing: 1px;">${cData.emailVat}</p>
             </div>
           </div>
           
           <div style="background-color: #fafafa; padding: 20px; text-align: center; border-top: 1px solid #eaeaea;">
             <p style="margin: 0; font-size: 12px; color: #000000; font-weight: bold;">Obsidian Studio</p>
             <p style="margin: 5px 0 0 0; font-size: 12px; color: #888888;">Dilbeek, Belgium • obsidian.studio.hq@gmail.com</p>
-            <p style="margin: 15px 0 0 0; font-size: 10px; color: #bbbbbb; text-transform: uppercase; letter-spacing: 1px; font-family: monospace;">Generated via Obsidian Engine. Not a final legal contract.</p>
+            <p style="margin: 15px 0 0 0; font-size: 10px; color: #bbbbbb; text-transform: uppercase; letter-spacing: 1px; font-family: monospace;">${cData.emailGenerated}</p>
           </div>
         </div>
       `;
@@ -270,8 +276,6 @@ export default function PriceCalculator() {
       );
 
       setIsSuccess(true);
-      console.log("Başarılı!");
-
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to send proposal. Please try again.');
@@ -288,11 +292,11 @@ export default function PriceCalculator() {
             <div className="flex justify-between items-end">
               <div className="space-y-2">
                 <h1 className="text-4xl md:text-6xl font-medium uppercase tracking-tight text-black leading-none">
-                  Project <br/>
-                  <span className="text-zinc-400 font-light italic">Configurator.</span>
+                  {cData.title} <br/>
+                  <span className="text-zinc-400 font-light italic">{cData.subtitle}</span>
                 </h1>
                 <p className="text-[10px] text-zinc-400 font-bold tracking-[0.2em] uppercase mt-4">
-                  Step {currentStep + 1} of {steps.length + 1} // Precision Pricing
+                  {cData.stepInfo} {currentStep + 1} {cData.of} {steps.length + 1} // {cData.tag}
                 </p>
               </div>
             </div>
@@ -331,7 +335,7 @@ export default function PriceCalculator() {
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-xl font-bold tracking-tight">{opt.label}</span>
                           <span className="font-mono text-sm opacity-80">
-                            {opt.price === 0 ? 'Included' : `+ €${opt.price.toFixed(2)}`}
+                            {opt.price === 0 ? cData.included : `+ €${opt.price.toFixed(2)}`}
                           </span>
                         </div>
                         <p className={`text-sm font-light ${selections[currentStep] === opt.id ? 'text-zinc-300' : 'text-zinc-500'}`}>
@@ -365,7 +369,7 @@ export default function PriceCalculator() {
                             </div>
                             <span className="font-mono text-sm opacity-80">
                               {opt.monthlyPrice 
-                                ? `€${opt.monthlyPrice.toFixed(2)} / mo` 
+                                ? `€${opt.monthlyPrice.toFixed(2)} / ${cData.monthly}` 
                                 : `+ €${opt.price.toFixed(2)}`}
                             </span>
                           </div>
@@ -407,21 +411,21 @@ export default function PriceCalculator() {
                     </div>
 
                     <div className={`p-8 rounded-[24px] border transition-all ${
-                        selections[currentStep]?.startsWith('Custom') 
+                        selections[currentStep]?.startsWith(cData.customPalette) 
                         ? 'bg-zinc-50 border-zinc-300 text-black shadow-inner' 
                         : 'bg-zinc-50 border-zinc-200 text-black'
                       }`}
                     >
                       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                         <div className="space-y-1">
-                          <h4 className="text-sm font-bold tracking-tight">Custom Palette Builder</h4>
-                          <p className="text-xs text-zinc-500 font-light">Define your own 3-color brand identity.</p>
+                          <h4 className="text-sm font-bold tracking-tight">{cData.builderTitle}</h4>
+                          <p className="text-xs text-zinc-500 font-light">{cData.builderDesc}</p>
                         </div>
                         <button 
                           onClick={handleRandomPalette}
                           className="px-4 py-2 bg-white border border-zinc-200 hover:border-black text-black text-[10px] font-bold uppercase tracking-widest rounded-full transition-all cursor-none"
                         >
-                          Shuffle Colors
+                          {cData.shuffleColors}
                         </button>
                       </div>
 
@@ -444,14 +448,14 @@ export default function PriceCalculator() {
                       </div>
 
                       <button
-                        onClick={() => handleSelect(`Custom Palette: ${customColors.join(' | ')}`, false)}
+                        onClick={() => handleSelect(`${cData.customPalette}: ${customColors.join(' | ')}`, false)}
                         className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 ${
-                          selections[currentStep]?.startsWith('Custom')
+                          selections[currentStep]?.startsWith(cData.customPalette)
                           ? 'bg-black text-white shadow-lg' 
                           : 'bg-white border border-zinc-200 text-black hover:border-black'
                         }`}
                       >
-                        {selections[currentStep]?.startsWith('Custom') ? '✓ Palette Selected' : 'Apply This Palette'}
+                        {selections[currentStep]?.startsWith(cData.customPalette) ? `✓ ${cData.paletteSelected}` : cData.applyPalette}
                       </button>
                     </div>
                   </div>
@@ -461,7 +465,7 @@ export default function PriceCalculator() {
                   <textarea
                     value={selections[currentStep] || ""}
                     onChange={(e) => handleSelect(e.target.value, false)}
-                    placeholder="Tell me about your brand personality, desired features, or reference websites you love..."
+                    placeholder={cData.textPlaceholder}
                     className="w-full h-64 bg-zinc-50 border border-zinc-200 rounded-[32px] p-10 text-black focus:outline-none focus:border-black transition-all cursor-none resize-none font-light leading-relaxed placeholder:text-zinc-400"
                   />
                 )}
@@ -471,12 +475,12 @@ export default function PriceCalculator() {
             <FadeUp>
               <div className="p-12 md:p-20 rounded-[48px] bg-zinc-50 border border-zinc-100 text-center space-y-12 shadow-sm relative overflow-hidden">
                 <div className="space-y-4 relative z-10">
-                  <h2 className="text-3xl font-medium text-black tracking-tight italic">Estimate Generated</h2>
+                  <h2 className="text-3xl font-medium text-black tracking-tight italic">{cData.estimateGen}</h2>
                   <div className="h-px w-20 bg-zinc-200 mx-auto" />
                 </div>
 
                 <div className="space-y-2 relative z-10">
-                  <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold">Total Investment</span>
+                  <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold">{cData.totalInv}</span>
                   <div className="text-7xl md:text-[8rem] font-medium text-black tracking-tighter leading-none">
                     €{upfront.toFixed(2)}
                   </div>
@@ -484,9 +488,9 @@ export default function PriceCalculator() {
 
                 {monthly > 0 && (
                   <div className="inline-block px-8 py-4 rounded-3xl bg-white border border-zinc-200 relative z-10 shadow-sm">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-[0.2em] block mb-1 font-bold">Recurring Support & Hosting</span>
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-[0.2em] block mb-1 font-bold">{cData.recurringLabel}</span>
                     <div className="text-2xl font-mono text-black tracking-tight font-medium">
-                      + €{monthly.toFixed(2)} <span className="text-sm text-zinc-400 font-sans">/ month</span>
+                      + €{monthly.toFixed(2)} <span className="text-sm text-zinc-400 font-sans">/ {cData.month}</span>
                     </div>
                   </div>
                 )}
@@ -494,33 +498,33 @@ export default function PriceCalculator() {
                 {!isSuccess ? (
                   <div className="max-w-md mx-auto space-y-4 pt-8 relative z-10 text-left">
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">Full Name</label>
+                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">{cData.formNameLabel}</label>
                       <input 
                         type="text" 
                         value={clientInfo.name}
                         onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
                         className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
-                        placeholder="John Doe"
+                        placeholder={cData.formNamePlace}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">Company / Brand</label>
+                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">{cData.formCompanyLabel}</label>
                       <input 
                         type="text" 
                         value={clientInfo.company}
                         onChange={(e) => setClientInfo({...clientInfo, company: e.target.value})}
                         className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
-                        placeholder="Acme Corp"
+                        placeholder={cData.formCompanyPlace}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">Email Address</label>
+                      <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">{cData.formEmailLabel}</label>
                       <input 
                         type="email" 
                         value={clientInfo.email}
                         onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
                         className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
-                        placeholder="john@example.com"
+                        placeholder={cData.formEmailPlace}
                       />
                     </div>
                     <div className="pt-6">
@@ -529,18 +533,18 @@ export default function PriceCalculator() {
                         onClick={handleGenerateDocument}
                         className="w-full py-6 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-zinc-800 transition-all cursor-none shadow-lg disabled:opacity-50"
                       >
-                        {isGenerating ? 'Sending Proposal...' : 'Send Proposal to Email'}
+                        {isGenerating ? cData.btnSending : cData.btnSend}
                       </button>
                       <p className="text-[10px] text-zinc-500 uppercase tracking-widest text-center mt-6">
-                        A detailed overview will be sent to your email.
+                        {cData.notice}
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="max-w-md mx-auto pt-8 relative z-10">
                     <div className="p-8 rounded-[32px] bg-white border border-zinc-200 shadow-sm">
-                      <h3 className="text-xl font-bold text-black mb-2">Proposal Sent</h3>
-                      <p className="text-zinc-500 text-sm leading-relaxed">Please check your inbox (and spam folder) for the detailed estimate. I will be in touch shortly.</p>
+                      <h3 className="text-xl font-bold text-black mb-2">{cData.successTitle}</h3>
+                      <p className="text-zinc-500 text-sm leading-relaxed">{cData.successDesc}</p>
                     </div>
                   </div>
                 )}
@@ -555,7 +559,7 @@ export default function PriceCalculator() {
             disabled={currentStep === 0 || currentStep === steps.length}
             className={`text-[10px] font-bold uppercase tracking-[0.3em] transition-all cursor-none ${currentStep === 0 || currentStep === steps.length ? 'opacity-0 pointer-events-none' : 'text-zinc-400 hover:text-black'}`}
           >
-            // Previous Step
+            // {cData.btnPrev}
           </button>
           
           {currentStep < steps.length && (
@@ -566,7 +570,7 @@ export default function PriceCalculator() {
                 isStepValid() ? 'bg-black text-white hover:bg-zinc-800 shadow-lg' : 'bg-zinc-100 text-zinc-400'
               }`}
             >
-              {currentStep === steps.length - 1 ? 'See Final Estimate' : 'Continue'}
+              {currentStep === steps.length - 1 ? cData.btnFinish : cData.btnNext}
             </button>
           )}
         </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../../context/LanguageContext';
 
 const CustomCursor = () => {
   const dotRef = useRef<HTMLDivElement>(null);
@@ -54,12 +55,13 @@ const ObsidianLogo = () => (
 
 export default function SharedLayout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Services", href: "/services" },
-    { name: "Process", href: "/process" },
-    { name: "Contact", href: "/contact" },
+    { name: t.nav.home, href: "/" },
+    { name: t.nav.services, href: "/services" },
+    { name: t.nav.process, href: "/process" },
+    { name: t.nav.contact, href: "/contact" },
   ];
 
   useEffect(() => {
@@ -74,11 +76,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-white text-black font-sans flex flex-col relative">
       <CustomCursor />
 
-      {/* HEADER - No bottom line */}
+      {/* HEADER */}
       <header className="sticky top-0 w-full z-[100] bg-white">
-        <div className="w-full px-6 md:px-16 h-20 md:h-24 flex items-center justify-between relative">
+        <div className="w-full px-6 md:px-16 h-20 md:h-24 flex items-center justify-between relative border-b-0">
           
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-4 group relative z-[110]" onClick={() => setIsOpen(false)}>
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center transition-transform group-hover:scale-95 shadow-sm">
                <ObsidianLogo />
@@ -88,7 +89,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
             </span>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-10">
             {navLinks.map((link) => (
               <Link key={link.name} href={link.href} className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] hover:text-black transition-colors">
@@ -97,13 +97,11 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
             ))}
           </nav>
 
-          {/* Right Area */}
           <div className="flex items-center gap-4 relative z-[110]">
-            <Link href="/calculator" className="hidden sm:inline-block px-8 py-3.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full hover:bg-zinc-800 transition-all">
-              Start Project
+            <Link href="/calculator" className="hidden md:inline-block px-8 py-3.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full hover:bg-zinc-800 transition-all">
+              {t.hero.ctaStart}
             </Link>
             
-            {/* Hamburger Button - 3 Lines Animated to X */}
             <button 
               onClick={() => setIsOpen(!isOpen)}
               className="flex md:hidden flex-col justify-center items-center w-10 h-10 gap-1.5 focus:outline-none relative"
@@ -125,7 +123,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
           </div>
         </div>
 
-        {/* SIDEBAR PANEL - Solid White Background */}
         <AnimatePresence>
           {isOpen && (
             <motion.div 
@@ -153,28 +150,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                     </Link>
                   </motion.div>
                 ))}
-                
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="pt-10 w-full max-w-[280px]"
-                >
-                  <Link 
-                    href="/calculator" 
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center w-full py-6 bg-black text-white text-[10px] font-bold uppercase tracking-[0.3em] rounded-full shadow-2xl active:scale-95 transition-transform"
-                  >
-                    Start Project
-                  </Link>
-                </motion.div>
-              </div>
-
-              {/* Panel Footer */}
-              <div className="p-12 text-center">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                  Dilbeek, Belgium &bull; Obsidian Studio
-                </p>
               </div>
             </motion.div>
           )}
@@ -185,6 +160,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
 
+      {/* FOOTER */}
       <footer className="w-full bg-white py-16 px-6 md:px-16 mt-12 border-t border-zinc-100/50">
         <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="flex flex-col gap-4">
@@ -197,19 +173,40 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
               </span>
              </div>
              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-               &copy; {new Date().getFullYear()} Obsidian. All rights reserved. <br/> 
-               Built in Dilbeek, Belgium.
+               &copy; {new Date().getFullYear()} Obsidian. {t.footer.rights} <br/> 
+               {t.footer.builtIn}
              </p>
+             
+             {/* EKLENEN KISIM: Yasal Linkler */}
+             <div className="flex items-center gap-4 mt-2">
+               <Link href="/terms" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                 {t.nav.terms}
+               </Link>
+               <Link href="/privacy" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                 {t.nav.privacy}
+               </Link>
+             </div>
+
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-x-12 gap-y-4">
-             <div className="flex gap-8">
-                <a href="#" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
-                <a href="#" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">GitHub</a>
+          <div className="flex flex-col sm:flex-row gap-x-12 gap-y-4 items-center">
+             <div className="relative inline-block text-left mb-4 sm:mb-0">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as any)}
+                  className="appearance-none bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2 text-[9px] font-bold uppercase tracking-widest outline-none cursor-pointer hover:border-black transition-colors"
+                >
+                  <option value="en">English</option>
+                  <option value="nl">Nederlands</option>
+                  <option value="fr">Français</option>
+                  <option value="tr">Türkçe</option>
+                  <option value="ko">한국어</option>
+                </select>
              </div>
+
              <div className="flex gap-8">
-                <Link href="/privacy" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">Privacy</Link>
-                <Link href="/terms" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">Terms</Link>
+                <a href="#" target="_blank" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
+                <a href="#" target="_blank" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">GitHub</a>
              </div>
           </div>
         </div>
