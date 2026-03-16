@@ -285,26 +285,31 @@ export default function PriceCalculator() {
   };
 
   return (
-    <main className="w-full bg-white min-h-screen">
-      <div className="max-w-4xl mx-auto px-6 pt-32 pb-40 relative">
+    <main className="w-full bg-white min-h-screen relative overflow-hidden">
+      
+      {/* BACKGROUND GLOWS (Derinlik hissi için eklendi) */}
+      <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
+      <div className="absolute bottom-[20%] left-[-10%] w-[400px] h-[400px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none -z-10 mix-blend-multiply" />
+
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-40 relative z-10">
         <FadeUp>
           <div className="mb-20 space-y-6">
             <div className="flex justify-between items-end">
               <div className="space-y-2">
-                <h1 className="text-4xl md:text-6xl font-medium uppercase tracking-tight text-black leading-none">
+                <h1 className="text-4xl md:text-6xl font-medium uppercase tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-slate-800 to-indigo-900 leading-tight pb-2">
                   {cData.title} <br/>
                   <span className="text-zinc-400 font-light italic">{cData.subtitle}</span>
                 </h1>
-                <p className="text-[10px] text-zinc-400 font-bold tracking-[0.2em] uppercase mt-4">
+                <p className="text-[10px] text-zinc-500 font-bold tracking-[0.2em] uppercase mt-4">
                   {cData.stepInfo} {currentStep + 1} {cData.of} {steps.length + 1} // {cData.tag}
                 </p>
               </div>
             </div>
             
-            {/* Progress Bar */}
-            <div className="h-1 w-full bg-zinc-100 rounded-full overflow-hidden mt-8">
+            {/* Progress Bar (Gradient uygulandı) */}
+            <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden mt-8 shadow-inner">
               <div 
-                className="h-full bg-black transition-all duration-700 ease-out" 
+                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-700 ease-out" 
                 style={{ width: `${((currentStep + 1) / (steps.length + 1)) * 100}%` }}
               />
             </div>
@@ -320,60 +325,31 @@ export default function PriceCalculator() {
                   <p className="text-zinc-500 font-light">{steps[currentStep].subtitle}</p>
                 </div>
 
+                {/* SELECT (TEKLİ SEÇİM) */}
                 {steps[currentStep].type === 'select' && (
                   <div className="grid grid-cols-1 gap-4">
-                    {steps[currentStep].options?.map((opt) => (
-                      <button
-                        key={opt.id}
-                        onClick={() => handleSelect(opt.id, false)}
-                        className={`group p-8 rounded-[24px] border transition-all text-left cursor-none ${
-                          selections[currentStep] === opt.id 
-                          ? 'bg-black text-white border-black shadow-lg' 
-                          : 'bg-white border-zinc-200 text-black hover:border-zinc-300 hover:bg-zinc-50'
-                        }`}
-                      >
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xl font-bold tracking-tight">{opt.label}</span>
-                          <span className="font-mono text-sm opacity-80">
-                            {opt.price === 0 ? cData.included : `+ €${opt.price.toFixed(2)}`}
-                          </span>
-                        </div>
-                        <p className={`text-sm font-light ${selections[currentStep] === opt.id ? 'text-zinc-300' : 'text-zinc-500'}`}>
-                          {opt.description}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {steps[currentStep].type === 'multi-select' && (
-                  <div className="grid grid-cols-1 gap-4">
                     {steps[currentStep].options?.map((opt) => {
-                      const isSelected = (selections[currentStep] || []).includes(opt.id);
+                      const isSelected = selections[currentStep] === opt.id;
                       return (
                         <button
                           key={opt.id}
-                          onClick={() => handleSelect(opt.id, true)}
-                          className={`group p-8 rounded-[24px] border transition-all text-left cursor-none relative overflow-hidden ${
+                          onClick={() => handleSelect(opt.id, false)}
+                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
                             isSelected 
-                            ? 'bg-black text-white border-black shadow-lg' 
-                            : 'bg-white border-zinc-200 text-black hover:border-zinc-300 hover:bg-zinc-50'
+                            ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+                            : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
                           }`}
                         >
-                          <div className="flex justify-between items-center mb-2">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${isSelected ? 'bg-white border-white' : 'border-zinc-300 bg-white'}`}>
-                                {isSelected && <div className="w-2.5 h-2.5 bg-black rounded-sm" />}
-                              </div>
-                              <span className="text-xl font-bold tracking-tight">{opt.label}</span>
-                            </div>
-                            <span className="font-mono text-sm opacity-80">
-                              {opt.monthlyPrice 
-                                ? `€${opt.monthlyPrice.toFixed(2)} / ${cData.monthly}` 
-                                : `+ €${opt.price.toFixed(2)}`}
+                          {/* Seçili karta içten hafif bir ışıltı */}
+                          {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
+
+                          <div className="flex justify-between items-center mb-2 relative z-10">
+                            <span className="text-xl font-bold tracking-tight">{opt.label}</span>
+                            <span className={`font-mono text-sm ${isSelected ? 'text-indigo-300' : 'text-zinc-500 opacity-80'}`}>
+                              {opt.price === 0 ? cData.included : `+ €${opt.price.toFixed(2)}`}
                             </span>
                           </div>
-                          <p className={`text-sm font-light ml-9 ${isSelected ? 'text-zinc-300' : 'text-zinc-500'}`}>
+                          <p className={`text-sm font-light relative z-10 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             {opt.description}
                           </p>
                         </button>
@@ -382,57 +358,109 @@ export default function PriceCalculator() {
                   </div>
                 )}
 
+                {/* MULTI-SELECT (ÇOKLU SEÇİM) */}
+                {steps[currentStep].type === 'multi-select' && (
+                  <div className="grid grid-cols-1 gap-4">
+                    {steps[currentStep].options?.map((opt) => {
+                      const isSelected = (selections[currentStep] || []).includes(opt.id);
+                      return (
+                        <button
+                          key={opt.id}
+                          onClick={() => handleSelect(opt.id, true)}
+                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
+                            isSelected 
+                            ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+                            : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
+                          }`}
+                        >
+                          {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
+
+                          <div className="flex justify-between items-center mb-2 relative z-10">
+                            <div className="flex items-center gap-4">
+                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 bg-white'}`}>
+                                {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
+                              </div>
+                              <span className="text-xl font-bold tracking-tight">{opt.label}</span>
+                            </div>
+                            <span className={`font-mono text-sm ${isSelected ? 'text-indigo-300' : 'text-zinc-500 opacity-80'}`}>
+                              {opt.monthlyPrice 
+                                ? `€${opt.monthlyPrice.toFixed(2)} / ${cData.monthly}` 
+                                : `+ €${opt.price.toFixed(2)}`}
+                            </span>
+                          </div>
+                          <p className={`text-sm font-light ml-9 relative z-10 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                            {opt.description}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {/* STYLE (PALET SEÇİMİ) */}
                 {steps[currentStep].type === 'style' && (
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {stylePalettes.map((p) => (
-                        <button
-                          key={p.name}
-                          onClick={() => handleSelect(p.name, false)}
-                          className={`p-8 rounded-[24px] border transition-all text-left cursor-none ${
-                            selections[currentStep] === p.name 
-                            ? 'bg-black text-white border-black shadow-lg' 
-                            : 'bg-white border-zinc-200 text-black hover:border-zinc-300 hover:bg-zinc-50'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center mb-4">
-                            <span className="font-bold tracking-tight">{p.name}</span>
-                            <div className="flex -space-x-2">
-                              {p.colors.map((c, i) => (
-                                <div key={i} className="w-5 h-5 rounded-full border border-black/10" style={{ backgroundColor: c }} />
-                              ))}
+                      {stylePalettes.map((p) => {
+                        const isSelected = selections[currentStep] === p.name;
+                        return (
+                          <button
+                            key={p.name}
+                            onClick={() => handleSelect(p.name, false)}
+                            className={`p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
+                              isSelected 
+                              ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+                              : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
+                            }`}
+                          >
+                            {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
+                            
+                            <div className="flex justify-between items-center mb-4 relative z-10">
+                              <span className="font-bold tracking-tight">{p.name}</span>
+                              <div className="flex -space-x-2">
+                                {p.colors.map((c, i) => (
+                                  <div key={i} className="w-5 h-5 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: c }} />
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                          <p className={`text-xs font-light ${selections[currentStep] === p.name ? 'text-zinc-300' : 'text-zinc-500'}`}>
-                            {p.desc}
-                          </p>
-                        </button>
-                      ))}
+                            <p className={`text-xs font-light relative z-10 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                              {p.desc}
+                            </p>
+                          </button>
+                        )
+                      })}
                     </div>
 
-                    <div className={`p-8 rounded-[24px] border transition-all ${
+                    {/* CUSTOM PALETTE BÖLÜMÜ */}
+                    <div className={`p-8 rounded-[32px] border transition-all duration-300 relative overflow-hidden ${
                         selections[currentStep]?.startsWith(cData.customPalette) 
-                        ? 'bg-zinc-50 border-zinc-300 text-black shadow-inner' 
-                        : 'bg-zinc-50 border-zinc-200 text-black'
+                        ? 'bg-zinc-950 border-zinc-800 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+                        : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black'
                       }`}
                     >
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                      {selections[currentStep]?.startsWith(cData.customPalette) && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
+
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 relative z-10">
                         <div className="space-y-1">
                           <h4 className="text-sm font-bold tracking-tight">{cData.builderTitle}</h4>
-                          <p className="text-xs text-zinc-500 font-light">{cData.builderDesc}</p>
+                          <p className={`text-xs font-light ${selections[currentStep]?.startsWith(cData.customPalette) ? 'text-zinc-400' : 'text-zinc-500'}`}>{cData.builderDesc}</p>
                         </div>
                         <button 
                           onClick={handleRandomPalette}
-                          className="px-4 py-2 bg-white border border-zinc-200 hover:border-black text-black text-[10px] font-bold uppercase tracking-widest rounded-full transition-all cursor-none"
+                          className={`px-4 py-2 border text-[10px] font-bold uppercase tracking-widest rounded-full transition-all cursor-none ${
+                            selections[currentStep]?.startsWith(cData.customPalette)
+                            ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+                            : 'bg-white border-zinc-200 text-black hover:border-black'
+                          }`}
                         >
                           {cData.shuffleColors}
                         </button>
                       </div>
 
-                      <div className="flex gap-4 mb-8">
+                      <div className="flex gap-4 mb-8 relative z-10">
                         {customColors.map((color, index) => (
                           <div key={index} className="flex-1 flex flex-col gap-2">
-                            <div className="relative h-20 w-full rounded-2xl border border-zinc-200 overflow-hidden group">
+                            <div className="relative h-20 w-full rounded-2xl border border-zinc-200/50 overflow-hidden shadow-sm">
                               <input 
                                 type="color" 
                                 value={color}
@@ -440,7 +468,7 @@ export default function PriceCalculator() {
                                 className="absolute -inset-2 w-[200%] h-[200%] cursor-none"
                               />
                             </div>
-                            <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-widest text-center">
+                            <span className={`text-[10px] font-mono uppercase tracking-widest text-center ${selections[currentStep]?.startsWith(cData.customPalette) ? 'text-zinc-400' : 'text-zinc-500'}`}>
                               {color}
                             </span>
                           </div>
@@ -449,10 +477,10 @@ export default function PriceCalculator() {
 
                       <button
                         onClick={() => handleSelect(`${cData.customPalette}: ${customColors.join(' | ')}`, false)}
-                        className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 ${
+                        className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 relative z-10 ${
                           selections[currentStep]?.startsWith(cData.customPalette)
-                          ? 'bg-black text-white shadow-lg' 
-                          : 'bg-white border border-zinc-200 text-black hover:border-black'
+                          ? 'bg-white text-black shadow-lg hover:bg-zinc-200' 
+                          : 'bg-white border border-zinc-200 text-black hover:border-indigo-300'
                         }`}
                       >
                         {selections[currentStep]?.startsWith(cData.customPalette) ? `✓ ${cData.paletteSelected}` : cData.applyPalette}
@@ -461,34 +489,39 @@ export default function PriceCalculator() {
                   </div>
                 )}
 
+                {/* TEXT (VİZYON GİRİŞİ) */}
                 {steps[currentStep].type === 'text' && (
                   <textarea
                     value={selections[currentStep] || ""}
                     onChange={(e) => handleSelect(e.target.value, false)}
                     placeholder={cData.textPlaceholder}
-                    className="w-full h-64 bg-zinc-50 border border-zinc-200 rounded-[32px] p-10 text-black focus:outline-none focus:border-black transition-all cursor-none resize-none font-light leading-relaxed placeholder:text-zinc-400"
+                    className="w-full h-64 bg-white/60 backdrop-blur-xl border border-zinc-200/60 shadow-sm rounded-[32px] p-10 text-black focus:outline-none focus:border-indigo-300 transition-all cursor-none resize-none font-light leading-relaxed placeholder:text-zinc-400 hover:bg-white"
                   />
                 )}
               </div>
             </FadeUp>
           ) : (
+            // FİNAL TAHMİN VE FORM EKRANI
             <FadeUp>
-              <div className="p-12 md:p-20 rounded-[48px] bg-zinc-50 border border-zinc-100 text-center space-y-12 shadow-sm relative overflow-hidden">
+              <div className="p-12 md:p-20 rounded-[48px] bg-white/60 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center space-y-12 relative overflow-hidden">
+                {/* Final ekranına içten premium bir ışık */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none -z-10" />
+
                 <div className="space-y-4 relative z-10">
                   <h2 className="text-3xl font-medium text-black tracking-tight italic">{cData.estimateGen}</h2>
-                  <div className="h-px w-20 bg-zinc-200 mx-auto" />
+                  <div className="h-px w-20 bg-indigo-200 mx-auto" />
                 </div>
 
                 <div className="space-y-2 relative z-10">
                   <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold">{cData.totalInv}</span>
-                  <div className="text-7xl md:text-[8rem] font-medium text-black tracking-tighter leading-none">
+                  <div className="text-7xl md:text-[8rem] font-medium tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-600">
                     €{upfront.toFixed(2)}
                   </div>
                 </div>
 
                 {monthly > 0 && (
-                  <div className="inline-block px-8 py-4 rounded-3xl bg-white border border-zinc-200 relative z-10 shadow-sm">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-[0.2em] block mb-1 font-bold">{cData.recurringLabel}</span>
+                  <div className="inline-block px-8 py-4 rounded-3xl bg-white border border-zinc-100 shadow-sm relative z-10">
+                    <span className="text-[10px] text-indigo-400 uppercase tracking-[0.2em] block mb-1 font-bold">{cData.recurringLabel}</span>
                     <div className="text-2xl font-mono text-black tracking-tight font-medium">
                       + €{monthly.toFixed(2)} <span className="text-sm text-zinc-400 font-sans">/ {cData.month}</span>
                     </div>
@@ -503,7 +536,7 @@ export default function PriceCalculator() {
                         type="text" 
                         value={clientInfo.name}
                         onChange={(e) => setClientInfo({...clientInfo, name: e.target.value})}
-                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
+                        className="w-full bg-white/80 backdrop-blur-sm border border-zinc-200 shadow-sm rounded-[20px] px-6 py-4 text-black text-sm focus:border-indigo-900/30 transition-colors outline-none cursor-none"
                         placeholder={cData.formNamePlace}
                       />
                     </div>
@@ -513,7 +546,7 @@ export default function PriceCalculator() {
                         type="text" 
                         value={clientInfo.company}
                         onChange={(e) => setClientInfo({...clientInfo, company: e.target.value})}
-                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
+                        className="w-full bg-white/80 backdrop-blur-sm border border-zinc-200 shadow-sm rounded-[20px] px-6 py-4 text-black text-sm focus:border-indigo-900/30 transition-colors outline-none cursor-none"
                         placeholder={cData.formCompanyPlace}
                       />
                     </div>
@@ -523,7 +556,7 @@ export default function PriceCalculator() {
                         type="email" 
                         value={clientInfo.email}
                         onChange={(e) => setClientInfo({...clientInfo, email: e.target.value})}
-                        className="w-full bg-white border border-zinc-200 rounded-2xl px-5 py-4 text-black focus:border-black outline-none cursor-none transition-colors"
+                        className="w-full bg-white/80 backdrop-blur-sm border border-zinc-200 shadow-sm rounded-[20px] px-6 py-4 text-black text-sm focus:border-indigo-900/30 transition-colors outline-none cursor-none"
                         placeholder={cData.formEmailPlace}
                       />
                     </div>
@@ -531,7 +564,7 @@ export default function PriceCalculator() {
                       <button 
                         disabled={!clientInfo.name || !clientInfo.email || isGenerating}
                         onClick={handleGenerateDocument}
-                        className="w-full py-6 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-zinc-800 transition-all cursor-none shadow-lg disabled:opacity-50"
+                        className="w-full py-6 bg-gradient-to-r from-zinc-900 to-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:shadow-lg hover:shadow-indigo-900/20 transition-all cursor-none disabled:opacity-50"
                       >
                         {isGenerating ? cData.btnSending : cData.btnSend}
                       </button>
@@ -542,7 +575,10 @@ export default function PriceCalculator() {
                   </div>
                 ) : (
                   <div className="max-w-md mx-auto pt-8 relative z-10">
-                    <div className="p-8 rounded-[32px] bg-white border border-zinc-200 shadow-sm">
+                    <div className="p-10 rounded-[32px] bg-white border border-zinc-100 shadow-sm">
+                      <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                      </div>
                       <h3 className="text-xl font-bold text-black mb-2">{cData.successTitle}</h3>
                       <p className="text-zinc-500 text-sm leading-relaxed">{cData.successDesc}</p>
                     </div>
@@ -553,7 +589,8 @@ export default function PriceCalculator() {
           )}
         </div>
 
-        <div className="mt-24 flex justify-between items-center border-t border-zinc-100 pt-12">
+        {/* ALT BUTONLAR (Önceki / Devam Et) */}
+        <div className="mt-24 flex justify-between items-center border-t border-zinc-100 pt-12 relative z-10">
           <button
             onClick={prevStep}
             disabled={currentStep === 0 || currentStep === steps.length}
@@ -567,7 +604,9 @@ export default function PriceCalculator() {
               onClick={nextStep}
               disabled={!isStepValid()}
               className={`px-12 py-5 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all cursor-none ${
-                isStepValid() ? 'bg-black text-white hover:bg-zinc-800 shadow-lg' : 'bg-zinc-100 text-zinc-400'
+                isStepValid() 
+                ? 'bg-gradient-to-r from-zinc-900 to-black text-white hover:shadow-lg hover:shadow-indigo-900/20' 
+                : 'bg-zinc-100 text-zinc-400'
               }`}
             >
               {currentStep === steps.length - 1 ? cData.btnFinish : cData.btnNext}

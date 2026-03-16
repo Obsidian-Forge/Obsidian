@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-// Hata veren satırı relative path ile düzelttik
 import { useLanguage } from '../../context/LanguageContext';
 
 const CustomCursor = () => {
@@ -77,8 +76,8 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-white text-black font-sans flex flex-col relative">
       <CustomCursor />
 
-      {/* HEADER */}
-      <header className="sticky top-0 w-full z-[100] bg-white">
+      {/* HEADER - Arka planı blurred yapıldı */}
+      <header className="sticky top-0 w-full z-[100] bg-white/80 backdrop-blur-md">
         <div className="w-full px-6 md:px-16 h-20 md:h-24 flex items-center justify-between relative border-b-0">
           
           <Link href="/" className="flex items-center gap-4 group relative z-[110]" onClick={() => setIsOpen(false)}>
