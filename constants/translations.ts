@@ -16,7 +16,6 @@ export const translations = {
       frontend: { title: "Frontend Development", desc: "Fast, responsive interfaces built with React and Tailwind CSS. Designed for optimal user experience." },
       fullstack: { title: "Fullstack Systems", desc: "Robust architecture using Next.js. Secure, scalable, and easy to maintain." }
     },
-    // ANASAYFA İÇİN PROCESS
     process: {
       title: "How I work.",
       subtitle: "A simple, effective development process.",
@@ -57,10 +56,10 @@ export const translations = {
     terms: {
       title: "Project",
       subtitle: "Guidelines.",
-      tag: "Website Development Rules // Obsidian",
+      tag: "Website Development Rules // Novatrum",
       lastUpdated: "Last Updated: March 2026",
       sec1Title: "01. Originality & Anti-Clone",
-      sec1Desc: "This website's design, layout, and unique animations are the original work of Obsidian.",
+      sec1Desc: "This website's design, layout, and unique animations are the original work of Novatrum.",
       sec1Notice: "Notice: Cloning this site’s specific visual identity or copying its structure for your own commercial use is strictly prohibited.",
       sec2Title: "02. Website Standards",
       sec2Desc: "We focus exclusively on building high-performance, modern websites. To maintain our quality, we follow these simple rules:",
@@ -90,7 +89,7 @@ export const translations = {
     privacy: {
       title: "Zero Data",
       subtitle: "Focus.",
-      tag: "Privacy First // Obsidian",
+      tag: "Privacy First // Novatrum",
       lastUpdated: "Last Updated: March 2026",
       intro: "We respect your privacy and are committed to protecting your personal data.",
       sec1Title: "01. No Personal Data",
@@ -112,7 +111,7 @@ export const translations = {
       title: "Start the",
       subtitle: "Dialogue.",
       desc: "Have a project in mind? I'm ready to help you build the next generation of digital products with precision and scale.",
-      studioName: "Obsidian Studio",
+      studioName: "Novatrum Studio",
       studioLoc: "Based in Dilbeek, Belgium",
       studioOper: "Global Operations // Remote-First",
       roadmapTitle: "The Next Steps",
@@ -181,7 +180,7 @@ export const translations = {
       emailRecurring: "Recurring Services:",
       emailTotal: "Total Estimated Investment",
       emailVat: "Prices exclude VAT where applicable.",
-      emailGenerated: "Generated via Obsidian Engine. Not a final legal contract.",
+      emailGenerated: "Generated via Novatrum Engine. Not a final legal contract.",
       stepsData: [
         {
           title: "Base Architecture",
@@ -237,13 +236,12 @@ export const translations = {
         { title: "The Vision", subtitle: "Tell me more about your specific needs or references." }
       ],
       palettes: [
-        { name: "Obsidian Dark", desc: "The signature look. Deep, premium, and bold." },
+        { name: "Novatrum Dark", desc: "The signature look. Deep, premium, and bold." },
         { name: "Nordic Clean", desc: "Airy, minimalist, and focuses on typography." },
         { name: "Midnight Tech", desc: "Modern blue tones for tech-focused startups." },
         { name: "Industrial Gold", desc: "High-contrast with elegant golden accents." }
       ]
     },
-    // AYRI OLAN PROCESS SAYFASI
     processPage: {
       title: "How I",
       subtitle: "Work.",
@@ -316,10 +314,10 @@ export const translations = {
     terms: {
       title: "Project",
       subtitle: "Richtlijnen.",
-      tag: "Website Ontwikkelingsregels // Obsidian",
+      tag: "Website Ontwikkelingsregels // Novatrum",
       lastUpdated: "Laatst bijgewerkt: Maart 2026",
       sec1Title: "01. Originaliteit & Anti-Kloon",
-      sec1Desc: "Het ontwerp en de unieke animaties van deze website zijn het originele werk van Obsidian.",
+      sec1Desc: "Het ontwerp en de unieke animaties van deze website zijn het originele werk van Novatrum.",
       sec1Notice: "Let op: Het kopiëren van de specifieke visuele identiteit van deze site is ten strengste verboden.",
       sec2Title: "02. Website Standaarden",
       sec2Desc: "Wij focussen ons uitsluitend op het bouwen van hoogwaardige, moderne websites.",
@@ -349,7 +347,7 @@ export const translations = {
     privacy: {
       title: "Zero Data",
       subtitle: "Focus.",
-      tag: "Privacy First // Obsidian",
+      tag: "Privacy First // Novatrum",
       lastUpdated: "Laatst bijgewerkt: Maart 2026",
       intro: "Wij respecteren uw privacy en doen er alles aan om uw persoonlijke gegevens te beschermen.",
       sec1Title: "01. Geen Persoonlijke Gegevens",
@@ -371,7 +369,7 @@ export const translations = {
       title: "Start de",
       subtitle: "Dialoog.",
       desc: "Heb je een project in gedachten? Ik ben klaar om je te helpen de volgende generatie digitale producten te bouwen.",
-      studioName: "Obsidian Studio",
+      studioName: "Novatrum Studio",
       studioLoc: "Gevestigd in Dilbeek, België",
       studioOper: "Wereldwijde Operaties // Remote-First",
       roadmapTitle: "De Volgende Stappen",
@@ -440,7 +438,7 @@ export const translations = {
       emailRecurring: "Terugkerende diensten:",
       emailTotal: "Totale Geschatte Investering",
       emailVat: "Prijzen zijn exclusief BTW waar van toepassing.",
-      emailGenerated: "Gegenereerd via Obsidian Engine. Geen definitief juridisch contract.",
+      emailGenerated: "Gegenereerd via Novatrum Engine. Geen definitief juridisch contract.",
       stepsData: [
         {
           title: "Basis Architectuur",
@@ -496,7 +494,7 @@ export const translations = {
         { title: "De Visie", subtitle: "Vertel me meer over je specifieke behoeften of referenties." }
       ],
       palettes: [
-        { name: "Obsidian Dark", desc: "De kenmerkende look. Diep, premium en gedurfd." },
+        { name: "Novatrum Dark", desc: "De kenmerkende look. Diep, premium en gedurfd." },
         { name: "Nordic Clean", desc: "Luchtig, minimalistisch en gericht op typografie." },
         { name: "Midnight Tech", desc: "Moderne blauwe tinten voor tech-startups." },
         { name: "Industrial Gold", desc: "Hoog contrast met elegante gouden accenten." }
@@ -574,10 +572,10 @@ export const translations = {
     terms: {
       title: "Directives",
       subtitle: "de Projet.",
-      tag: "Règles de Développement Web // Obsidian",
+      tag: "Règles de Développement Web // Novatrum",
       lastUpdated: "Dernière mise à jour : Mars 2026",
       sec1Title: "01. Originalité & Anti-Clone",
-      sec1Desc: "Le design et les animations uniques de ce site sont l'œuvre originale d'Obsidian.",
+      sec1Desc: "Le design et les animations uniques de ce site sont l'œuvre originale de Novatrum.",
       sec1Notice: "Avis : Le clonage de l'identité visuelle de ce site est strictement interdit.",
       sec2Title: "02. Standards du Site Web",
       sec2Desc: "Nous nous concentrons exclusivement sur la création de sites web modernes.",
@@ -607,7 +605,7 @@ export const translations = {
     privacy: {
       title: "Zéro Donnée",
       subtitle: "Focus.",
-      tag: "Priorité à la confidentialité // Obsidian",
+      tag: "Priorité à la confidentialité // Novatrum",
       lastUpdated: "Dernière mise à jour : Mars 2026",
       intro: "Nous respectons votre vie privée et sommes déterminés à protéger vos données personnelles.",
       sec1Title: "01. Aucune donnée personnelle",
@@ -629,7 +627,7 @@ export const translations = {
       title: "Commencer le",
       subtitle: "Dialogue.",
       desc: "Vous avez un projet en tête ? Je suis prêt à vous aider à créer la prochaine génération de produits digitaux.",
-      studioName: "Obsidian Studio",
+      studioName: "Novatrum Studio",
       studioLoc: "Basé à Dilbeek, Belgique",
       studioOper: "Opérations Mondiales // Remote-First",
       roadmapTitle: "Les Prochaines Étapes",
@@ -698,7 +696,7 @@ export const translations = {
       emailRecurring: "Services récurrents :",
       emailTotal: "Investissement Total Estimé",
       emailVat: "Les prix s'entendent hors TVA où applicable.",
-      emailGenerated: "Généré via Obsidian Engine. Ceci n'est pas un contrat légal.",
+      emailGenerated: "Généré via Novatrum Engine. Ceci n'est pas un contrat légal.",
       stepsData: [
         {
           title: "Architecture de base",
@@ -754,7 +752,7 @@ export const translations = {
         { title: "La Vision", subtitle: "Dites-m'en plus sur vos besoins spécifiques ou références." }
       ],
       palettes: [
-        { name: "Obsidian Dark", desc: "Le look signature. Profond, premium et audacieux." },
+        { name: "Novatrum Dark", desc: "Le look signature. Profond, premium et audacieux." },
         { name: "Nordic Clean", desc: "Aéré, minimaliste et axé sur la typographie." },
         { name: "Midnight Tech", desc: "Tons bleus modernes pour les startups axées sur la technologie." },
         { name: "Industrial Gold", desc: "Contraste élevé avec des accents dorés élégants." }
@@ -832,10 +830,10 @@ export const translations = {
     terms: {
       title: "Proje",
       subtitle: "Kuralları.",
-      tag: "Web Sitesi Geliştirme Kuralları // Obsidian",
+      tag: "Web Sitesi Geliştirme Kuralları // Novatrum",
       lastUpdated: "Son Güncelleme: Mart 2026",
       sec1Title: "01. Özgünlük ve Klonlama Yasağı",
-      sec1Desc: "Bu web sitesinin tasarımı Obsidian'ın özgün çalışmasıdır.",
+      sec1Desc: "Bu web sitesinin tasarımı Novatrum'un özgün çalışmasıdır.",
       sec1Notice: "Not: Bu sitenin görsel kimliğini kopyalamak kesinlikle yasaktır.",
       sec2Title: "02. Web Sitesi Standartları",
       sec2Desc: "Sadece yüksek performanslı web siteleri oluşturmaya odaklanıyoruz.",
@@ -865,7 +863,7 @@ export const translations = {
     privacy: {
       title: "Sıfır Veri",
       subtitle: "Odaklı.",
-      tag: "Önce Gizlilik // Obsidian",
+      tag: "Önce Gizlilik // Novatrum",
       lastUpdated: "Son Güncelleme: Mart 2026",
       intro: "Gizliliğinize saygı duyuyor ve kişisel verilerinizi korumayı taahhüt ediyoruz.",
       sec1Title: "01. Kişisel Veri Yok",
@@ -887,7 +885,7 @@ export const translations = {
       title: "Diyaloğu",
       subtitle: "Başlat.",
       desc: "Aklınızda bir proje mi var? Yeni nesil dijital ürünleri hassasiyetle inşa etmenize yardımcı olmaya hazırım.",
-      studioName: "Obsidian Studio",
+      studioName: "Novatrum Studio",
       studioLoc: "Dilbeek, Belçika Merkezli",
       studioOper: "Küresel Operasyonlar // Uzaktan Çalışma",
       roadmapTitle: "Sonraki Adımlar",
@@ -956,7 +954,7 @@ export const translations = {
       emailRecurring: "Tekrarlayan Hizmetler:",
       emailTotal: "Tahmini Toplam Yatırım",
       emailVat: "Fiyatlara uygun olan yerlerde KDV dahil değildir.",
-      emailGenerated: "Obsidian Engine üzerinden oluşturulmuştur. Nihai bir yasal sözleşme değildir.",
+      emailGenerated: "Novatrum Engine üzerinden oluşturulmuştur. Nihai bir yasal sözleşme değildir.",
       stepsData: [
         {
           title: "Temel Mimari",
@@ -1012,7 +1010,7 @@ export const translations = {
         { title: "Vizyon", subtitle: "Bana özel ihtiyaçlarınızdan veya referanslarınızdan bahsedin." }
       ],
       palettes: [
-        { name: "Obsidian Dark", desc: "İmza görünüm. Derin, premium ve cesur." },
+        { name: "Novatrum Dark", desc: "İmza görünüm. Derin, premium ve cesur." },
         { name: "Nordic Clean", desc: "Havadar, minimalist ve tipografiye odaklı." },
         { name: "Midnight Tech", desc: "Teknoloji odaklı girişimler için modern mavi tonlar." },
         { name: "Industrial Gold", desc: "Zarif altın vurgularla yüksek kontrast." }
@@ -1050,7 +1048,6 @@ export const translations = {
       frontend: { title: "프론트엔드 개발", desc: "React 및 Tailwind CSS로 제작된 인터페이스." },
       fullstack: { title: "풀스택 시스템", desc: "Next.js를 사용한 견고한 아키텍처." }
     },
-    // ANASAYFA İÇİN PROCESS
     process: {
       title: "협업 방식.",
       subtitle: "단순하고 효과적인 개발 프로세스.",
@@ -1091,10 +1088,10 @@ export const translations = {
     terms: {
       title: "프로젝트",
       subtitle: "지침.",
-      tag: "웹사이트 개발 규칙 // Obsidian",
+      tag: "웹사이트 개발 규칙 // Novatrum",
       lastUpdated: "최종 업데이트: 2026년 3월",
       sec1Title: "01. 독창성 및 복제 금지",
-      sec1Desc: "이 웹사이트의 디자인은 Obsidian의 독창적인 작업물입니다.",
+      sec1Desc: "이 웹사이트의 디자인은 Novatrum의 독창적인 작업물입니다.",
       sec1Notice: "주의: 이 사이트의 시각적 정체성을 복제하는 것은 엄격히 금지됩니다.",
       sec2Title: "02. 웹사이트 표준",
       sec2Desc: "우리는 고성능 현대식 웹사이트 구축에만 집중합니다.",
@@ -1124,7 +1121,7 @@ export const translations = {
     privacy: {
       title: "제로 데이터",
       subtitle: "포커스.",
-      tag: "개인정보 최우선 // Obsidian",
+      tag: "개인정보 최우선 // Novatrum",
       lastUpdated: "최종 업데이트: 2026년 3월",
       intro: "당사는 귀하의 개인정보를 존중하고 개인 데이터를 보호하기 위해 최선을 다하고 있습니다.",
       sec1Title: "01. 개인 데이터 없음",
@@ -1146,7 +1143,7 @@ export const translations = {
       title: "대화",
       subtitle: "시작하기.",
       desc: "염두에 둔 프로젝트가 있으신가요? 차세대 디지털 제품을 구축할 수 있도록 도와드릴 준비가 되어 있습니다.",
-      studioName: "Obsidian Studio",
+      studioName: "Novatrum Studio",
       studioLoc: "벨기에 딜베크 기반",
       studioOper: "글로벌 운영 // 원격 근무 우선",
       roadmapTitle: "다음 단계",
@@ -1215,7 +1212,7 @@ export const translations = {
       emailRecurring: "반복 서비스:",
       emailTotal: "총 예상 투자액",
       emailVat: "해당되는 경우 VAT 별도 가격입니다.",
-      emailGenerated: "Obsidian Engine을 통해 생성되었습니다. 최종 법적 계약이 아닙니다.",
+      emailGenerated: "Novatrum Engine을 통해 생성되었습니다. 최종 법적 계약이 아닙니다.",
       stepsData: [
         {
           title: "기본 아키텍처",
@@ -1271,13 +1268,12 @@ export const translations = {
         { title: "비전", subtitle: "특정 요구 사항이나 참조 사항에 대해 자세히 알려주세요." }
       ],
       palettes: [
-        { name: "Obsidian Dark", desc: "시그니처 룩. 깊고, 프리미엄하며, 대담합니다." },
+        { name: "Novatrum Dark", desc: "시그니처 룩. 깊고, 프리미엄하며, 대담합니다." },
         { name: "Nordic Clean", desc: "가볍고 미니멀하며 타이포그래피에 중점을 둡니다." },
         { name: "Midnight Tech", desc: "기술 중심 스타트업을 위한 현대적인 블루 톤." },
         { name: "Industrial Gold", desc: "우아한 골드 포인트와 높은 대비." }
       ]
     },
-    // AYRI OLAN PROCESS SAYFASI
     processPage: {
       title: "나의",
       subtitle: "작업 방식.",

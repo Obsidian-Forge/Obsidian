@@ -47,12 +47,6 @@ const CustomCursor = () => {
   );
 };
 
-const ObsidianLogo = () => (
-  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
-    <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" />
-  </svg>
-);
-
 export default function SharedLayout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
@@ -76,16 +70,17 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     <div className="min-h-screen bg-white text-black font-sans flex flex-col relative">
       <CustomCursor />
 
-      {/* HEADER - Arka planı blurred yapıldı */}
+      {/* HEADER */}
       <header className="sticky top-0 w-full z-[100] bg-white/80 backdrop-blur-md">
         <div className="w-full px-6 md:px-16 h-20 md:h-24 flex items-center justify-between relative border-b-0">
           
-          <Link href="/" className="flex items-center gap-4 group relative z-[110]" onClick={() => setIsOpen(false)}>
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center transition-transform group-hover:scale-95 shadow-sm">
-               <ObsidianLogo />
+          <Link href="/" className="flex items-center gap-3 group relative z-[110]" onClick={() => setIsOpen(false)}>
+            <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-95">
+               {/* Doğru yol: /logo.png */}
+               <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase leading-none mt-0.5">
-              Obsidian
+              Novatrum
             </span>
           </Link>
 
@@ -164,20 +159,20 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
       <footer className="w-full bg-white py-16 px-6 md:px-16 mt-12 border-t border-zinc-100/50">
         <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="flex flex-col gap-4">
-             <div className="flex items-center gap-4">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center shadow-sm">
-                <ObsidianLogo />
+             <div className="flex items-center gap-3">
+              <div className="w-7 h-7 flex items-center justify-center">
+                {/* Doğru yol: /logo.png */}
+                <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase leading-none mt-0.5">
-                Obsidian
+                Novatrum
               </span>
              </div>
              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-               &copy; {new Date().getFullYear()} Obsidian. {t.footer.rights} <br/> 
+               &copy; {new Date().getFullYear()} Novatrum. {t.footer.rights} <br/> 
                {t.footer.builtIn}
              </p>
              
-             {/* Yasal Linkler */}
              <div className="flex items-center gap-4 mt-2">
                <Link href="/terms" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
                  {t.nav.terms}
@@ -205,7 +200,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
              </div>
 
              <div className="flex gap-8">
-                <a href="https://www.linkedin.com/company/obsidian-be/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
+                <a href="https://www.linkedin.com/company/novatrum/about/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
              </div>
           </div>
         </div>

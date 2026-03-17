@@ -224,19 +224,19 @@ export default function PriceCalculator() {
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
           <div style="background-color: #000000; padding: 40px 30px; text-align: center;">
             <img 
-              src="https://i.postimg.cc/NMqsRc9X/duotone.png" 
-              alt="Obsidian" 
+              src="https://novatrum.eu/logo-white.png" 
+              alt="Novatrum" 
               width="45" 
               height="45" 
               style="display: block; margin: 0 auto 16px auto; width: 45px !important; height: 45px !important; border: 0; outline: none; text-decoration: none;" 
             />
-            <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #ffffff; text-transform: uppercase; font-style: italic; letter-spacing: 2px;">OBSIDIAN</h1>
+            <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #ffffff; text-transform: uppercase; font-style: italic; letter-spacing: 2px;">NOVATRUM</h1>
             <p style="margin: 10px 0 0 0; color: #888888; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-family: monospace;">${cData.emailSubject}</p>
           </div>
           
           <div style="padding: 40px 30px;">
             <p style="margin: 0 0 5px 0; font-size: 16px; color: #000000;">Hello <strong>${clientInfo.name}</strong>,</p>
-            <p style="margin: 0 0 30px 0; font-size: 14px; color: #666666; line-height: 1.6;">Thank you for using the Obsidian Configurator. Below is the detailed estimate for <strong>${clientInfo.company || 'your project'}</strong>.</p>
+            <p style="margin: 0 0 30px 0; font-size: 14px; color: #666666; line-height: 1.6;">Thank you for using the Configurator. Below is the detailed estimate for <strong>${clientInfo.company || 'your project'}</strong>.</p>
             
             <h2 style="margin: 0 0 15px 0; font-size: 14px; color: #000000; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #000000; padding-bottom: 10px;">${cData.emailScope}</h2>
             
@@ -255,8 +255,8 @@ export default function PriceCalculator() {
           </div>
           
           <div style="background-color: #fafafa; padding: 20px; text-align: center; border-top: 1px solid #eaeaea;">
-            <p style="margin: 0; font-size: 12px; color: #000000; font-weight: bold;">Obsidian Studio</p>
-            <p style="margin: 5px 0 0 0; font-size: 12px; color: #888888;">Dilbeek, Belgium • obsidian.studio.hq@gmail.com</p>
+            <p style="margin: 0; font-size: 12px; color: #000000; font-weight: bold;">Novatrum Studio</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: #888888;">Dilbeek, Belgium • info@novatrum.eu</p>
             <p style="margin: 15px 0 0 0; font-size: 10px; color: #bbbbbb; text-transform: uppercase; letter-spacing: 1px; font-family: monospace;">${cData.emailGenerated}</p>
           </div>
         </div>
@@ -269,10 +269,10 @@ export default function PriceCalculator() {
       };
 
       await emailjs.send(
-        'service_ra7x10v',   
-        'template_ucd79qi',  
+        'service_lzn6bze',   
+        'template_f33ua3k',  
         templateParams,
-        'gKoFLF4zfxzIxyQ8F'
+        'rsgJ9I_OVOHvHyewq'
       );
 
       setIsSuccess(true);

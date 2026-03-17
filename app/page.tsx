@@ -28,13 +28,21 @@ export default function HomePage() {
     setIsSubmitting(true);
 
     const formData = new FormData(event.currentTarget);
-    formData.append("access_key", "0ca2b8a6-eeb6-4866-841b-ac00ee601416");
-    formData.append("subject", "New Inquiry from Obsidian Homepage");
+    const object = Object.fromEntries(formData);
+    object.access_key = "0ca2b8a6-eeb6-4866-841b-ac00ee601416";
+    object.subject = "New Inquiry from Novatrum Homepage";
+    object.from_name = "Novatrum Studio";
+
+    const json = JSON.stringify(object);
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        body: formData
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: json
       });
 
       if (response.ok) {
@@ -53,11 +61,10 @@ export default function HomePage() {
   return (
     <div className="w-full bg-white selection:bg-black/10 pb-20">
       
-      {/* 1. HERO BANNER SECTION (Referans Görseldeki Gibi İçeride Rounded Banner) */}
+      {/* 1. HERO BANNER SECTION */}
       <section className="px-4 md:px-8 pt-4 md:pt-8">
         <div className="relative w-full min-h-[85vh] rounded-[40px] md:rounded-[60px] bg-zinc-950 overflow-hidden flex flex-col items-center justify-center text-center px-6 py-20 shadow-2xl">
           
-          {/* Obsidian Konseptli Koyu/Mor Arka Plan Efekti */}
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-overlay"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent"></div>
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/30 rounded-full blur-[120px] pointer-events-none" />
@@ -85,7 +92,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* TECH STACK LOGOS (Logo Ribbon) */}
+      {/* TECH STACK LOGOS */}
       <section className="max-w-7xl mx-auto px-6 py-16">
         <p className="text-center text-[10px] text-zinc-400 uppercase tracking-widest mb-8">{t.tech.tag}</p>
         <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale font-bold text-xl md:text-2xl tracking-tighter text-black">
@@ -97,7 +104,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. WHAT IS USD BLOOM KISMINA BENZEYEN SERVICES SECTION */}
+      {/* 2. SERVICES SECTION */}
       <section id="services" className="max-w-7xl mx-auto px-6 py-20">
         <motion.div variants={fadeUpVariant} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}>
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 mb-12 items-end">
@@ -106,7 +113,6 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Geniş, Açık Renk Gradient Kart */}
             <div className="lg:col-span-3 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-[40px] p-10 md:p-14 relative overflow-hidden group h-[400px] flex flex-col justify-between">
               <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-300 rounded-full blur-3xl opacity-30 transition-opacity duration-700 group-hover:opacity-60" />
               <div>
@@ -116,7 +122,6 @@ export default function HomePage() {
               <p className="text-zinc-600 font-light leading-relaxed max-w-sm relative z-10">{t.services.frontend.desc}</p>
             </div>
             
-            {/* Dar, Koyu Obsidian Kart */}
             <div className="lg:col-span-2 bg-zinc-950 rounded-[40px] p-10 md:p-14 relative overflow-hidden group h-[400px] flex flex-col justify-between">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20 transition-opacity duration-700 group-hover:opacity-40" />
               <div>
@@ -129,7 +134,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* 3. PROCESS SECTION (3'lü Bento Grid) */}
+      {/* 3. PROCESS SECTION */}
       <section className="max-w-7xl mx-auto px-6 py-20">
         <motion.div variants={fadeUpVariant} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -146,7 +151,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* 4. USE CASES BENZERİ CALCULATOR CTA SECTION */}
+      {/* 4. CALCULATOR CTA SECTION */}
       <section className="max-w-7xl mx-auto px-6 py-32">
         <motion.div variants={fadeUpVariant} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}>
           <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
@@ -180,36 +185,62 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* 5. CONTACT FORM (Sadeleştirilmiş Bento Kart) */}
-      <section className="max-w-4xl mx-auto px-6 py-20">
+      {/* 5. CONTACT FORM (Karanlık Banner Tasarımı) */}
+      <section className="max-w-4xl mx-auto px-6 py-20 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
+
         <motion.div variants={fadeUpVariant} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }}>
-          <div className="bg-zinc-50 border border-zinc-100 rounded-[40px] p-10 md:p-16">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-black">{t.contact.title}</h2>
-              <p className="text-zinc-500 mt-4 font-light">{t.contact.subtitle}</p>
+          <div className="p-10 md:p-16 rounded-[40px] bg-zinc-950 shadow-2xl min-h-[500px] flex flex-col justify-center relative overflow-hidden group">
+            
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay transition-opacity duration-1000 group-hover:opacity-40"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-600/40 rounded-full blur-[100px] pointer-events-none opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+
+            <div className="text-center mb-12 relative z-10">
+              <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-white">{t.contact.title}</h2>
+              <p className="text-zinc-400 mt-4 font-light">{t.contact.subtitle}</p>
             </div>
 
             {!isSuccess ? (
-              <form onSubmit={handleSubmit} className="space-y-6" suppressHydrationWarning>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <input type="text" name="name" placeholder={t.contact.namePlaceholder} required className="w-full bg-white border border-zinc-200 shadow-sm rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors" suppressHydrationWarning />
-                  <input type="email" name="email" placeholder={t.contact.emailPlaceholder} required className="w-full bg-white border border-zinc-200 shadow-sm rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors" suppressHydrationWarning />
+              <form onSubmit={handleSubmit} className="space-y-8 relative z-10" suppressHydrationWarning>
+                
+                <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3 text-left">
+                    <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{t.contact.namePlaceholder}</label>
+                    <input type="text" name="name" required placeholder={t.contact.namePlaceholder} className="w-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm rounded-[24px] px-6 py-4 text-white text-sm focus:border-indigo-400 transition-all outline-none placeholder:text-zinc-500" suppressHydrationWarning />
+                  </div>
+                  <div className="space-y-3 text-left">
+                    <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{t.contact.emailPlaceholder}</label>
+                    <input type="email" name="email" required placeholder={t.contact.emailPlaceholder} className="w-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm rounded-[24px] px-6 py-4 text-white text-sm focus:border-indigo-400 transition-all outline-none placeholder:text-zinc-500" suppressHydrationWarning />
+                  </div>
                 </div>
-                <textarea name="message" rows={5} placeholder={t.contact.messagePlaceholder} required className="w-full bg-white border border-zinc-200 shadow-sm rounded-[20px] px-6 py-4 text-sm outline-none focus:border-black transition-colors resize-none" suppressHydrationWarning></textarea>
-                <button type="submit" disabled={isSubmitting} className="w-full bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full py-5 hover:bg-zinc-800 transition-colors disabled:opacity-50" suppressHydrationWarning>
+                
+                <div className="space-y-3 text-left">
+                  <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{t.contact.messagePlaceholder}</label>
+                  <textarea name="message" required rows={5} placeholder={t.contact.messagePlaceholder} className="w-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm rounded-[24px] px-6 py-4 text-white text-sm focus:border-indigo-400 transition-all outline-none resize-none placeholder:text-zinc-500" suppressHydrationWarning></textarea>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="w-full py-5 bg-white text-black font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50"
+                  suppressHydrationWarning
+                >
                   {isSubmitting ? "Sending..." : t.contact.button}
                 </button>
               </form>
             ) : (
-              <div className="text-center space-y-6 py-12 animate-in fade-in zoom-in duration-500 bg-white rounded-[32px] p-10 shadow-sm border border-zinc-100">
-                <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto">
+              <div className="text-center space-y-6 py-10 animate-in fade-in zoom-in duration-500 relative z-10">
+                <div className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center mx-auto shadow-xl shadow-white/10">
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
-                <h3 className="text-3xl font-bold text-black tracking-tight">Message Sent.</h3>
-                <p className="text-zinc-500 font-light leading-relaxed max-w-sm mx-auto">
+                <h3 className="text-3xl font-bold text-white tracking-tight">Message Sent.</h3>
+                <p className="text-zinc-400 font-light leading-relaxed max-w-sm mx-auto">
                   Thank you for reaching out. I have received your message and will get back to you within 24 hours.
                 </p>
-                <button onClick={() => setIsSuccess(false)} className="mt-4 px-6 py-3 bg-zinc-50 border border-zinc-200 text-zinc-500 text-[10px] font-bold uppercase tracking-widest rounded-full hover:border-black hover:text-black transition-colors">
+                <button onClick={() => setIsSuccess(false)} className="mt-8 px-8 py-4 bg-white/10 border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-white hover:text-black hover:shadow-md transition-all">
                   Send another message
                 </button>
               </div>

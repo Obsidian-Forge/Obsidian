@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Obsidian",
+  title: "Novatrum",
   description: "Premium software studio crafting high-performance digital experiences.",
+  icons: {
+    icon: '/logo.png', 
+  },
 };
 
 export default function RootLayout({

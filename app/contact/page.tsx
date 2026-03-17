@@ -17,8 +17,8 @@ export default function ContactPage() {
 
     const formData = new FormData(event.currentTarget);
     formData.append("access_key", "0ca2b8a6-eeb6-4866-841b-ac00ee601416");
-    formData.append("subject", "New Inquiry from Obsidian Website");
-    formData.append("from_name", "Obsidian Studio Contact Form");
+    formData.append("subject", "New Inquiry from Novatrum Website");
+    formData.append("from_name", "Novatrum Studio Contact Form");
 
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
@@ -111,14 +111,17 @@ export default function ContactPage() {
           <FadeUp delay={200}>
             <div className="p-10 md:p-14 rounded-[40px] bg-zinc-950 shadow-2xl min-h-[500px] flex flex-col justify-center relative overflow-hidden group">
               
-              {/* Obsidian Konseptli Koyu/Mor Arka Plan Efekti */}
+              {/* Novatrum Konseptli Koyu/Mor Arka Plan Efekti */}
               <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay transition-opacity duration-1000 group-hover:opacity-40"></div>
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-transparent pointer-events-none"></div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-indigo-600/40 rounded-full blur-[100px] pointer-events-none -z-0 opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
 
               {!isSuccess ? (
-                // FORM HENÜZ GÖNDERİLMEDİYSE FORMU GÖSTER
                 <form onSubmit={handleSubmit} className="space-y-8 relative z-10" suppressHydrationWarning>
+                  
+                  {/* HONEYPOT GİZLİ ALANI - Botları yakalamak için */}
+                  <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3 text-left">
                       <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold">{data.form.nameLabel}</label>
@@ -143,7 +146,7 @@ export default function ContactPage() {
                     <textarea name="message" required rows={4} placeholder={data.form.briefPlaceholder} className="w-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm rounded-[24px] px-6 py-4 text-white text-sm focus:border-indigo-400 transition-all outline-none resize-none placeholder:text-zinc-500" suppressHydrationWarning></textarea>
                   </div>
 
-                  {/* Submit Butonu: Koyu Arka Plana Zıt Bembeyaz Bir Buton */}
+                  {/* Submit Butonu */}
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
@@ -154,7 +157,7 @@ export default function ContactPage() {
                   </button>
                 </form>
               ) : (
-                // FORM BAŞARIYLA GÖNDERİLDİYSE EKRAN (Karanlık Temaya Uygun)
+                // FORM BAŞARIYLA GÖNDERİLDİYSE
                 <div className="text-center space-y-6 py-10 animate-in fade-in zoom-in duration-500 relative z-10">
                   <div className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center mx-auto shadow-xl shadow-white/10">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
