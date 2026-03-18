@@ -59,7 +59,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="w-full bg-white selection:bg-black/10 pb-20">
+    <div className="w-full overflow-x-hidden bg-white selection:bg-black/10 pb-20">
       
       {/* 1. HERO BANNER SECTION */}
       <section className="px-4 md:px-8 pt-4 md:pt-8">

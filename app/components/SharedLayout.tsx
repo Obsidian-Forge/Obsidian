@@ -76,7 +76,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
           
           <Link href="/" className="flex items-center gap-3 group relative z-[110]" onClick={() => setIsOpen(false)}>
             <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-95">
-               {/* Doğru yol: /logo.png */}
                <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase leading-none mt-0.5">
@@ -117,39 +116,57 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
             </button>
           </div>
         </div>
-
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div 
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="fixed inset-0 z-[105] bg-white md:hidden flex flex-col pt-24"
-            >
-              <div className="flex-grow flex flex-col items-center justify-center gap-10 text-center px-8 pb-24">
-                {navLinks.map((link, i) => (
-                  <motion.div
-                    key={link.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 + i * 0.05 }}
-                    className="w-full"
-                  >
-                    <Link 
-                      href={link.href} 
-                      onClick={() => setIsOpen(false)}
-                      className="text-4xl font-black uppercase tracking-tighter text-black hover:text-zinc-500 transition-colors block py-2"
-                    >
-                      {link.name}
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </header>
+
+      {/* MOBILE MENU OVERLAY */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed inset-0 z-[90] bg-white md:hidden flex flex-col pt-24"
+          >
+            <div className="flex-grow flex flex-col items-center justify-center gap-8 text-center px-8 pb-24">
+              {navLinks.map((link, i) => (
+                <motion.div
+                  key={link.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                  className="w-full"
+                >
+                  <Link 
+                    href={link.href} 
+                    onClick={() => setIsOpen(false)}
+                    className="text-4xl font-black uppercase tracking-tighter text-black hover:text-zinc-500 transition-colors block py-2"
+                  >
+                    {link.name}
+                  </Link>
+                </motion.div>
+              ))}
+              
+              {/* MOBILE CTA BUTTON */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + navLinks.length * 0.05 }}
+                className="w-full mt-8"
+              >
+                <Link 
+                  href="/calculator"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-block w-full max-w-[280px] py-5 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl"
+                >
+                  {t.hero.ctaStart}
+                </Link>
+              </motion.div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-grow">
         {children}
@@ -161,7 +178,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
           <div className="flex flex-col gap-4">
              <div className="flex items-center gap-3">
               <div className="w-7 h-7 flex items-center justify-center">
-                {/* Doğru yol: /logo.png */}
                 <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase leading-none mt-0.5">
