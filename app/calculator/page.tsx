@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FadeUp from '../components/FadeUp';
-import emailjs from '@emailjs/browser';
 import { useLanguage } from '../../context/LanguageContext';
 
 type Option = {
@@ -31,8 +30,46 @@ export default function PriceCalculator() {
   const [clientInfo, setClientInfo] = useState({ name: '', company: '', email: '' });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  if (!cData) return <div className="pt-40 text-center text-zinc-500">Loading...</div>;
+  useEffect(() => {
+    const savedSelections = localStorage.getItem('novatrum_selections');
+    const savedStep = localStorage.getItem('novatrum_step');
+    const savedColors = localStorage.getItem('novatrum_colors');
+
+    if (savedSelections) setSelections(JSON.parse(savedSelections));
+    if (savedStep) setCurrentStep(JSON.parse(savedStep));
+    if (savedColors) setCustomColors(JSON.parse(savedColors));
+
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('novatrum_selections', JSON.stringify(selections));
+      localStorage.setItem('novatrum_step', JSON.stringify(currentStep));
+      localStorage.setItem('novatrum_colors', JSON.stringify(customColors));
+    }
+  }, [selections, currentStep, customColors, isLoaded]);
+
+  // YENİ: BAŞTAN BAŞLAMA FONKSİYONU
+  const handleReset = () => {
+    if (window.confirm(cData.resetConfirm || "Are you sure you want to start over? All selections will be cleared.")) {
+      setSelections({});
+      setCurrentStep(0);
+      setCustomColors(["#ffffff", "#888888", "#000000"]);
+      setClientInfo({ name: '', company: '', email: '' });
+      setIsSuccess(false);
+      localStorage.removeItem('novatrum_selections');
+      localStorage.removeItem('novatrum_step');
+      localStorage.removeItem('novatrum_colors');
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // En üste kaydır
+    }
+  };
+
+  if (!cData || !isLoaded) return <div className="pt-40 text-center text-zinc-500">Loading...</div>;
+
+  const isLargeProject = ['standard-store', 'advanced-api', 'ecommerce'].includes(selections[0]);
 
   const steps: Step[] = [
     {
@@ -40,11 +77,11 @@ export default function PriceCalculator() {
       subtitle: cData.stepsData[0].subtitle,
       type: 'select',
       options: [
-        { id: "landing", price: 1250.00, label: cData.stepsData[0].options[0].label, description: cData.stepsData[0].options[0].desc },
-        { id: "business", price: 2850.00, label: cData.stepsData[0].options[1].label, description: cData.stepsData[0].options[1].desc },
-        { id: "standard-store", price: 2250.00, label: cData.stepsData[0].options[2].label, description: cData.stepsData[0].options[2].desc },
-        { id: "advanced-api", price: 3850.00, label: cData.stepsData[0].options[3].label, description: cData.stepsData[0].options[3].desc },
-        { id: "ecommerce", price: 4750.00, label: cData.stepsData[0].options[4].label, description: cData.stepsData[0].options[4].desc }
+        { id: "landing", price: 950.00, label: cData.stepsData[0].options[0].label, description: cData.stepsData[0].options[0].desc },
+        { id: "business", price: 1950.00, label: cData.stepsData[0].options[1].label, description: cData.stepsData[0].options[1].desc },
+        { id: "standard-store", price: 1750.00, label: cData.stepsData[0].options[2].label, description: cData.stepsData[0].options[2].desc },
+        { id: "advanced-api", price: 3450.00, label: cData.stepsData[0].options[3].label, description: cData.stepsData[0].options[3].desc },
+        { id: "ecommerce", price: 4450.00, label: cData.stepsData[0].options[4].label, description: cData.stepsData[0].options[4].desc }
       ]
     },
     {
@@ -57,8 +94,8 @@ export default function PriceCalculator() {
       subtitle: cData.stepsData[2].subtitle,
       type: 'multi-select',
       options: [
-        { id: "logo", price: 400.00, label: cData.stepsData[2].options[0].label, description: cData.stepsData[2].options[0].desc },
-        { id: "custom-ui", price: 500.00, label: cData.stepsData[2].options[1].label, description: cData.stepsData[2].options[1].desc }
+        { id: "logo", price: 350.00, label: cData.stepsData[2].options[0].label, description: cData.stepsData[2].options[0].desc },
+        { id: "custom-ui", price: 450.00, label: cData.stepsData[2].options[1].label, description: cData.stepsData[2].options[1].desc }
       ]
     },
     {
@@ -66,9 +103,9 @@ export default function PriceCalculator() {
       subtitle: cData.stepsData[3].subtitle,
       type: 'multi-select',
       options: [
-        { id: "seo-basic", price: 350.00, label: cData.stepsData[3].options[0].label, description: cData.stepsData[3].options[0].desc },
-        { id: "copywriting", price: 450.00, label: cData.stepsData[3].options[1].label, description: cData.stepsData[3].options[1].desc },
-        { id: "seo-adv", price: 750.00, label: cData.stepsData[3].options[2].label, description: cData.stepsData[3].options[2].desc }
+        { id: "seo-basic", price: 250.00, label: cData.stepsData[3].options[0].label, description: cData.stepsData[3].options[0].desc },
+        { id: "copywriting", price: 400.00, label: cData.stepsData[3].options[1].label, description: cData.stepsData[3].options[1].desc },
+        { id: "seo-adv", price: 650.00, label: cData.stepsData[3].options[2].label, description: cData.stepsData[3].options[2].desc }
       ]
     },
     {
@@ -76,9 +113,9 @@ export default function PriceCalculator() {
       subtitle: cData.stepsData[4].subtitle,
       type: 'multi-select',
       options: [
-        { id: "contact-form", price: 150.00, label: cData.stepsData[4].options[0].label, description: cData.stepsData[4].options[0].desc },
-        { id: "newsletter", price: 200.00, label: cData.stepsData[4].options[1].label, description: cData.stepsData[4].options[1].desc },
-        { id: "email-marketing", price: 250.00, label: cData.stepsData[4].options[2].label, description: cData.stepsData[4].options[2].desc }
+        { id: "contact-form", price: 100.00, label: cData.stepsData[4].options[0].label, description: cData.stepsData[4].options[0].desc },
+        { id: "newsletter", price: 150.00, label: cData.stepsData[4].options[1].label, description: cData.stepsData[4].options[1].desc },
+        { id: "email-marketing", price: 200.00, label: cData.stepsData[4].options[2].label, description: cData.stepsData[4].options[2].desc }
       ]
     },
     {
@@ -86,20 +123,26 @@ export default function PriceCalculator() {
       subtitle: cData.stepsData[5].subtitle,
       type: 'multi-select',
       options: [
-        { id: "speed-basic", price: 250.00, label: cData.stepsData[5].options[0].label, description: cData.stepsData[5].options[0].desc },
-        { id: "speed-ultra", price: 550.00, label: cData.stepsData[5].options[1].label, description: cData.stepsData[5].options[1].desc },
-        { id: "hosting", price: 0.00, monthlyPrice: 45.00, label: cData.stepsData[5].options[2].label, description: cData.stepsData[5].options[2].desc },
-        { id: "maintenance", price: 0.00, monthlyPrice: 125.00, label: cData.stepsData[5].options[3].label, description: cData.stepsData[5].options[3].desc }
+        { id: "speed-basic", price: 200.00, label: cData.stepsData[5].options[0].label, description: cData.stepsData[5].options[0].desc },
+        { id: "speed-ultra", price: 450.00, label: cData.stepsData[5].options[1].label, description: cData.stepsData[5].options[1].desc },
+        { id: "hosting", price: 0.00, monthlyPrice: 35.00, label: cData.stepsData[5].options[2].label, description: cData.stepsData[5].options[2].desc },
+        { id: "maintenance", price: 0.00, monthlyPrice: 95.00, label: cData.stepsData[5].options[3].label, description: cData.stepsData[5].options[3].desc }
       ]
     },
     {
       title: cData.stepsData[6].title,
       subtitle: cData.stepsData[6].subtitle,
       type: 'select',
-      options: [
-        { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
-        { id: "timeline-rush", price: 750.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
-      ]
+      options: isLargeProject 
+        ? [
+            { id: "timeline-large", price: 0.00, label: cData.stepsData[6].options[0].label.replace(/4-6/g, '6-10'), description: cData.stepsData[6].options[0].desc },
+            { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
+            { id: "timeline-rush", price: 600.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
+          ]
+        : [
+            { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
+            { id: "timeline-rush", price: 600.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
+          ]
     },
     {
       title: cData.stepsData[7].title,
@@ -116,16 +159,31 @@ export default function PriceCalculator() {
   ];
 
   const handleSelect = (val: string, isMulti: boolean = false) => {
+    let newSelections = { ...selections };
+
     if (isMulti) {
-      const current = selections[currentStep] || [];
+      const current = newSelections[currentStep] || [];
       if (current.includes(val)) {
-        setSelections({ ...selections, [currentStep]: current.filter((id: string) => id !== val) });
+        newSelections[currentStep] = current.filter((id: string) => id !== val);
       } else {
-        setSelections({ ...selections, [currentStep]: [...current, val] });
+        newSelections[currentStep] = [...current, val];
       }
     } else {
-      setSelections({ ...selections, [currentStep]: val });
+      newSelections[currentStep] = val;
     }
+
+    if (currentStep === 0) {
+      const isNowLarge = ['standard-store', 'advanced-api', 'ecommerce'].includes(val);
+      if (isNowLarge) {
+        newSelections[6] = 'timeline-large';
+      } else {
+        if (newSelections[6] === 'timeline-large') {
+          newSelections[6] = 'timeline-standard';
+        }
+      }
+    }
+
+    setSelections(newSelections);
   };
 
   const handleCustomColorChange = (index: number, val: string) => {
@@ -181,7 +239,24 @@ export default function PriceCalculator() {
       const step = steps[parseInt(stepIdx)];
       if (step.type === 'select') {
         const option = step.options?.find(o => o.id === val);
-        if (option) items.push({ label: option.label, price: `€${option.price.toFixed(2)}` });
+        if (option) {
+          const priceStr = stepIdx === "0" 
+            ? `From €${option.price.toFixed(2)}` 
+            : (option.price === 0 ? cData.included : `€${option.price.toFixed(2)}`);
+          
+          let labelStr = option.label;
+          
+          if (stepIdx === "6") {
+            const isLarge = ['standard-store', 'advanced-api', 'ecommerce'].includes(selections[0]);
+            if (val === "timeline-standard") {
+              labelStr += isLarge ? " (6-10 Weeks)" : " (4-6 Weeks)";
+            } else if (val === "timeline-rush") {
+              labelStr += " (1-2 Weeks)";
+            }
+          }
+
+          items.push({ label: labelStr, price: priceStr });
+        }
       } else if (step.type === 'multi-select') {
         (val as string[]).forEach(id => {
           const option = step.options?.find(o => o.id === id);
@@ -221,7 +296,7 @@ export default function PriceCalculator() {
         : '';
 
       const htmlProposal = `
-  <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 24px; overflow: hidden; background-color: #ffffff; shadow: 0 10px 40px rgba(0,0,0,0.05);">
+  <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 24px; overflow: hidden; background-color: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
     
     <div style="background: #09090b linear-gradient(135deg, #09090b 0%, #1e1b4b 100%); padding: 60px 40px; text-align: center; position: relative;">
       <img 
@@ -232,7 +307,7 @@ export default function PriceCalculator() {
         style="display: block; margin: 0 auto 20px auto; border: 0; outline: none;" 
       />
       <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 5px; line-height: 1;">NOVATRUM</h1>
-      <div style="margin: 15px auto 0 auto; width: 40px; h-px: 1px; background-color: rgba(255,255,255,0.2);"></div>
+      <div style="margin: 15px auto 0 auto; width: 40px; height: 1px; background-color: rgba(255,255,255,0.2);"></div>
       <p style="margin: 15px 0 0 0; color: rgba(255,255,255,0.5); font-size: 10px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700;">${cData.emailSubject}</p>
     </div>
     
@@ -270,14 +345,24 @@ export default function PriceCalculator() {
         html_proposal: htmlProposal
       };
 
-      await emailjs.send(
-        'service_lzn6bze',
-        'template_f33ua3k',
-        templateParams,
-        'rsgJ9I_OVOHvHyewq'
-      );
+      const response = await fetch('/api/send-proposal', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(templateParams),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
 
       setIsSuccess(true);
+      
+      localStorage.removeItem('novatrum_selections');
+      localStorage.removeItem('novatrum_step');
+      localStorage.removeItem('novatrum_colors');
+      
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to send proposal. Please try again.');
@@ -289,11 +374,10 @@ export default function PriceCalculator() {
   return (
     <main className="w-full bg-white min-h-screen relative overflow-hidden">
 
-      {/* BACKGROUND GLOWS (Derinlik hissi için eklendi) */}
       <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
       <div className="absolute bottom-[20%] left-[-10%] w-[400px] h-[400px] bg-purple-100/40 rounded-full blur-[100px] pointer-events-none -z-10 mix-blend-multiply" />
 
-      <div className="max-w-4xl mx-auto px-6 pt-32 pb-40 relative z-10">
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-56 relative z-10">
         <FadeUp>
           <div className="mb-20 space-y-6">
             <div className="flex justify-between items-end">
@@ -308,7 +392,6 @@ export default function PriceCalculator() {
               </div>
             </div>
 
-            {/* Progress Bar (Gradient uygulandı) */}
             <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden mt-8 shadow-inner">
               <div
                 className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-700 ease-out"
@@ -332,22 +415,59 @@ export default function PriceCalculator() {
                   <div className="grid grid-cols-1 gap-4">
                     {steps[currentStep].options?.map((opt) => {
                       const isSelected = selections[currentStep] === opt.id;
+                      const isDisabledOption = currentStep === 6 && isLargeProject && opt.id !== 'timeline-large';
+
+                      let dynamicWeekText = "";
+                      if (currentStep === 6) {
+                        if (opt.id === "timeline-standard") {
+                          dynamicWeekText = isLargeProject ? "(6-10 Weeks)" : "(4-6 Weeks)";
+                        } else if (opt.id === "timeline-rush") {
+                          dynamicWeekText = "(1-2 Weeks)";
+                        }
+                      }
+
                       return (
                         <button
                           key={opt.id}
-                          onClick={() => handleSelect(opt.id, false)}
-                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${isSelected
-                              ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
-                              : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
-                            }`}
+                          onClick={() => {
+                            if (!isDisabledOption) handleSelect(opt.id, false);
+                          }}
+                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
+                            isSelected 
+                              ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+                              : isDisabledOption
+                                ? 'bg-white/40 border-zinc-200/40 text-black opacity-40 grayscale pointer-events-none'
+                                : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
+                          }`}
                         >
-                          {/* Seçili karta içten hafif bir ışıltı */}
                           {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
 
-                          <div className="flex justify-between items-center mb-2 relative z-10">
-                            <span className="text-xl font-bold tracking-tight">{opt.label}</span>
-                            <span className={`font-mono text-sm ${isSelected ? 'text-indigo-300' : 'text-zinc-500 opacity-80'}`}>
-                              {opt.price === 0 ? cData.included : `+ €${opt.price.toFixed(2)}`}
+                          <div className="flex justify-between items-start md:items-center gap-4 mb-2 relative z-10">
+                            <div className="flex flex-col md:flex-row md:items-center items-start gap-2 md:gap-0">
+                              <span className="text-xl font-bold tracking-tight">
+                                {opt.label}
+                                {dynamicWeekText && (
+                                  <span className={`ml-2 text-sm font-medium ${isSelected ? 'text-indigo-300' : 'text-zinc-500'}`}>
+                                    {dynamicWeekText}
+                                  </span>
+                                )}
+                              </span>
+                              
+                              <div className="flex items-center">
+                                {isDisabledOption && (
+                                  <span className="text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full font-bold md:ml-3 bg-zinc-200 text-zinc-500">
+                                    Unavailable for this size
+                                  </span>
+                                )}
+                                {opt.id === 'timeline-large' && (
+                                  <span className={`text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full font-bold md:ml-3 ${isSelected ? 'bg-indigo-500/30 text-indigo-200' : 'bg-indigo-100 text-indigo-700'}`}>
+                                    Auto-Selected
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <span className={`font-mono text-sm whitespace-nowrap flex-shrink-0 ${isSelected ? 'text-indigo-300' : 'text-zinc-500 opacity-80'}`}>
+                              {opt.price === 0 ? cData.included : (currentStep === 0 ? `From €${opt.price.toFixed(2)}` : `+ €${opt.price.toFixed(2)}`)}
                             </span>
                           </div>
                           <p className={`text-sm font-light relative z-10 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
@@ -368,26 +488,37 @@ export default function PriceCalculator() {
                         <button
                           key={opt.id}
                           onClick={() => handleSelect(opt.id, true)}
-                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${isSelected
+                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
+                            isSelected
                               ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
                               : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
-                            }`}
+                          }`}
                         >
                           {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
 
-                          <div className="flex justify-between items-center mb-2 relative z-10">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 bg-white'}`}>
+                          <div className="flex items-start justify-between gap-4 mb-2 relative z-10">
+                            <div className="flex items-start gap-4">
+                              <div className={`w-5 h-5 flex-shrink-0 mt-1 rounded flex items-center justify-center transition-colors border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 bg-white'}`}>
                                 {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
                               </div>
-                              <span className="text-xl font-bold tracking-tight">{opt.label}</span>
+                              
+                              <div className="flex flex-col items-start gap-2">
+                                <span className="text-xl font-bold tracking-tight leading-none">{opt.label}</span>
+                                {opt.id === 'speed-ultra' && (
+                                  <span className={`text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full font-bold ${isSelected ? 'bg-indigo-500/30 text-indigo-200' : 'bg-emerald-100 text-emerald-700'}`}>
+                                    95+ PageSpeed Guarantee
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                            <span className={`font-mono text-sm ${isSelected ? 'text-indigo-300' : 'text-zinc-500 opacity-80'}`}>
+
+                            <span className={`font-mono text-sm flex-shrink-0 whitespace-nowrap text-right ${isSelected ? 'text-indigo-300' : 'text-zinc-500 opacity-80'}`}>
                               {opt.monthlyPrice
                                 ? `€${opt.monthlyPrice.toFixed(2)} / ${cData.monthly}`
                                 : `+ €${opt.price.toFixed(2)}`}
                             </span>
                           </div>
+                          
                           <p className={`text-sm font-light ml-9 relative z-10 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             {opt.description}
                           </p>
@@ -407,10 +538,11 @@ export default function PriceCalculator() {
                           <button
                             key={p.name}
                             onClick={() => handleSelect(p.name, false)}
-                            className={`p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${isSelected
+                            className={`p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
+                              isSelected
                                 ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
                                 : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
-                              }`}
+                            }`}
                           >
                             {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
 
@@ -499,8 +631,7 @@ export default function PriceCalculator() {
           ) : (
             // FİNAL TAHMİN VE FORM EKRANI
             <FadeUp>
-              <div className="p-12 md:p-20 rounded-[48px] bg-white/60 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center space-y-12 relative overflow-hidden">
-                {/* Final ekranına içten premium bir ışık */}
+              <div className="p-6 sm:p-10 md:p-20 rounded-[48px] bg-white/60 backdrop-blur-2xl border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center space-y-10 md:space-y-12 relative overflow-hidden">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-gradient-to-b from-indigo-50/50 to-transparent pointer-events-none -z-10" />
 
                 <div className="space-y-4 relative z-10">
@@ -510,7 +641,7 @@ export default function PriceCalculator() {
 
                 <div className="space-y-2 relative z-10">
                   <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold">{cData.totalInv}</span>
-                  <div className="text-7xl md:text-[8rem] font-medium tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-600">
+                  <div className="text-5xl sm:text-6xl md:text-[8rem] font-medium tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-600 break-words">
                     €{upfront.toFixed(2)}
                   </div>
                 </div>
@@ -523,9 +654,28 @@ export default function PriceCalculator() {
                     </div>
                   </div>
                 )}
+                
+                {/* BUTONLAR KISMI: Geri Dön ve Baştan Başla */}
+                <div className="relative z-10 flex items-center justify-center gap-6">
+                  <button
+                    onClick={() => setCurrentStep(steps.length - 1)}
+                    className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 hover:text-black transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                    {cData.btnPrev || "Edit Selections"}
+                  </button>
+
+                  <button
+                    onClick={handleReset}
+                    className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-rose-400 hover:text-rose-600 transition-colors"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    {cData.btnReset || "Start Over"}
+                  </button>
+                </div>
 
                 {!isSuccess ? (
-                  <div className="max-w-md mx-auto space-y-4 pt-8 relative z-10 text-left">
+                  <div className="max-w-md mx-auto space-y-4 pt-4 md:pt-8 relative z-10 text-left">
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase text-zinc-500 tracking-[0.2em] font-bold">{cData.formNameLabel}</label>
                       <input
@@ -584,31 +734,62 @@ export default function PriceCalculator() {
             </FadeUp>
           )}
         </div>
-
-        {/* ALT BUTONLAR (Önceki / Devam Et) */}
-        <div className="mt-24 flex justify-between items-center border-t border-zinc-100 pt-12 relative z-10">
-          <button
-            onClick={prevStep}
-            disabled={currentStep === 0 || currentStep === steps.length}
-            className={`text-[10px] font-bold uppercase tracking-[0.3em] transition-all cursor-none ${currentStep === 0 || currentStep === steps.length ? 'opacity-0 pointer-events-none' : 'text-zinc-400 hover:text-black'}`}
-          >
-            // {cData.btnPrev}
-          </button>
-
-          {currentStep < steps.length && (
-            <button
-              onClick={nextStep}
-              disabled={!isStepValid()}
-              className={`px-12 py-5 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all cursor-none ${isStepValid()
-                  ? 'bg-gradient-to-r from-zinc-900 to-black text-white hover:shadow-lg hover:shadow-indigo-900/20'
-                  : 'bg-zinc-100 text-zinc-400'
-                }`}
-            >
-              {currentStep === steps.length - 1 ? cData.btnFinish : cData.btnNext}
-            </button>
-          )}
-        </div>
       </div>
+
+      {currentStep < steps.length && (
+        <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-zinc-200/60 p-4 md:p-6 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.04)]">
+          <div className="max-w-4xl mx-auto flex justify-between items-center">
+            
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+                {cData.liveTotal || "Live Total"}
+              </span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl md:text-2xl font-bold text-black tracking-tight">
+                  €{upfront.toFixed(2)}
+                </span>
+                {monthly > 0 && (
+                  <span className="text-xs font-mono text-indigo-500 font-medium hidden sm:inline-block">
+                    + €{monthly.toFixed(2)}<span className="text-zinc-400">/{cData.month || "mo"}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 md:gap-6">
+              
+              <button
+                onClick={prevStep}
+                disabled={currentStep === 0}
+                className={`text-[10px] font-bold uppercase tracking-[0.2em] transition-all cursor-none hidden md:block ${currentStep === 0 ? 'opacity-0 pointer-events-none' : 'text-zinc-400 hover:text-black'}`}
+              >
+                // {cData.btnPrev || "PREVIOUS STEP"}
+              </button>
+              
+              <button
+                onClick={prevStep}
+                disabled={currentStep === 0}
+                className={`w-12 h-12 rounded-full border border-zinc-200 flex items-center justify-center transition-all md:hidden ${currentStep === 0 ? 'opacity-0 pointer-events-none' : 'text-zinc-400 hover:text-black hover:bg-zinc-50'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+
+              <button
+                onClick={nextStep}
+                disabled={!isStepValid()}
+                className={`px-8 md:px-12 py-4 md:py-5 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all cursor-none ${isStepValid()
+                    ? 'bg-gradient-to-r from-zinc-900 to-black text-white hover:shadow-lg hover:shadow-indigo-900/20'
+                    : 'bg-zinc-100 text-zinc-400'
+                  }`}
+              >
+                {currentStep === steps.length - 1 ? cData.btnFinish : cData.btnNext}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </main>
   );
 }
