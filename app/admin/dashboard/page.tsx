@@ -287,13 +287,6 @@ export default function AdminDashboardPage() {
 
     const handleSendCode = async (email: string, code: string, clientName: string) => {
     if (!confirm(`Send key to ${email}?`)) return;
-
-    // --- HATA TESPİTİ (DEBUG) İÇİN EKLENDİ ---
-    console.log("Service ID:", process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID);
-    console.log("Template ID:", process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID);
-    console.log("Public Key:", process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY);
-    // ----------------------------------------
-
     try {
         await emailjs.send(
             process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!, 
@@ -302,15 +295,13 @@ export default function AdminDashboardPage() {
                 to_email: email, 
                 client_name: clientName, 
                 access_code: code, 
-                login_link: `${window.location.origin}/client/login` 
+                // BURAYI DEĞİŞTİRDİK (Vercel uzantısını gizliyoruz)
+                login_link: `https://app.novatrum.com/login` 
             }, 
             process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
         );
         alert("Sent.");
-    } catch (err: any) { 
-        console.error("EmailJS Full Error:", err);
-        alert(`Failed to send. Check console for details.`); 
-    }
+    } catch (err) { alert("Failed."); console.error(err); }
 };
 
     if (!isAdmin) return null;
