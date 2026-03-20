@@ -28,7 +28,7 @@ export default function ClientDashboardPage() {
         if (!error && data) {
             setProjects(data.map(p => ({
                 ...p,
-                project_updates: p.project_updates.sort((a: any, b: any) => 
+                project_updates: p.project_updates.sort((a: any, b: any) =>
                     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                 )
             })));
@@ -70,7 +70,7 @@ export default function ClientDashboardPage() {
         if (!storedId) return router.push('/client/login');
 
         setClientName(storedName || 'Valued Client');
-        
+
         Promise.all([
             fetchProjects(storedId),
             fetchSystemStatus(),
@@ -78,16 +78,39 @@ export default function ClientDashboardPage() {
             fetchClientFiles(storedId)
         ]).then(() => setLoading(false));
 
-        const statusChannel = supabase.channel('system-status-sync').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'system_status' }, () => { fetchSystemStatus(); }).subscribe();
-        
-        const updatesChannel = supabase.channel('project-sync').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'project_updates' }, () => { fetchProjects(storedId); })
-            .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'clients', filter: `id=eq.${storedId}` }, () => { handleLogout(); alert("Access key revoked."); }).subscribe();
-        
-        const filesChannel = supabase.channel('client-files-sync').on('postgres_changes', { event: '*', schema: 'public', table: 'client_files', filter: `client_id=eq.${storedId}` }, () => { fetchClientFiles(storedId); }).subscribe();
+        // 1. Sistem Durumu Kanalı
+        const statusChannel = supabase.channel('client-status-sync')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'system_status' }, () => { fetchSystemStatus(); })
+            .subscribe();
+
+        // 2. Proje Logları Kanalı
+        const logsChannel = supabase.channel('client-logs-sync')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'project_updates' }, () => { fetchProjects(storedId); })
+            .subscribe();
+
+        // 3. Proje Durum/Yüzde Kanalı (Filtre kaldırıldı, global dinliyor ama sadece kendi verisini çekiyor)
+        const projectsChannel = supabase.channel('client-projects-sync')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'projects' }, () => { fetchProjects(storedId); })
+            .subscribe();
+
+        // 4. Yetki Kanalı (Müşteri silinirse)
+        const authChannel = supabase.channel('client-auth-sync')
+            .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'clients', filter: `id=eq.${storedId}` }, () => {
+                handleLogout();
+                alert("Access key revoked.");
+            })
+            .subscribe();
+
+        // 5. Dosya Kanalı
+        const filesChannel = supabase.channel('client-files-sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'client_files', filter: `client_id=eq.${storedId}` }, () => { fetchClientFiles(storedId); })
+            .subscribe();
 
         return () => {
             supabase.removeChannel(statusChannel);
-            supabase.removeChannel(updatesChannel);
+            supabase.removeChannel(logsChannel);
+            supabase.removeChannel(projectsChannel);
+            supabase.removeChannel(authChannel);
             supabase.removeChannel(filesChannel);
         };
     }, [router]);
@@ -97,7 +120,7 @@ export default function ClientDashboardPage() {
     return (
         <div className="min-h-screen bg-[#F8F9FA] text-black p-6 md:p-8 font-sans overflow-x-hidden">
             <div className="max-w-4xl mx-auto pt-10 md:pt-16">
-                
+
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 gap-6">
                     <div className="space-y-1">
                         <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Deployment Hub</span>
@@ -105,7 +128,6 @@ export default function ClientDashboardPage() {
                         <p className="text-zinc-400 text-[11px] font-bold uppercase tracking-widest mt-2">Identity: <span className="text-black">{clientName}</span></p>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                        {/* SUPPORT BUTONU EKLENDİ */}
                         <button onClick={() => router.push('/client/support')} className="text-[10px] font-black uppercase tracking-widest border border-zinc-200 bg-white px-5 py-3 rounded-xl hover:border-black transition-all">Support</button>
                         <button onClick={() => router.push('/client/settings')} className="text-[10px] font-black uppercase tracking-widest border border-zinc-200 bg-white px-5 py-3 rounded-xl hover:border-black transition-all">Settings</button>
                         <button onClick={handleLogout} className="text-[10px] font-black uppercase tracking-widest bg-black text-white px-5 py-3 rounded-xl shadow-xl active:scale-95 transition-all">Disconnect</button>
@@ -185,14 +207,26 @@ export default function ClientDashboardPage() {
                                 </div>
                                 <span className="bg-black text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl tracking-widest">{project.status}</span>
                             </div>
-                            
+
                             <div className="space-y-6">
                                 <div className="flex justify-between items-end font-mono">
                                     <span className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Infrastructure Core</span>
-                                    <span className="text-2xl font-black">%{project.progress_percent}</span>
+                                    {/* Yüzde texti de yeşil yapıldı */}
+                                    <span className="text-2xl font-black text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">
+                                        %{project.progress_percent}
+                                    </span>
                                 </div>
-                                <div className="h-3 w-full bg-zinc-100 rounded-full overflow-hidden border border-zinc-50">
-                                    <div className="h-full bg-black transition-all duration-1000" style={{ width: `${project.progress_percent}%` }} />
+
+                                {/* Barın Arka Planı (Koyu Gri/Siyahımsı) */}
+                                <div className="h-3 w-full bg-zinc-800 rounded-full overflow-hidden border border-zinc-700 shadow-inner">
+                                    {/* Yeşil Parlayan Progress Bar */}
+                                    <div
+                                        className="h-full bg-emerald-500 transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(16,185,129,0.8)] relative"
+                                        style={{ width: `${project.progress_percent}%` }}
+                                    >
+                                        {/* Üzerinde minik bir parıltı/şerit efekti */}
+                                        <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/30 blur-[2px]" />
+                                    </div>
                                 </div>
                             </div>
 
@@ -209,7 +243,7 @@ export default function ClientDashboardPage() {
                                         </div>
                                     ))}
                                     {(!project.project_updates || project.project_updates.length === 0) && (
-                                         <p className="text-[10px] text-zinc-300 italic text-center uppercase tracking-widest">Waiting for initial log entry...</p>
+                                        <p className="text-[10px] text-zinc-300 italic text-center uppercase tracking-widest">Waiting for initial log entry...</p>
                                     )}
                                 </div>
                             </div>

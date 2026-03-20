@@ -16,6 +16,8 @@ export default function AdminDashboardPage() {
     const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
     const [supportTickets, setSupportTickets] = useState<any[]>([]);
 
+    const [unreadCounts, setUnreadCounts] = useState<{ [key: string]: number }>({});
+
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
     const [replies, setReplies] = useState<any[]>([]);
     const [replyMessage, setReplyMessage] = useState('');
@@ -28,6 +30,7 @@ export default function AdminDashboardPage() {
 
     const [updateMessage, setUpdateMessage] = useState('');
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+    const [localProgress, setLocalProgress] = useState<{ [key: string]: number }>({});
 
     const [clientForm, setClientForm] = useState({ email: '', fullName: '', companyName: '', phone: '', address: '' });
     const [projectForm, setProjectForm] = useState({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
@@ -40,26 +43,55 @@ export default function AdminDashboardPage() {
         fetchSystemStatus();
         fetchSupportTickets();
 
-        const channel = supabase.channel('admin-support-sync')
+        const storedUnreads = localStorage.getItem('novatrum_admin_unreads');
+        if (storedUnreads) {
+            setUnreadCounts(JSON.parse(storedUnreads));
+        }
+
+        // 1. SUPPORT TICKETS SİNC.
+        const ticketChannel = supabase.channel('admin-support-sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
                 fetchSupportTickets();
             }).subscribe();
 
-        return () => { supabase.removeChannel(channel); };
+        // 2. PROJELER VE LOGLAR İÇİN REALTIME (YENİ EKLENDİ)
+        const projectsChannel = supabase.channel('admin-projects-sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => {
+                fetchData(); // Proje yüzdesi/durumu değiştiğinde veriyi tazeleyin
+            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'project_updates' }, () => {
+                fetchData(); // Yeni bir log girildiğinde projeleri tazeleyin
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(ticketChannel);
+            supabase.removeChannel(projectsChannel);
+        };
     }, [activeTab]);
 
-    // YENİ: Anlık Chat Dinleyicisi
+    // CHAT (GLOBAL) DİNLEYİCİSİ
     useEffect(() => {
-        if (!selectedTicket) return;
-        const chatChannel = supabase.channel(`admin-chat-${selectedTicket.id}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies', filter: `ticket_id=eq.${selectedTicket.id}` }, (payload) => {
+        const globalChatChannel = supabase.channel('global-admin-chat')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload) => {
                 if (payload.new.sender_type === 'client') {
-                    setReplies(current => [...current, payload.new]);
-                    fetchSupportTickets();
+                    const incomingTicketId = payload.new.ticket_id;
+                    if (selectedTicket && selectedTicket.id === incomingTicketId) {
+                        setReplies(current => [...current, payload.new]);
+                        fetchSupportTickets();
+                    }
+                    else {
+                        setUnreadCounts(prev => {
+                            const newCounts = { ...prev, [incomingTicketId]: (prev[incomingTicketId] || 0) + 1 };
+                            localStorage.setItem('novatrum_admin_unreads', JSON.stringify(newCounts));
+                            return newCounts;
+                        });
+                        fetchSupportTickets();
+                    }
                 }
             }).subscribe();
 
-        return () => { supabase.removeChannel(chatChannel); };
+        return () => { supabase.removeChannel(globalChatChannel); };
     }, [selectedTicket]);
 
     useEffect(() => {
@@ -78,7 +110,13 @@ export default function AdminDashboardPage() {
         const { data: clientsData } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
         const { data: projectsData } = await supabase.from('projects').select('*, clients(full_name)').order('created_at', { ascending: false });
         if (clientsData) setClients(clientsData);
-        if (projectsData) setProjects(projectsData);
+        if (projectsData) {
+            setProjects(projectsData);
+            // Projeler çekilince local progress state'ini de doldur
+            const progressMap: { [key: string]: number } = {};
+            projectsData.forEach(p => { progressMap[p.id] = p.progress_percent; });
+            setLocalProgress(progressMap);
+        }
     };
 
     const fetchSystemStatus = async () => {
@@ -109,6 +147,14 @@ export default function AdminDashboardPage() {
 
     const openTicketChat = async (ticket: any) => {
         setSelectedTicket(ticket);
+
+        setUnreadCounts(prev => {
+            const newCounts = { ...prev };
+            delete newCounts[ticket.id];
+            localStorage.setItem('novatrum_admin_unreads', JSON.stringify(newCounts));
+            return newCounts;
+        });
+
         const { data } = await supabase.from('ticket_replies').select('*').eq('ticket_id', ticket.id).order('created_at', { ascending: true });
         setReplies(data || []);
     };
@@ -125,16 +171,13 @@ export default function AdminDashboardPage() {
                 message: replyMessage
             };
 
-            // Veritabanına yaz ve dönen (ID eklenmiş) satırı al
             const { data, error } = await supabase.from('ticket_replies').insert(newReply).select().single();
             if (error) throw error;
 
-            // Ticket durumunu güncelle
             if (selectedTicket.status === 'open') {
                 await supabase.from('support_tickets').update({ status: 'in-progress' }).eq('id', selectedTicket.id);
             }
 
-            // Listeye eklerken VERİTABANINDAN dönen veriyi kullan
             setReplies(current => [...current, data]);
             setReplyMessage('');
             fetchSupportTickets();
@@ -149,7 +192,7 @@ export default function AdminDashboardPage() {
         return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
 
-    // --- DİĞER FONKSİYONLAR AYNI ---
+    // --- DİĞER FONKSİYONLAR ---
     const fetchClientFiles = async (clientId: string) => {
         const { data } = await supabase.from('client_files').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
         if (data) setClientFiles(data);
@@ -165,13 +208,10 @@ export default function AdminDashboardPage() {
         try {
             const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
             if (uploadError) throw uploadError;
-
             const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filePath);
-
             await supabase.from('client_files').insert({
                 client_id: clientId, file_name: file.name, file_url: publicUrl, file_type: file.type.includes('pdf') ? 'pdf' : 'document'
             });
-
             fetchClientFiles(clientId);
         } catch (error: any) { alert(error.message); } finally { setUploading(false); }
     };
@@ -182,8 +222,12 @@ export default function AdminDashboardPage() {
     };
 
     const handleUpdateProjectStatus = async (projectId: string, newStatus: string) => {
-        await supabase.from('projects').update({ status: newStatus }).eq('id', projectId);
-        fetchData();
+        try {
+            await supabase.from('projects').update({ status: newStatus }).eq('id', projectId);
+            // fetchData(); burda manuel çağırmaya gerek yok, realtime kanalı algılayacak.
+        } catch (error) {
+            console.error("Failed to update status", error);
+        }
     };
 
     const handleCreateClient = async (e: React.FormEvent) => {
@@ -199,13 +243,30 @@ export default function AdminDashboardPage() {
         } catch (err: any) { alert(err.message); } finally { setLoading(false); }
     };
 
-    const handleUpdateProject = async (projectId: string, newProgress: number) => {
-        if (!updateMessage) return alert("Update log required.");
+    const handleSyncProject = async (projectId: string) => {
         setLoading(true);
-        await supabase.from('projects').update({ progress_percent: newProgress }).eq('id', projectId);
-        await supabase.from('project_updates').insert({ project_id: projectId, message: updateMessage, progress_at_time: newProgress });
-        setUpdateMessage(''); setSelectedProjectId(null); fetchData();
-        setLoading(false);
+        try {
+            const newProgress = localProgress[projectId];
+
+            // Yüzdeyi güncelle
+            await supabase.from('projects').update({ progress_percent: newProgress }).eq('id', projectId);
+
+            // EĞER mesaj yazılmışsa, veritabanına log olarak ekle
+            if (updateMessage.trim() && selectedProjectId === projectId) {
+                await supabase.from('project_updates').insert({
+                    project_id: projectId,
+                    message: updateMessage,
+                    progress_at_time: newProgress
+                });
+                setUpdateMessage(''); // Mesajı temizle
+                setSelectedProjectId(null);
+            }
+            // fetchData(); burda manuel çağırmaya gerek yok, realtime kanalı algılayacak.
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleDeployProject = async (e: React.FormEvent) => {
@@ -225,18 +286,41 @@ export default function AdminDashboardPage() {
     };
 
     const handleSendCode = async (email: string, code: string, clientName: string) => {
-        if (!confirm(`Send key to ${email}?`)) return;
-        try {
-            await emailjs.send(process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!, process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!, { to_email: email, client_name: clientName, access_code: code, login_link: `${window.location.origin}/client/login` }, process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!);
-            alert("Sent.");
-        } catch (err) { alert("Failed."); }
-    };
+    if (!confirm(`Send key to ${email}?`)) return;
+
+    // --- HATA TESPİTİ (DEBUG) İÇİN EKLENDİ ---
+    console.log("Service ID:", process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID);
+    console.log("Template ID:", process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID);
+    console.log("Public Key:", process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY);
+    // ----------------------------------------
+
+    try {
+        await emailjs.send(
+            process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!, 
+            process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!, 
+            { 
+                to_email: email, 
+                client_name: clientName, 
+                access_code: code, 
+                login_link: `${window.location.origin}/client/login` 
+            }, 
+            process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
+        );
+        alert("Sent.");
+    } catch (err: any) { 
+        console.error("EmailJS Full Error:", err);
+        alert(`Failed to send. Check console for details.`); 
+    }
+};
 
     if (!isAdmin) return null;
+
+    const hasAnyUnread = Object.keys(unreadCounts).length > 0;
 
     return (
         <div className="flex min-h-screen bg-[#F8F9FA] text-black font-sans relative overflow-x-hidden">
 
+            {/* Sağdan Açılan Müşteri Paneli */}
             {selectedClient && (
                 <div className="fixed inset-0 z-[60] flex justify-end">
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setSelectedClient(null)} />
@@ -278,9 +362,12 @@ export default function AdminDashboardPage() {
 
             <div className="md:hidden fixed top-0 w-full bg-white border-b border-zinc-200 z-40 p-4 flex justify-between items-center">
                 <h2 className="text-xl font-black tracking-tighter">NOVATRUM OS</h2>
-                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-zinc-100 rounded-lg">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
+                <div className="flex items-center gap-4">
+                    {hasAnyUnread && <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />}
+                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-zinc-100 rounded-lg">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                </div>
             </div>
 
             <aside className={`fixed inset-y-0 left-0 z-50 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-all duration-300 w-72 bg-white border-r border-zinc-200 p-8 flex flex-col h-full shadow-sm`}>
@@ -291,13 +378,18 @@ export default function AdminDashboardPage() {
                 <nav className="flex-1 space-y-1">
                     {[
                         { id: 'overview', label: 'System Overview' },
-                        { id: 'tickets', label: 'Support Tickets' },
+                        { id: 'tickets', label: 'Support Tickets', notification: hasAnyUnread },
                         { id: 'status', label: 'Infrastructure Control' },
                         { id: 'clients', label: 'Global Database' },
                         { id: 'add_client', label: '+ Register Client' },
                         { id: 'add_project', label: '+ Deploy Project' }
                     ].map((item) => (
-                        <button key={item.id} onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }} className={`w-full text-left px-6 py-4 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === item.id ? 'bg-black text-white shadow-lg' : 'text-zinc-400 hover:bg-zinc-50'}`}>{item.label}</button>
+                        <button key={item.id} onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }} className={`relative w-full text-left px-6 py-4 rounded-[20px] text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === item.id ? 'bg-black text-white shadow-lg' : 'text-zinc-400 hover:bg-zinc-50'}`}>
+                            {item.label}
+                            {item.notification && (
+                                <span className="absolute top-4 right-4 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_red] animate-pulse" />
+                            )}
+                        </button>
                     ))}
                 </nav>
                 <div className="mt-auto flex flex-col items-center pt-8 border-t border-zinc-50"><LogoutButton /></div>
@@ -313,7 +405,14 @@ export default function AdminDashboardPage() {
                             <div className="grid gap-6">
                                 {supportTickets.length === 0 && <p className="text-zinc-400 font-bold uppercase text-xs">No active tickets.</p>}
                                 {supportTickets.map(ticket => (
-                                    <div key={ticket.id} onClick={() => openTicketChat(ticket)} className="cursor-pointer bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border border-zinc-200 shadow-sm flex flex-col md:flex-row justify-between gap-6 hover:shadow-md hover:border-black transition-all group">
+                                    <div key={ticket.id} onClick={() => openTicketChat(ticket)} className="relative cursor-pointer bg-white p-6 md:p-8 rounded-[30px] md:rounded-[40px] border border-zinc-200 shadow-sm flex flex-col md:flex-row justify-between gap-6 hover:shadow-md hover:border-black transition-all group">
+
+                                        {unreadCounts[ticket.id] > 0 && (
+                                            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black px-3 py-1 rounded-full border-2 border-white animate-bounce shadow-md">
+                                                {unreadCounts[ticket.id]} NEW MESSAGES
+                                            </div>
+                                        )}
+
                                         <div className="space-y-4 flex-1">
                                             <div className="flex flex-wrap items-center gap-3">
                                                 <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase border ${ticket.status === 'open' ? 'border-blue-200 text-blue-600 bg-blue-50' : ticket.status === 'in-progress' ? 'border-yellow-200 text-yellow-600 bg-yellow-50' : 'border-emerald-200 text-emerald-600 bg-emerald-50'}`}>
@@ -324,7 +423,7 @@ export default function AdminDashboardPage() {
                                                     {ticket.priority} priority
                                                 </span>
                                             </div>
-                                            <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight group-hover:text-zinc-700 transition-colors">{ticket.subject}</h3>
+                                            <h3 className="text-xl md:text-2xl font-black uppercase tracking-tight group-hover:text-zinc-700 transition-colors pr-8">{ticket.subject}</h3>
                                             <p className="text-sm text-zinc-600 leading-relaxed bg-zinc-50 p-5 rounded-2xl border border-zinc-100 line-clamp-2">{ticket.message}</p>
                                             <p className="text-[10px] font-bold text-zinc-400 uppercase">From: <span className="text-black">{ticket.clients?.full_name}</span></p>
                                         </div>
@@ -344,11 +443,19 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div className="flex-1 overflow-y-auto pr-2 space-y-3">
                                         {supportTickets.map(ticket => (
-                                            <div key={ticket.id} onClick={() => openTicketChat(ticket)} className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedTicket?.id === ticket.id ? 'bg-black text-white border-black' : 'bg-zinc-50 hover:bg-white border-zinc-100 hover:border-zinc-300'}`}>
+                                            <div key={ticket.id} onClick={() => openTicketChat(ticket)} className={`relative p-4 rounded-2xl cursor-pointer transition-all border ${selectedTicket?.id === ticket.id ? 'bg-black text-white border-black' : 'bg-zinc-50 hover:bg-white border-zinc-100 hover:border-zinc-300'}`}>
+
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border ${selectedTicket?.id === ticket.id ? 'border-zinc-700 text-zinc-300' : (ticket.status === 'open' ? 'border-blue-200 text-blue-600' : ticket.status === 'in-progress' ? 'border-yellow-200 text-yellow-600' : 'border-emerald-200 text-emerald-600')}`}>{ticket.status}</span>
+
+                                                    {unreadCounts[ticket.id] > 0 && selectedTicket?.id !== ticket.id && (
+                                                        <span className="bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                                                            {unreadCounts[ticket.id]} NEW
+                                                        </span>
+                                                    )}
+
                                                 </div>
-                                                <h3 className={`text-xs font-black uppercase truncate ${selectedTicket?.id === ticket.id ? 'text-white' : 'text-black'}`}>{ticket.subject}</h3>
+                                                <h3 className={`text-xs font-black uppercase truncate pr-8 ${selectedTicket?.id === ticket.id ? 'text-white' : 'text-black'}`}>{ticket.subject}</h3>
                                                 <p className={`text-[9px] uppercase tracking-widest mt-2 truncate ${selectedTicket?.id === ticket.id ? 'text-zinc-400' : 'text-zinc-500'}`}>{ticket.clients?.full_name}</p>
                                             </div>
                                         ))}
@@ -452,6 +559,7 @@ export default function AdminDashboardPage() {
                     </div>
                 )}
 
+                {/* GÜNCELLENEN OVERVIEW SEKMESİ */}
                 {activeTab === 'overview' && (
                     <div className="max-w-6xl animate-in fade-in duration-700 space-y-12">
                         <div className="flex justify-between items-end">
@@ -486,7 +594,7 @@ export default function AdminDashboardPage() {
 
                                     <div className="space-y-4 pt-6 border-t border-zinc-50">
                                         <input
-                                            type="text" placeholder="Update log message..."
+                                            type="text" placeholder="Optional log message..."
                                             className="w-full bg-zinc-50 border border-zinc-100 p-4 rounded-2xl text-xs outline-none focus:bg-white transition-all"
                                             value={selectedProjectId === p.id ? updateMessage : ''}
                                             onChange={(e) => { setSelectedProjectId(p.id); setUpdateMessage(e.target.value); }}
@@ -494,13 +602,38 @@ export default function AdminDashboardPage() {
                                         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                                             <div className="flex items-center gap-3 flex-1">
                                                 <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2 shrink-0">Progress:</span>
+                                                {/* YENİ NESİL AKILLI PROGRESS INPUT */}
                                                 <input
-                                                    type="number" className="flex-1 bg-zinc-50 border border-zinc-100 p-4 rounded-2xl text-xs font-bold w-full"
-                                                    defaultValue={p.progress_percent}
-                                                    onBlur={(e) => handleUpdateProject(p.id, parseInt(e.target.value))}
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    className="flex-1 bg-zinc-50 border border-zinc-100 p-4 rounded-2xl text-xs font-bold w-full"
+                                                    value={localProgress[p.id] !== undefined ? localProgress[p.id] : p.progress_percent}
+                                                    onFocus={(e) => e.target.select()} // Kutuya tıklanınca içindekini seç (hemen üstüne yazabilmek için)
+                                                    onChange={(e) => {
+                                                        const valStr = e.target.value;
+
+                                                        // Eğer kutu tamamen silinirse (boş kalırsa) geçici olarak 0 atıyoruz
+                                                        if (valStr === '') {
+                                                            setLocalProgress({ ...localProgress, [p.id]: 0 });
+                                                            return;
+                                                        }
+
+                                                        // Sayıyı temizle (Baştaki gereksiz 0'ları parseInt otomatik siler: "040" -> 40 olur)
+                                                        let val = parseInt(valStr, 10);
+
+                                                        // Güvenlik sınırları: Sayı değilse 0 yap, 100'den büyükse 100'e sabitle, 0'dan küçükse 0 yap
+                                                        if (isNaN(val) || val < 0) val = 0;
+                                                        if (val > 100) val = 100;
+
+                                                        // Sınırlandırılmış ve temizlenmiş net sayıyı state'e kaydet
+                                                        setLocalProgress({ ...localProgress, [p.id]: val });
+                                                    }}
                                                 />
                                             </div>
-                                            <button className="w-full sm:w-auto bg-zinc-100 text-zinc-400 px-6 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors">Sync Log</button>
+                                            <button onClick={() => handleSyncProject(p.id)} disabled={loading} className="w-full sm:w-auto bg-black text-white px-6 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors shadow-lg active:scale-95 disabled:opacity-50">
+                                                Sync Update
+                                            </button>
                                         </div>
                                     </div>
                                 </div>

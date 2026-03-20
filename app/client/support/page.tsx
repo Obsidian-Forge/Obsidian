@@ -10,6 +10,9 @@ export default function ClientSupportPage() {
     const [sending, setSending] = useState(false);
     const [clientId, setClientId] = useState<string | null>(null);
     
+    // YENİ: Okunmamış mesaj sayılarını tutacağımız state { ticket_id: sayi }
+    const [unreadCounts, setUnreadCounts] = useState<{[key: string]: number}>({});
+
     const [form, setForm] = useState({ subject: '', message: '', priority: 'normal' });
     const router = useRouter();
 
@@ -22,8 +25,16 @@ export default function ClientSupportPage() {
         const storedId = localStorage.getItem('novatrum_client_id');
         if (!storedId) return router.push('/client/login');
         setClientId(storedId);
+        
+        // Önce okunmamış mesaj kayıtlarını local storage'dan alalım
+        const storedUnreads = localStorage.getItem(`novatrum_unreads_${storedId}`);
+        if (storedUnreads) {
+            setUnreadCounts(JSON.parse(storedUnreads));
+        }
+
         fetchTickets(storedId);
 
+        // 1. TİCKET DURUM DEĞİŞİKLİKLERİNİ DİNLE (Genel)
         const channel = supabase.channel('support-sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets', filter: `client_id=eq.${storedId}` }, () => {
                 fetchTickets(storedId);
@@ -32,19 +43,34 @@ export default function ClientSupportPage() {
         return () => { supabase.removeChannel(channel); };
     }, [router]);
 
-    // Anlık Chat Dinleyicisi
+    // 2. YENİ MESAJ GELDİ Mİ? (Global Dinleyici)
     useEffect(() => {
-        if (!selectedTicket) return;
-        const chatChannel = supabase.channel(`client-chat-${selectedTicket.id}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies', filter: `ticket_id=eq.${selectedTicket.id}` }, (payload) => {
-                // Sadece karşı tarafın (adminin) gönderdiği mesajları dinle, kendi mesajımızı `sendReply` içinde ekliyoruz
+        if (!clientId) return;
+
+        const globalChatChannel = supabase.channel('global-client-chat')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, (payload) => {
+                
+                // Eğer mesajı admin gönderdiyse
                 if (payload.new.sender_type === 'admin') {
-                    setReplies(current => [...current, payload.new]);
+                    const incomingTicketId = payload.new.ticket_id;
+
+                    // Eğer bu ticket şu an AÇIKSA (sohbetteysek), mesajı ekrana yaz ve okunmamış sayma
+                    if (selectedTicket && selectedTicket.id === incomingTicketId) {
+                        setReplies(current => [...current, payload.new]);
+                    } 
+                    // Eğer ticket KAPALIYSA (veya başka ticket'taysak), okunmamış sayısını arttır
+                    else {
+                        setUnreadCounts(prev => {
+                            const newCounts = { ...prev, [incomingTicketId]: (prev[incomingTicketId] || 0) + 1 };
+                            localStorage.setItem(`novatrum_unreads_${clientId}`, JSON.stringify(newCounts));
+                            return newCounts;
+                        });
+                    }
                 }
             }).subscribe();
 
-        return () => { supabase.removeChannel(chatChannel); };
-    }, [selectedTicket]);
+        return () => { supabase.removeChannel(globalChatChannel); };
+    }, [clientId, selectedTicket]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,6 +90,15 @@ export default function ClientSupportPage() {
 
     const openTicket = async (ticket: any) => {
         setSelectedTicket(ticket);
+        
+        // YENİ: Ticket açıldığında okunmamış mesaj sayısını sıfırla
+        setUnreadCounts(prev => {
+            const newCounts = { ...prev };
+            delete newCounts[ticket.id];
+            localStorage.setItem(`novatrum_unreads_${clientId}`, JSON.stringify(newCounts));
+            return newCounts;
+        });
+
         const { data } = await supabase.from('ticket_replies').select('*').eq('ticket_id', ticket.id).order('created_at', { ascending: true });
         setReplies(data || []);
     };
@@ -90,8 +125,6 @@ export default function ClientSupportPage() {
 
         try {
             const newReply = { ticket_id: selectedTicket.id, sender_type: 'client', message: replyMessage };
-            
-            // KEY HATASI ÇÖZÜMÜ: .select().single() ile veritabanından ID ile dönen halini alıyoruz
             const { data, error } = await supabase.from('ticket_replies').insert(newReply).select().single();
             if (error) throw error;
 
@@ -99,7 +132,6 @@ export default function ClientSupportPage() {
                 await supabase.from('support_tickets').update({ status: 'open' }).eq('id', selectedTicket.id);
             }
 
-            // Veritabanından gelen data'yı ekliyoruz (id özelliği dolu olarak geliyor)
             setReplies(current => [...current, data]);
             setReplyMessage('');
             fetchTickets(clientId!);
@@ -167,11 +199,18 @@ export default function ClientSupportPage() {
                                 </div>
                                 <div className="flex-1 overflow-y-auto pr-2 space-y-3">
                                     {tickets.map(ticket => (
-                                        <div key={ticket.id} onClick={() => openTicket(ticket)} className={`p-4 rounded-2xl cursor-pointer transition-all border ${selectedTicket?.id === ticket.id ? 'bg-black text-white border-black' : 'bg-zinc-50 hover:bg-white border-zinc-100 hover:border-zinc-300'}`}>
+                                        <div key={ticket.id} onClick={() => openTicket(ticket)} className={`relative p-4 rounded-2xl cursor-pointer transition-all border ${selectedTicket?.id === ticket.id ? 'bg-black text-white border-black' : 'bg-zinc-50 hover:bg-white border-zinc-100 hover:border-zinc-300'}`}>
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-md border ${selectedTicket?.id === ticket.id ? 'border-zinc-700 text-zinc-300' : getStatusStyle(ticket.status)}`}>{ticket.status}</span>
+                                                
+                                                {/* YENİ MESAJ BİLDİRİMİ (BUNU EKLEDİK) */}
+                                                {unreadCounts[ticket.id] > 0 && selectedTicket?.id !== ticket.id && (
+                                                    <span className="bg-red-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                                                        {unreadCounts[ticket.id]} NEW
+                                                    </span>
+                                                )}
                                             </div>
-                                            <h3 className={`text-xs font-black uppercase truncate ${selectedTicket?.id === ticket.id ? 'text-white' : 'text-black'}`}>{ticket.subject}</h3>
+                                            <h3 className={`text-xs font-black uppercase truncate pr-8 ${selectedTicket?.id === ticket.id ? 'text-white' : 'text-black'}`}>{ticket.subject}</h3>
                                         </div>
                                     ))}
                                 </div>
@@ -191,7 +230,15 @@ export default function ClientSupportPage() {
                                 ) : (
                                     <div className="grid gap-4">
                                         {tickets.map(ticket => (
-                                            <div key={ticket.id} onClick={() => openTicket(ticket)} className="bg-white border border-zinc-200 p-6 md:p-8 rounded-[30px] shadow-sm hover:shadow-md hover:border-black cursor-pointer transition-all group">
+                                            <div key={ticket.id} onClick={() => openTicket(ticket)} className="bg-white border border-zinc-200 p-6 md:p-8 rounded-[30px] shadow-sm hover:shadow-md hover:border-black cursor-pointer transition-all group relative">
+                                                
+                                                {/* YENİ MESAJ BİLDİRİMİ (BÜYÜK KART İÇİN) */}
+                                                {unreadCounts[ticket.id] > 0 && (
+                                                    <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black px-3 py-1 rounded-full border-2 border-white animate-bounce shadow-md">
+                                                        {unreadCounts[ticket.id]} NEW MESSAGES
+                                                    </div>
+                                                )}
+
                                                 <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                                                     <div className="flex flex-wrap items-center gap-3">
                                                         <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase border ${getStatusStyle(ticket.status)}`}>{ticket.status}</span>
@@ -201,7 +248,7 @@ export default function ClientSupportPage() {
                                                     </div>
                                                     <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-50 px-3 py-1.5 rounded-lg">{formatDate(ticket.created_at)}</span>
                                                 </div>
-                                                <h3 className="text-lg font-black uppercase tracking-tight mb-2 group-hover:text-zinc-700">{ticket.subject}</h3>
+                                                <h3 className="text-lg font-black uppercase tracking-tight mb-2 group-hover:text-zinc-700 pr-8">{ticket.subject}</h3>
                                                 <p className="text-xs text-zinc-500 line-clamp-1">{ticket.message}</p>
                                             </div>
                                         ))}
