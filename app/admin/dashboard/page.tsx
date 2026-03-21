@@ -284,31 +284,26 @@ export default function AdminDashboardPage() {
         fetchData();
     };
 
-const handleSendCode = async (email: string, code: string, clientName: string) => {
-    if (!confirm(`Send key to ${email}?`)) return;
-    
-    try {
-        const response = await fetch('/api/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                email: email,
-                code: code,
-                clientName: clientName,
-                loginLink: `${window.location.origin}/client/login`
-            })
-        });
+    const handleSendCode = async (email: string, code: string, clientName: string) => {
+        if (!confirm(`Send key to ${email}?`)) return;
 
-        if (!response.ok) {
-            throw new Error("Sunucu maili gönderemedi.");
-        }
+        try {
+            const response = await fetch('/api/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'access_code', // <- Bunu ekledik
+                    email: email,
+                    code: code,
+                    clientName: clientName,
+                    loginLink: `${window.location.origin}/client/login`
+                })
+            });
 
-        alert("Sent successfully.");
-    } catch (err) { 
-        console.error(err);
-        alert("Failed to send."); 
-    }
-};
+            if (!response.ok) throw new Error("Backend failed");
+            alert("Sent successfully.");
+        } catch (err) { alert("Failed to send."); }
+    };
 
     if (!isAdmin) return null;
 

@@ -29,20 +29,20 @@ export default function HomePage() {
 
     const formData = new FormData(event.currentTarget);
     const object = Object.fromEntries(formData);
-    object.access_key = "0ca2b8a6-eeb6-4866-841b-ac00ee601416";
-    object.subject = "New Inquiry from Novatrum Homepage";
-    object.from_name = "Novatrum Studio";
-
-    const json = JSON.stringify(object);
-
+    
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      // Artık Web3Forms değil, kendi API'mize gidiyoruz
+      const response = await fetch("/api/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json"
         },
-        body: json
+        body: JSON.stringify({
+          type: 'contact', // Backend'e iletişim formu olduğunu söylüyoruz
+          clientName: object.name,
+          email: object.email,
+          message: object.message
+        })
       });
 
       if (response.ok) {

@@ -52,7 +52,6 @@ export default function PriceCalculator() {
     }
   }, [selections, currentStep, customColors, isLoaded]);
 
-  // YENİ: BAŞTAN BAŞLAMA FONKSİYONU
   const handleReset = () => {
     if (window.confirm(cData.resetConfirm || "Are you sure you want to start over? All selections will be cleared.")) {
       setSelections({});
@@ -63,7 +62,7 @@ export default function PriceCalculator() {
       localStorage.removeItem('novatrum_selections');
       localStorage.removeItem('novatrum_step');
       localStorage.removeItem('novatrum_colors');
-      window.scrollTo({ top: 0, behavior: 'smooth' }); // En üste kaydır
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -133,16 +132,16 @@ export default function PriceCalculator() {
       title: cData.stepsData[6].title,
       subtitle: cData.stepsData[6].subtitle,
       type: 'select',
-      options: isLargeProject 
+      options: isLargeProject
         ? [
-            { id: "timeline-large", price: 0.00, label: cData.stepsData[6].options[0].label.replace(/4-6/g, '6-10'), description: cData.stepsData[6].options[0].desc },
-            { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
-            { id: "timeline-rush", price: 600.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
-          ]
+          { id: "timeline-large", price: 0.00, label: cData.stepsData[6].options[0].label.replace(/4-6/g, '6-10'), description: cData.stepsData[6].options[0].desc },
+          { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
+          { id: "timeline-rush", price: 600.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
+        ]
         : [
-            { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
-            { id: "timeline-rush", price: 600.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
-          ]
+          { id: "timeline-standard", price: 0.00, label: cData.stepsData[6].options[0].label, description: cData.stepsData[6].options[0].desc },
+          { id: "timeline-rush", price: 600.00, label: cData.stepsData[6].options[1].label, description: cData.stepsData[6].options[1].desc }
+        ]
     },
     {
       title: cData.stepsData[7].title,
@@ -240,12 +239,12 @@ export default function PriceCalculator() {
       if (step.type === 'select') {
         const option = step.options?.find(o => o.id === val);
         if (option) {
-          const priceStr = stepIdx === "0" 
-            ? `From €${option.price.toFixed(2)}` 
+          const priceStr = stepIdx === "0"
+            ? `From €${option.price.toFixed(2)}`
             : (option.price === 0 ? cData.included : `€${option.price.toFixed(2)}`);
-          
+
           let labelStr = option.label;
-          
+
           if (stepIdx === "6") {
             const isLarge = ['standard-store', 'advanced-api', 'ecommerce'].includes(selections[0]);
             if (val === "timeline-standard") {
@@ -277,92 +276,39 @@ export default function PriceCalculator() {
     return items;
   };
 
+  // GÜNCELLENEN KISIM: EmailJS iptal edildi, yeni backend API'sine (Nodemailer) bağlanıldı
   const handleGenerateDocument = async () => {
     setIsGenerating(true);
 
     try {
-      const itemsHtml = getSelectedItemsForEmail().map(item => `
-        <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #eeeeee; color: #333333; font-size: 14px;">${item.label}</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #eeeeee; text-align: right; font-weight: bold; color: #000000; font-size: 14px; font-family: monospace;">${item.price}</td>
-        </tr>
-      `).join('');
+      const items = getSelectedItemsForEmail();
+      const vision = selections[steps.length - 1] && selections[steps.length - 1].length > 2 ? selections[steps.length - 1] : '';
 
-      const visionText = selections[steps.length - 1] && selections[steps.length - 1].length > 2
-        ? `<div style="margin-top: 30px; padding: 20px; background-color: #fafafa; border-radius: 8px;">
-            <p style="margin: 0 0 10px 0; font-size: 10px; color: #888888; text-transform: uppercase; letter-spacing: 1px;">Client Vision</p>
-            <p style="margin: 0; font-size: 14px; color: #555555; font-style: italic;">"${selections[steps.length - 1]}"</p>
-           </div>`
-        : '';
-
-      const htmlProposal = `
-  <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #f0f0f0; border-radius: 24px; overflow: hidden; background-color: #ffffff; box-shadow: 0 10px 40px rgba(0,0,0,0.05);">
-    
-    <div style="background: #09090b linear-gradient(135deg, #09090b 0%, #1e1b4b 100%); padding: 60px 40px; text-align: center; position: relative;">
-      <img 
-        src="https://novatrum.eu/logo-white.png" 
-        alt="Novatrum" 
-        width="50" 
-        height="50" 
-        style="display: block; margin: 0 auto 20px auto; border: 0; outline: none;" 
-      />
-      <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #ffffff; text-transform: uppercase; letter-spacing: 5px; line-height: 1;">NOVATRUM</h1>
-      <div style="margin: 15px auto 0 auto; width: 40px; height: 1px; background-color: rgba(255,255,255,0.2);"></div>
-      <p style="margin: 15px 0 0 0; color: rgba(255,255,255,0.5); font-size: 10px; text-transform: uppercase; letter-spacing: 3px; font-weight: 700;">${cData.emailSubject}</p>
-    </div>
-    
-    <div style="padding: 50px 40px;">
-      <p style="margin: 0 0 10px 0; font-size: 18px; color: #000000; font-weight: 600;">Hello <strong>${clientInfo.name}</strong>,</p>
-      <p style="margin: 0 0 40px 0; font-size: 15px; color: #666666; line-height: 1.6;">Thank you for using the Configurator. Below is the custom roadmap and detailed estimate for <strong>${clientInfo.company || 'your project'}</strong>.</p>
-      
-      <h2 style="margin: 0 0 20px 0; font-size: 12px; color: #000000; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px;">${cData.emailScope}</h2>
-      
-      <table style="width: 100%; border-collapse: collapse;">
-        ${itemsHtml}
-      </table>
-      
-      ${visionText}
-      
-      <div style="margin-top: 50px; padding: 40px; background-color: #fcfcfd; border-radius: 20px; text-align: right; border: 1px solid #f8f8f8;">
-        ${monthly > 0 ? `<p style="margin: 0 0 15px 0; font-size: 12px; color: #666666; text-transform: uppercase; letter-spacing: 1px;">${cData.emailRecurring} <span style="font-size: 20px; color: #4f46e5; font-weight: 700;">+ €${monthly.toFixed(2)} <span style="font-size: 12px; font-weight: 400; color: #999;">/ ${cData.monthly}</span></span></p>` : ''}
-        <p style="margin: 0 0 8px 0; font-size: 11px; color: #999999; text-transform: uppercase; letter-spacing: 2px; font-weight: 700;">${cData.emailTotal}</p>
-        <p style="margin: 0; font-size: 48px; font-weight: 800; color: #000000; letter-spacing: -2px; line-height: 1;">€${upfront.toFixed(2)}</p>
-        <p style="margin: 12px 0 0 0; font-size: 10px; color: #cccccc; text-transform: uppercase; letter-spacing: 1px;">${cData.emailVat}</p>
-      </div>
-    </div>
-    
-    <div style="background-color: #fafafa; padding: 40px; text-align: center; border-top: 1px solid #f0f0f0;">
-      <p style="margin: 0; font-size: 13px; color: #000000; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Novatrum Studio</p>
-      <p style="margin: 8px 0 0 0; font-size: 12px; color: #888888;">Belgium • <a href="mailto:info@novatrum.eu" style="color: #4f46e5; text-decoration: none;">info@novatrum.eu</a></p>
-      <p style="margin: 25px 0 0 0; font-size: 9px; color: #bbbbbb; text-transform: uppercase; letter-spacing: 1px;">${cData.emailGenerated}</p>
-    </div>
-  </div>
-`;
-
-      const templateParams = {
-        client_name: clientInfo.name,
-        client_email: clientInfo.email,
-        html_proposal: htmlProposal
-      };
-
-      const response = await fetch('/api/send-proposal', {
+      // API'ye sadece saf JSON datası atıyoruz, HTML tasarımlarını Backend yapacak!
+      const response = await fetch('/api/email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(templateParams),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'calculator', // <- Bu çok önemli, backend'e şablonu söylüyor
+          email: clientInfo.email,
+          clientName: clientInfo.name,
+          upfront: upfront,
+          monthly: monthly,
+          items: items,
+          vision: vision
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send email');
+        throw new Error('Sunucu e-postayı gönderemedi');
       }
 
       setIsSuccess(true);
-      
+
       localStorage.removeItem('novatrum_selections');
       localStorage.removeItem('novatrum_step');
       localStorage.removeItem('novatrum_colors');
-      
+
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to send proposal. Please try again.');
@@ -432,13 +378,12 @@ export default function PriceCalculator() {
                           onClick={() => {
                             if (!isDisabledOption) handleSelect(opt.id, false);
                           }}
-                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
-                            isSelected 
-                              ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]' 
+                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${isSelected
+                              ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
                               : isDisabledOption
                                 ? 'bg-white/40 border-zinc-200/40 text-black opacity-40 grayscale pointer-events-none'
                                 : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
-                          }`}
+                            }`}
                         >
                           {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
 
@@ -452,7 +397,7 @@ export default function PriceCalculator() {
                                   </span>
                                 )}
                               </span>
-                              
+
                               <div className="flex items-center">
                                 {isDisabledOption && (
                                   <span className="text-[9px] uppercase tracking-widest px-2.5 py-1 rounded-full font-bold md:ml-3 bg-zinc-200 text-zinc-500">
@@ -488,11 +433,10 @@ export default function PriceCalculator() {
                         <button
                           key={opt.id}
                           onClick={() => handleSelect(opt.id, true)}
-                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
-                            isSelected
+                          className={`group p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${isSelected
                               ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
                               : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
-                          }`}
+                            }`}
                         >
                           {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
 
@@ -501,7 +445,7 @@ export default function PriceCalculator() {
                               <div className={`w-5 h-5 flex-shrink-0 mt-1 rounded flex items-center justify-center transition-colors border ${isSelected ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 bg-white'}`}>
                                 {isSelected && <div className="w-2.5 h-2.5 bg-white rounded-sm" />}
                               </div>
-                              
+
                               <div className="flex flex-col items-start gap-2">
                                 <span className="text-xl font-bold tracking-tight leading-none">{opt.label}</span>
                                 {opt.id === 'speed-ultra' && (
@@ -518,7 +462,7 @@ export default function PriceCalculator() {
                                 : `+ €${opt.price.toFixed(2)}`}
                             </span>
                           </div>
-                          
+
                           <p className={`text-sm font-light ml-9 relative z-10 ${isSelected ? 'text-zinc-400' : 'text-zinc-500'}`}>
                             {opt.description}
                           </p>
@@ -538,11 +482,10 @@ export default function PriceCalculator() {
                           <button
                             key={p.name}
                             onClick={() => handleSelect(p.name, false)}
-                            className={`p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${
-                              isSelected
+                            className={`p-8 rounded-[32px] border transition-all duration-300 text-left cursor-none relative overflow-hidden ${isSelected
                                 ? 'bg-zinc-950 text-white border-zinc-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
                                 : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black hover:bg-white hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5'
-                            }`}
+                              }`}
                           >
                             {isSelected && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
 
@@ -564,8 +507,8 @@ export default function PriceCalculator() {
 
                     {/* CUSTOM PALETTE BÖLÜMÜ */}
                     <div className={`p-8 rounded-[32px] border transition-all duration-300 relative overflow-hidden ${selections[currentStep]?.startsWith(cData.customPalette)
-                        ? 'bg-zinc-950 border-zinc-800 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
-                        : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black'
+                      ? 'bg-zinc-950 border-zinc-800 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)]'
+                      : 'bg-white/60 backdrop-blur-xl border-zinc-200/60 text-black'
                       }`}
                     >
                       {selections[currentStep]?.startsWith(cData.customPalette) && <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 blur-xl -z-10" />}
@@ -578,8 +521,8 @@ export default function PriceCalculator() {
                         <button
                           onClick={handleRandomPalette}
                           className={`px-4 py-2 border text-[10px] font-bold uppercase tracking-widest rounded-full transition-all cursor-none ${selections[currentStep]?.startsWith(cData.customPalette)
-                              ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
-                              : 'bg-white border-zinc-200 text-black hover:border-black'
+                            ? 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700'
+                            : 'bg-white border-zinc-200 text-black hover:border-black'
                             }`}
                         >
                           {cData.shuffleColors}
@@ -607,8 +550,8 @@ export default function PriceCalculator() {
                       <button
                         onClick={() => handleSelect(`${cData.customPalette}: ${customColors.join(' | ')}`, false)}
                         className={`w-full py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all duration-300 relative z-10 ${selections[currentStep]?.startsWith(cData.customPalette)
-                            ? 'bg-white text-black shadow-lg hover:bg-zinc-200'
-                            : 'bg-white border border-zinc-200 text-black hover:border-indigo-300'
+                          ? 'bg-white text-black shadow-lg hover:bg-zinc-200'
+                          : 'bg-white border border-zinc-200 text-black hover:border-indigo-300'
                           }`}
                       >
                         {selections[currentStep]?.startsWith(cData.customPalette) ? `✓ ${cData.paletteSelected}` : cData.applyPalette}
@@ -654,7 +597,7 @@ export default function PriceCalculator() {
                     </div>
                   </div>
                 )}
-                
+
                 {/* BUTONLAR KISMI: Geri Dön ve Baştan Başla */}
                 <div className="relative z-10 flex items-center justify-center gap-6">
                   <button
@@ -739,7 +682,7 @@ export default function PriceCalculator() {
       {currentStep < steps.length && (
         <div className="fixed bottom-0 left-0 w-full bg-white/80 backdrop-blur-xl border-t border-zinc-200/60 p-4 md:p-6 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.04)]">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
-            
+
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
                 {cData.liveTotal || "Live Total"}
@@ -757,7 +700,7 @@ export default function PriceCalculator() {
             </div>
 
             <div className="flex items-center gap-3 md:gap-6">
-              
+
               <button
                 onClick={prevStep}
                 disabled={currentStep === 0}
@@ -765,7 +708,7 @@ export default function PriceCalculator() {
               >
                 // {cData.btnPrev || "PREVIOUS STEP"}
               </button>
-              
+
               <button
                 onClick={prevStep}
                 disabled={currentStep === 0}
@@ -778,8 +721,8 @@ export default function PriceCalculator() {
                 onClick={nextStep}
                 disabled={!isStepValid()}
                 className={`px-8 md:px-12 py-4 md:py-5 rounded-full font-bold uppercase tracking-widest text-[10px] transition-all cursor-none ${isStepValid()
-                    ? 'bg-gradient-to-r from-zinc-900 to-black text-white hover:shadow-lg hover:shadow-indigo-900/20'
-                    : 'bg-zinc-100 text-zinc-400'
+                  ? 'bg-gradient-to-r from-zinc-900 to-black text-white hover:shadow-lg hover:shadow-indigo-900/20'
+                  : 'bg-zinc-100 text-zinc-400'
                   }`}
               >
                 {currentStep === steps.length - 1 ? cData.btnFinish : cData.btnNext}
