@@ -214,7 +214,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                   <option value="nl">Nederlands</option>
                   <option value="fr">Français</option>
                   <option value="tr">Türkçe</option>
-                  <option value="ko">한국어</option>
                 </select>
              </div>
 
