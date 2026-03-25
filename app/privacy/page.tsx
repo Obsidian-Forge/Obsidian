@@ -8,24 +8,25 @@ import { useLanguage } from '../../context/LanguageContext';
 export default function PrivacyPage() {
   const { t } = useLanguage();
 
+  if (!t.privacy) return <div className="min-h-screen bg-white"></div>;
+
   return (
-    <main className="w-full bg-white min-h-screen relative overflow-hidden">
+    <main className="w-full bg-white min-h-screen relative overflow-hidden selection:bg-zinc-900 selection:text-white">
       
-      {/* BACKGROUND GLOWS (Derinlik ve premium his için) */}
-      <div className="absolute top-[-10%] left-[-5%] w-[600px] h-[600px] bg-blue-100/40 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
-      <div className="absolute bottom-[20%] right-[-10%] w-[500px] h-[500px] bg-indigo-100/30 rounded-full blur-[100px] pointer-events-none -z-10 mix-blend-multiply" />
+      {/* CLEAN BACKGROUND TEXTURE */}
+      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:32px_32px] opacity-40 -z-10" />
 
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-40 relative z-10">
         
         {/* Page Header */}
         <FadeUp>
-          <div className="space-y-6 border-b border-zinc-100/50 pb-12">
-            <h1 className="text-5xl md:text-7xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-slate-800 to-indigo-900 leading-tight pb-2">
+          <div className="space-y-6 pb-12 border-b border-zinc-100">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-tight text-black uppercase pb-2">
               {t.privacy.title} <br />
-              <span className="text-zinc-400 italic font-light">{t.privacy.subtitle}</span>
+              <span className="text-zinc-400 font-medium">{t.privacy.subtitle}</span>
             </h1>
             <div className="flex items-center gap-4">
-               <p className="text-indigo-400 font-bold text-[10px] tracking-[0.2em] uppercase bg-indigo-50/50 px-4 py-2 rounded-full border border-indigo-100/50">
+               <p className="text-black font-black text-[10px] tracking-[0.2em] uppercase bg-zinc-100 px-4 py-2 rounded-full">
                  {t.privacy.tag}
                </p>
                <span className="w-1 h-1 bg-zinc-300 rounded-full" />
@@ -36,69 +37,54 @@ export default function PrivacyPage() {
           </div>
         </FadeUp>
 
-        <div className="mt-20 space-y-12 text-left">
+        <div className="mt-20 space-y-8 text-left">
           
-          {/* 01. Veri Toplamama Sözü */}
+          {/* 01. Data Collection */}
           <FadeUp delay={100}>
-            <section className="p-10 md:p-14 bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-[40px] shadow-sm hover:shadow-lg hover:shadow-indigo-900/5 hover:bg-white transition-all relative overflow-hidden group">
-              {/* Kart içi çok hafif hover efekti */}
-              <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-blue-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em] mb-6 relative z-10">{t.privacy.sec1Title}</h2>
-              <div className="space-y-6 text-zinc-500 font-light leading-relaxed relative z-10">
-                <p className="text-lg">
+            <section className="p-10 md:p-14 bg-white border border-zinc-200 hover:bg-zinc-950 hover:border-zinc-950 rounded-[32px] transition-all duration-500 ease-out group">
+              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">{t.privacy.sec1Title}</h2>
+              <div className="space-y-6">
+                <p className="text-lg text-zinc-600 group-hover:text-zinc-400 font-medium leading-relaxed transition-colors duration-500">
                   {t.privacy.sec1Desc}
                 </p>
-                <div className="p-8 rounded-[24px] bg-gradient-to-br from-indigo-50/50 to-blue-50/50 border border-indigo-100/50 text-indigo-950 text-sm font-medium shadow-inner">
+                <div className="p-6 md:p-8 rounded-[24px] bg-zinc-50 group-hover:bg-zinc-900 border border-zinc-200 group-hover:border-zinc-800 text-black group-hover:text-white text-sm font-black uppercase tracking-widest transition-all duration-500">
                   {t.privacy.sec1Notice}
                 </div>
               </div>
             </section>
           </FadeUp>
 
-          {/* 02. İletişim Formu ve Email */}
+          {/* 02. Communication */}
           <FadeUp delay={150}>
-            <section className="p-10 md:p-14 bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-[40px] shadow-sm hover:shadow-lg hover:shadow-indigo-900/5 hover:bg-white transition-all relative overflow-hidden group">
-              <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-indigo-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em] mb-6 relative z-10">{t.privacy.sec2Title}</h2>
-              <p className="text-zinc-500 font-light text-lg leading-relaxed relative z-10 mb-8">
+            <section className="p-10 md:p-14 bg-white border border-zinc-200 hover:bg-zinc-950 hover:border-zinc-950 rounded-[32px] transition-all duration-500 ease-out group">
+              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">{t.privacy.sec2Title}</h2>
+              <p className="text-lg text-zinc-600 group-hover:text-zinc-400 font-medium leading-relaxed mb-8 transition-colors duration-500">
                 {t.privacy.sec2Desc}
               </p>
               
-              <ul className="space-y-4 text-zinc-500 font-light ml-2 border-l border-indigo-100 pl-8 relative z-10">
+              <ul className="space-y-5 text-zinc-600 group-hover:text-zinc-300 font-medium ml-2 border-l-2 border-zinc-100 group-hover:border-zinc-800 pl-8 transition-colors duration-500">
                 <li className="flex items-center gap-4 relative">
-                  <span className="absolute -left-[37px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
-                  <span className="text-black font-medium">{t.privacy.rule1}</span>
+                  <span className="absolute -left-[39px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-zinc-200 group-hover:bg-zinc-700 transition-colors duration-500" />
+                  <span className="text-black group-hover:text-white transition-colors duration-500">{t.privacy.rule1}</span>
                 </li>
                 <li className="flex items-center gap-4 relative">
-                  <span className="absolute -left-[37px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
-                  <span className="text-black font-medium">{t.privacy.rule2}</span>
+                  <span className="absolute -left-[39px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-zinc-200 group-hover:bg-zinc-700 transition-colors duration-500" />
+                  <span className="text-black group-hover:text-white transition-colors duration-500">{t.privacy.rule2}</span>
                 </li>
                 <li className="flex items-center gap-4 relative">
-                  <span className="absolute -left-[37px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.5)]" />
-                  <span className="text-black font-medium">{t.privacy.rule3}</span>
+                  <span className="absolute -left-[39px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-zinc-900 group-hover:bg-white transition-colors duration-500" />
+                  <span className="text-black group-hover:text-white transition-colors duration-500">{t.privacy.rule3}</span>
                 </li>
               </ul>
             </section>
           </FadeUp>
 
-          {/* 03. Çerez ve Takip Yok */}
+          {/* 03. Security */}
           <FadeUp delay={200}>
-            <section className="p-10 md:p-14 bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-[40px] shadow-sm hover:shadow-lg hover:shadow-indigo-900/5 hover:bg-white transition-all relative overflow-hidden group">
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em] mb-6 relative z-10">{t.privacy.sec3Title}</h2>
-              <p className="text-zinc-500 font-light text-lg leading-relaxed relative z-10">
+            <section className="p-10 md:p-14 bg-white border border-zinc-200 hover:bg-zinc-950 hover:border-zinc-950 rounded-[32px] transition-all duration-500 ease-out group">
+              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">{t.privacy.sec3Title}</h2>
+              <p className="text-lg text-zinc-600 group-hover:text-zinc-400 font-medium leading-relaxed transition-colors duration-500">
                 {t.privacy.sec3Desc}
-              </p>
-            </section>
-          </FadeUp>
-
-          {/* 04. Güvenlik */}
-          <FadeUp delay={250}>
-            <section className="p-10 md:p-14 bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-[40px] shadow-sm hover:shadow-lg hover:shadow-indigo-900/5 hover:bg-white transition-all relative overflow-hidden group">
-              <h2 className="text-xl font-bold text-black uppercase tracking-[0.2em] mb-6 relative z-10">{t.privacy.sec4Title}</h2>
-              <p className="text-zinc-500 font-light text-lg leading-relaxed relative z-10">
-                {t.privacy.sec4Desc}
               </p>
             </section>
           </FadeUp>
@@ -106,10 +92,10 @@ export default function PrivacyPage() {
         </div>
 
         {/* Footer CTA */}
-        <FadeUp delay={300}>
-          <div className="mt-32 pt-16 border-t border-zinc-100/50 text-center space-y-8 relative z-10">
-            <p className="text-zinc-400 text-xs font-bold uppercase tracking-[0.2em]">{t.privacy.footerTag}</p>
-            <Link href="/contact" className="inline-block px-10 py-5 bg-gradient-to-r from-zinc-900 to-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:shadow-lg hover:shadow-indigo-900/20 transition-all cursor-none scale-100 hover:scale-105">
+        <FadeUp delay={250}>
+          <div className="mt-32 pt-16 text-center space-y-8 relative z-10 border-t border-zinc-100">
+            <p className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.3em]">{t.privacy.footerTag}</p>
+            <Link href="/contact" className="inline-block px-12 py-6 bg-black text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-zinc-800 transition-all hover:scale-105 active:scale-95 shadow-xl">
               {t.privacy.cta}
             </Link>
           </div>
