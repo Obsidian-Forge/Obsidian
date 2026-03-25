@@ -77,7 +77,7 @@ export default function ProcessPage() {
         <FadeUp>
           <div className="text-center pt-20 border-t border-zinc-100/50 mt-20">
             <h3 className="text-3xl md:text-5xl font-medium text-black mb-10 tracking-tight">{pData.ctaTitle}</h3>
-            <Link href="/calculator" className="inline-flex items-center gap-4 px-10 py-5 bg-gradient-to-r from-zinc-900 to-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:shadow-lg hover:shadow-indigo-900/20 transition-all group cursor-none scale-100 hover:scale-[1.02]">
+            <Link href="/gateway" className="inline-flex items-center gap-4 px-10 py-5 bg-gradient-to-r from-zinc-900 to-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:shadow-lg hover:shadow-indigo-900/20 transition-all group cursor-none scale-100 hover:scale-[1.02]">
               {pData.ctaButton}
               <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />

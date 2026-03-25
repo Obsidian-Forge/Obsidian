@@ -92,8 +92,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
           </nav>
 
           <div className="flex items-center gap-4 relative z-[110]">
-            <Link href="/calculator" className="hidden md:inline-block px-8 py-3.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full hover:bg-zinc-800 transition-all">
-              {t.hero.ctaStart}
+            {/* YEŞİL NOKTALI MASAÜSTÜ BUTONU */}
+            <Link href="/client/login" className="hidden md:inline-flex items-center gap-2 px-8 py-3.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full hover:bg-zinc-800 transition-all">
+              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              Client Portal
             </Link>
             
             <button 
@@ -147,19 +149,20 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                 </motion.div>
               ))}
               
-              {/* MOBILE CTA BUTTON */}
+              {/* YEŞİL NOKTALI MOBİL BUTON */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + navLinks.length * 0.05 }}
-                className="w-full mt-8"
+                className="w-full mt-8 px-4"
               >
                 <Link 
-                  href="/calculator"
+                  href="/client/login"
                   onClick={() => setIsOpen(false)}
-                  className="inline-block w-full max-w-[280px] py-5 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl"
+                  className="inline-flex items-center justify-center gap-3 w-full max-w-[280px] py-5 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl mx-auto"
                 >
-                  {t.hero.ctaStart}
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                  Client Portal
                 </Link>
               </motion.div>
 
@@ -172,7 +175,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
 
-      {/* FOOTER */}
+      {/* FOOTER - DOKUNULMADI */}
       <footer className="w-full bg-white py-16 px-6 md:px-16 mt-12 border-t border-zinc-100/50">
         <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div className="flex flex-col gap-4">

@@ -26,25 +26,22 @@ export default function HomePage() {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
-
     const formData = new FormData(event.currentTarget);
     const object = Object.fromEntries(formData);
     
     try {
-      // Artık Web3Forms değil, kendi API'mize gidiyoruz
       const response = await fetch("/api/email", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          type: 'contact', // Backend'e iletişim formu olduğunu söylüyoruz
+          type: 'contact', 
           clientName: object.name,
           email: object.email,
           message: object.message
         })
       });
-
       if (response.ok) {
         setIsSuccess(true);
       } else {
@@ -84,8 +81,8 @@ export default function HomePage() {
             </motion.p>
 
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-              <Link href="/calculator" className="px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl shadow-white/10">
-                {t.hero.ctaStart}
+              <Link href="/gateway" className="px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl shadow-white/10">
+                Start Project Discovery
               </Link>
             </motion.div>
           </div>
@@ -94,7 +91,7 @@ export default function HomePage() {
 
       {/* TECH STACK LOGOS */}
       <section className="max-w-7xl mx-auto px-6 py-16">
-        <p className="text-center text-[10px] text-zinc-400 uppercase tracking-widest mb-8">{t.tech.tag}</p>
+         <p className="text-center text-[10px] text-zinc-400 uppercase tracking-widest mb-8">{t.tech.tag}</p>
         <div className="flex flex-wrap justify-center gap-8 md:gap-16 opacity-40 grayscale font-bold text-xl md:text-2xl tracking-tighter text-black">
           <span>{t.tech.items.next}</span>
           <span>{t.tech.items.ts}</span>
@@ -111,12 +108,12 @@ export default function HomePage() {
             <h2 className="text-4xl md:text-6xl font-medium tracking-tight text-black flex-1">{t.services.title}</h2>
             <p className="text-zinc-500 text-lg font-light flex-1 max-w-md lg:mb-2">{t.services.subtitle}</p>
           </div>
-          
+        
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div className="lg:col-span-3 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-[40px] p-10 md:p-14 relative overflow-hidden group h-[400px] flex flex-col justify-between">
               <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-300 rounded-full blur-3xl opacity-30 transition-opacity duration-700 group-hover:opacity-60" />
               <div>
-                <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-indigo-900 mb-6"><LayoutIcon /></div>
+                 <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-indigo-900 mb-6"><LayoutIcon /></div>
                 <h3 className="text-3xl font-bold tracking-tight text-black">{t.services.frontend.title}</h3>
               </div>
               <p className="text-zinc-600 font-light leading-relaxed max-w-sm relative z-10">{t.services.frontend.desc}</p>
@@ -175,8 +172,8 @@ export default function HomePage() {
               
               <div className="relative z-10 space-y-8">
                 <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Ready to build?</h3>
-                <Link href="/calculator" className="inline-flex items-center justify-center px-10 py-5 bg-white text-black font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-transform">
-                  {t.pricing.cta}
+                <Link href="/gateway" className="inline-flex items-center justify-center px-10 py-5 bg-white text-black font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-transform">
+                  Start Project Discovery
                 </Link>
               </div>
             </div>
@@ -185,7 +182,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      {/* 5. CONTACT FORM (Karanlık Banner Tasarımı) */}
+      {/* 5. CONTACT FORM */}
       <section className="max-w-4xl mx-auto px-6 py-20 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
 
@@ -234,7 +231,7 @@ export default function HomePage() {
             ) : (
               <div className="text-center space-y-6 py-10 animate-in fade-in zoom-in duration-500 relative z-10">
                 <div className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center mx-auto shadow-xl shadow-white/10">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <h3 className="text-3xl font-bold text-white tracking-tight">Message Sent.</h3>
                 <p className="text-zinc-400 font-light leading-relaxed max-w-sm mx-auto">

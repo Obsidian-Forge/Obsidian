@@ -18,18 +18,14 @@ export default function ContactPage() {
     const formData = new FormData(event.currentTarget);
     const object = Object.fromEntries(formData);
     
-    // Mesajın sonuna kategori bilgisini de ekliyoruz ki sana gelen mailde gözüksün
     const fullMessage = `Category: ${object.category}\n\nMessage:\n${object.message}`;
 
     try {
-      // Web3Forms yerine KENDİ API'MİZE yönlendiriyoruz
       const response = await fetch("/api/email", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: 'contact', // Backend'e bunun bir iletişim formu olduğunu söylüyoruz
+          type: 'contact',
           clientName: object.name,
           email: object.email,
           message: fullMessage
@@ -37,7 +33,7 @@ export default function ContactPage() {
       });
 
       if (response.ok) {
-        setIsSuccess(true); 
+        setIsSuccess(true);
       } else {
         alert("Something went wrong. Please try again.");
       }
@@ -49,18 +45,16 @@ export default function ContactPage() {
     }
   };
 
-  if (!data) return <div className="pt-40 text-center text-zinc-500">Loading translations...</div>;
+  if (!data || !data.form) return <div className="pt-40 text-center text-zinc-500">Loading translations...</div>;
 
   return (
     <main className="w-full bg-white min-h-screen relative overflow-hidden">
       
-      {/* BACKGROUND GLOWS */}
       <div className="absolute top-[-5%] left-[-5%] w-[600px] h-[600px] bg-purple-100/40 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
       <div className="absolute top-[40%] right-[-10%] w-[500px] h-[500px] bg-indigo-100/30 rounded-full blur-[100px] pointer-events-none -z-10 mix-blend-multiply" />
 
       <div className="max-w-7xl mx-auto px-6 pt-32 pb-40 relative z-10">
         
-        {/* Page Header */}
         <FadeUp>
           <div className="text-center space-y-8 max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-8xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-slate-800 to-indigo-900 leading-[1.1] pb-2">
@@ -75,7 +69,6 @@ export default function ContactPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 mt-32 border-b border-zinc-100/50 pb-32">
           
-          {/* Left Side: Roadmap & Presence */}
           <FadeUp delay={100}>
             <div className="space-y-16">
               <div className="space-y-6">
@@ -89,13 +82,12 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* The Roadmap */}
               <div className="space-y-8">
                 <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400 border-l-2 border-indigo-200 pl-4">
                   {data.roadmapTitle}
                 </h4>
                 <div className="space-y-8">
-                  {data.steps.map((item: any, i: number) => (
+                  {data.steps?.map((item: any, i: number) => (
                     <div key={i} className="flex gap-6 items-start group">
                       <span className="text-xs font-black text-white px-3 py-2 bg-gradient-to-br from-zinc-900 to-black rounded-xl tracking-tighter shadow-md group-hover:shadow-indigo-900/20 transition-all">
                         {item.s}
@@ -109,7 +101,6 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Availability Badge */}
               <div className="flex items-center gap-4 p-5 rounded-2xl bg-emerald-50/80 backdrop-blur-sm border border-emerald-100/50 w-fit shadow-sm">
                 <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                 <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-[0.2em]">{data.badge}</p>
@@ -117,7 +108,6 @@ export default function ContactPage() {
             </div>
           </FadeUp>
 
-          {/* Right Side: Contact Form */}
           <FadeUp delay={200}>
             <div className="p-10 md:p-14 rounded-[40px] bg-zinc-950 shadow-2xl min-h-[500px] flex flex-col justify-center relative overflow-hidden group">
               
@@ -127,7 +117,6 @@ export default function ContactPage() {
 
               {!isSuccess ? (
                 <form onSubmit={handleSubmit} className="space-y-8 relative z-10" suppressHydrationWarning>
-                  
                   <input type="checkbox" name="botcheck" className="hidden" style={{ display: 'none' }} />
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -160,7 +149,7 @@ export default function ContactPage() {
                     className="w-full py-5 bg-white text-black font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-[1.02] transition-all disabled:opacity-50"
                     suppressHydrationWarning
                   >
-                    {isSubmitting ? "Sending..." : data.form.submit}
+                    {isSubmitting ? data.form.sending : data.form.submit}
                   </button>
                 </form>
               ) : (
@@ -168,12 +157,12 @@ export default function ContactPage() {
                   <div className="w-20 h-20 bg-white text-black rounded-full flex items-center justify-center mx-auto shadow-xl shadow-white/10">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                   </div>
-                  <h3 className="text-3xl font-bold text-white tracking-tight">Message Sent.</h3>
+                  <h3 className="text-3xl font-bold text-white tracking-tight">{data.success.title}</h3>
                   <p className="text-zinc-400 font-light leading-relaxed max-w-sm mx-auto">
-                    Thank you for reaching out. I have received your project brief and will get back to you within 24 hours.
+                    {data.success.desc}
                   </p>
                   <button onClick={() => setIsSuccess(false)} className="mt-8 px-8 py-4 bg-white/10 border border-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-white hover:text-black hover:shadow-md transition-all">
-                    Send another message
+                    {data.success.button}
                   </button>
                 </div>
               )}
@@ -182,7 +171,6 @@ export default function ContactPage() {
           </FadeUp>
         </div>
 
-        {/* FAQ Section */}
         <section className="mt-40">
           <FadeUp>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
@@ -194,7 +182,7 @@ export default function ContactPage() {
               </div>
               
               <div className="lg:col-span-2 space-y-12 text-left">
-                {data.faqs.map((faq: any, i: number) => (
+                {data.faqs?.map((faq: any, i: number) => (
                   <div key={i} className="group border-b border-zinc-100/50 pb-10">
                     <h4 className="text-xl font-bold text-black group-hover:text-indigo-900 transition-colors duration-300">
                       {faq.q}

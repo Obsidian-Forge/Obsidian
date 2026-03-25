@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
+/* İŞTE EKSİK OLAN SİHİRLİ SATIR (Tailwind v4 Dark Mode Tetikleyicisi) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* TEMEL TEMA DEĞİŞKENLERİ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f9fa;
+  --foreground: #000000;
+  --card: #ffffff;
+  --border: #e4e4e7;
+}
+
+/* DARK CLASS'I AKTİF OLDUĞUNDA (Settings'ten tetiklenir) */
+.dark {
+  --background: #09090b;
+  --foreground: #ffffff;
+  --card: #18181b;
+  --border: #27272a;
 }
 
 @theme inline {
@@ -12,24 +26,21 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* GENEL SIFIRLAMA VE YUMUŞAK GEÇİŞ */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  /* Mobilde normal imleç için varsayılan ayar */
   cursor: auto;
+  min-height: 100vh;
 }
 
-/* SADECE BİLGİSAYAR (MUSE/POINTER) İÇİN AYARLAR */
+/* SADECE BİLGİSAYAR (MOUSE/POINTER) İÇİN ÖZEL CURSOR AYARLARI */
 @media (pointer: fine) {
-  /* Bilgisayarda orijinal imleci gizle */
   *, a, button, input, textarea, select {
     cursor: none !important;
   }
@@ -37,13 +48,33 @@ body {
 
 /* SADECE MOBİL/DOKUNMATİK İÇİN AYARLAR */
 @media (pointer: coarse) {
-  /* Custom cursor elementlerini (beyaz nokta ve halka) tamamen gizle */
   .hide-on-mobile {
     display: none !important;
   }
 
-  /* Telefonlarda her şeyin kendi doğal imlecine (parmak dokunuşu) dönmesini sağla */
   *, a, button, input, textarea, select {
     cursor: auto !important;
   }
+}
+
+/* SCROLLBAR TASARIMI (DARK MODE UYUMLU) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
 }

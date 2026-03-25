@@ -1,1294 +1,1524 @@
+export type Language = 'en' | 'nl' | 'fr' | 'tr';
+
 export const translations = {
   en: {
-    nav: { home: "Home", services: "Services", process: "Process", contact: "Contact", privacy: "Privacy", terms: "Terms" },
-    footer: { rights: "All rights reserved.", builtIn: "Built in Dilbeek, Belgium.", lang: "Language" },
+    nav: { home: "Home", services: "Services", process: "Process", contact: "Contact", privacy: "Privacy", terms: "Terms", gateway: "Client Portal" },
+    footer: { rights: "All rights reserved.", builtIn: "Engineered in Dilbeek, Belgium.", lang: "Language" },
+
     hero: {
       badge: "Digital Studio • Dilbeek, Belgium",
       title: "Digital products.",
       subtitle: "Built right.",
-      desc: "I engineer fast, scalable web applications using modern open-source tools. Clean code, functional design, and transparent pricing.",
-      ctaStart: "Start Project",
-      ctaExplore: "Explore Services"
+      desc: "We engineer fast, scalable web applications using modern open-source tools. Clean code, functional design, and transparent workflows.",
+      ctaStart: "Initiate Project",
+      ctaExplore: "Explore Capabilities"
     },
+
     services: {
-      title: "Focused capabilities.",
-      subtitle: "Everything you need to launch.",
-      frontend: { title: "Frontend Development", desc: "Fast, responsive interfaces built with React and Tailwind CSS. Designed for optimal user experience." },
-      fullstack: { title: "Fullstack Systems", desc: "Robust architecture using Next.js. Secure, scalable, and easy to maintain." }
+      title: "Engineering Capabilities.",
+      subtitle: "Architectural focus areas.",
+      frontend: { title: "Frontend Architecture", desc: "Custom user interfaces with sub-second load times. Built with React and Tailwind CSS." },
+      fullstack: { title: "Full-Stack Systems", desc: "Robust relational databases and secure backends. Engineered for enterprise scalability." }
     },
+
     process: {
-      title: "How I work.",
-      subtitle: "A simple, effective development process.",
-      step1: { label: "01. Discover", title: "Scope & Strategy", desc: "We define the project requirements, architecture, and select the right tech stack for your goals." },
-      step2: { label: "02. Build", title: "Development", desc: "Writing clean, modular code. You get regular updates and access to a staging environment." },
-      step3: { label: "03. Launch", title: "Deployment", desc: "Final testing, performance optimization, and pushing your product live to the world." }
+      title: "Engineering Workflow.",
+      subtitle: "A transparent deployment pipeline.",
+      step1: { label: "01. Scope", title: "Strategy", desc: "We define exact project parameters and technical requirements." },
+      step2: { label: "02. Build", title: "Development", desc: "Writing clean, modular code in a secure staging environment." },
+      step3: { label: "03. Launch", title: "Deployment", desc: "Rigorous cross-device testing and seamless server deployment." }
     },
-    pricing: {
-      tag: "Transparent Pricing",
-      title: "Know your costs upfront.",
-      desc: "Use the interactive configurator to define your project scope, features, and timeline to get an immediate estimate. No surprises.",
-      check1: "Itemized breakdown of costs",
-      check2: "Modular feature selection",
-      check3: "Instant proposal generation",
-      cta: "Open Configurator"
-    },
+
     tech: {
-      tag: "Performance First",
-      title: "Powered by open source.",
-      desc: "I rely on industry-standard, free, and open-source technologies to build resilient applications without vendor lock-in.",
-      items: {
-        next: "The React Framework",
-        ts: "Type-safe JavaScript",
-        tailwind: "Utility-first styling",
-        supabase: "Open source database",
-        vercel: "Global edge network",
-        framer: "Smooth animations"
-      }
+      tag: "CORE TECHNOLOGIES",
+      items: { next: "Next.js", ts: "TypeScript", tailwind: "Tailwind CSS", supabase: "Supabase", vercel: "Vercel" }
     },
+
+    pricing: {
+      tag: "ALGORITHMIC ESTIMATES",
+      title: "Calculate parameters.",
+      desc: "No hidden fees. Generate a baseline calculation for your architecture before we initiate discovery.",
+      check1: "Instant baseline figure",
+      check2: "Non-binding calculation",
+      check3: "Tailored to your scope",
+      button: "Start Calculator"
+    },
+
     contact: {
-      title: "Let's talk.",
-      subtitle: "Send me a message and I'll get back to you within 24 hours.",
-      namePlaceholder: "Your Name",
-      emailPlaceholder: "Your Email",
-      messagePlaceholder: "Tell me about your project...",
-      button: "Send Message"
+      title: "Initiate Contact.",
+      subtitle: "Secure communication channel.",
+      namePlaceholder: "Entity Name",
+      emailPlaceholder: "Corporate Email",
+      messagePlaceholder: "Project specifications...",
+      button: "Transmit Message"
     },
-    terms: {
-      title: "Project",
-      subtitle: "Guidelines.",
-      tag: "Website Development Rules // Novatrum",
-      lastUpdated: "Last Updated: March 2026",
-      sec1Title: "01. Originality & Anti-Clone",
-      sec1Desc: "This website's design, layout, and unique animations are the original work of Novatrum.",
-      sec1Notice: "Notice: Cloning this site’s specific visual identity or copying its structure for your own commercial use is strictly prohibited.",
-      sec2Title: "02. Website Standards",
-      sec2Desc: "We focus exclusively on building high-performance, modern websites. To maintain our quality, we follow these simple rules:",
-      rule1Title: "Rule #01 — Modern Tech Only",
-      rule1Desc: "We build using Next.js and Tailwind CSS. We do not work with outdated builders, slow CMS platforms, or cheap templates.",
-      rule2Title: "Rule #02 — Content Readiness",
-      rule2Desc: "The client must provide all necessary texts, high-resolution images, and branding assets before the build phase begins.",
-      rule3Title: "Rule #03 — Fair Revisions",
-      rule3Desc: "We include a specific number of design adjustments to ensure the project stays on track and launches fast.",
-      sec3Title: "03. Usage of this Site",
-      sec3Desc: "You are free to explore our portfolio and use the Price Calculator for your own project planning.",
-      sec4Title: "04. Ownership",
-      sec4Desc: "Once the final invoice for your website is paid in full, you own the website entirely.",
-      footerTag: "Build fast. Build clean.",
-      cta: "I Understand. Start Project."
+
+    gateway: {
+      title: "Project Initiation",
+      subtitle: "Select your preferred pathway to begin the engineering process.",
+      opt1Title: "Quick Estimate",
+      opt1Time: "3 - 5 Minutes",
+      opt1Desc: "Get a ballpark figure based on standard parameters. Perfect if you are in the early stages of budget planning.",
+      opt1Feat1: "Fast & Simple",
+      opt1Feat2: "No commitments",
+      opt1Feat3: "Approximate pricing only",
+      opt1Btn: "Calculate Estimate",
+      opt2Title: "Definitive Blueprint",
+      opt2Time: "10 - 12 Minutes",
+      opt2Desc: "A deep dive into your technical needs. We will lock in your parameters and provide an exact, contract-ready proposal.",
+      opt2NoticeTitle: "Engineering Requirement",
+      opt2NoticeDesc: "This form is highly detailed. Please only proceed if you are ready to outline your project's technical scope.",
+      opt2Btn: "Initiate Discovery",
+      returnHub: "Return to Hub"
     },
-    servicesPage: {
-      title: "Specialized",
-      subtitle: "Solutions.",
-      desc: "I leverage modern frameworks and scalable architectures to build digital products that perform effortlessly.",
-      s1: { tag: "01 // Frontend", title: "Modern Web Applications", desc: "I build blazing fast, interactive, and responsive user interfaces using Next.js and Tailwind CSS.", tech: "Next.js + Tailwind" },
-      s2: { tag: "02 // Backend", title: "Scalable Databases & Auth", desc: "Using Supabase, I create secure authentication systems and real-time databases.", tech: "Supabase" },
-      s3: { tag: "03 // Deployment", title: "Zero-Downtime Infrastructure", desc: "I deploy your projects via Vercel. This serverless approach guarantees maximum uptime.", tech: "Vercel" },
-      ctaTitle: "Ready to build something great?",
-      ctaButton: "Calculate Project Cost"
-    },
-    privacy: {
-      title: "Zero Data",
-      subtitle: "Focus.",
-      tag: "Privacy First // Novatrum",
-      lastUpdated: "Last Updated: March 2026",
-      intro: "We respect your privacy and are committed to protecting your personal data.",
-      sec1Title: "01. No Personal Data",
-      sec1Desc: "I do not collect your name, phone number, or physical address automatically. My business is building fast, high-quality websites, not trading user data.",
-      sec1Notice: "Notice: This site works without asking who you are. I believe your digital footprint belongs only to you.",
-      sec2Title: "02. Minimal Contact",
-      sec2Desc: "When you use my contact form or calculator, I only ask for project details and an email address so I can reply to you directly.",
-      rule1: "No newsletters.",
-      rule2: "No marketing emails.",
-      rule3: "No sharing your email with third parties.",
-      sec3Title: "03. No Tracking",
-      sec3Desc: "I do not use tracking pixels, Google Analytics, or invasive cookies. Website speed and user privacy are my top priorities.",
-      sec4Title: "04. Security",
-      sec4Desc: "Every interaction on this site is encrypted via SSL. Your project ideas and communication are treated with the same level of security as my own code.",
-      footerTag: "Privacy is a right, not a feature.",
-      cta: "Start a Private Conversation"
-    },
+
+    discoveryPage: {
+  title: "Definitive",
+  subtitle: "Discovery.",
+  desc: "Provide the detailed parameters of your project. We will engineer a precise blueprint and contract-ready proposal.",
+  liveEstimate: "Live Estimate",
+  phase: "Phase",
+  of: "of",
+  fileUploading: "Encrypting Upload...",
+  fileClick: "Click or Drag files here",
+  integrations: {
+    stripe: "Stripe Payment Gateway",
+    auth: "User Authentication & Authorization",
+    crm: "CRM / Hubspot Sync",
+    mail: "Newsletter & Email Sync",
+    analytics: "Advanced Event Analytics",
+    ai: "Bespoke AI / ML Integration",
+    sockets: "Real-time Data / Sockets",
+    cms: "Custom Content Management (CMS)",
+    multilang: "Multi-language Alphas"
+  },
+  designStyles: {
+    minimal: "Minimal & Focus on Typography",
+    bold: "Bold, Premium & Brand Driven",
+    corporate: "Professional & Corporate Structure",
+    interactive: "Highly Interactive & Complex UI"
+  },
+  fontPrefs: {
+    sans: "Modern Sans-Serif",
+    serif: "Classic Serif",
+    mono: "Industrial Monospace"
+  },
+  seoLevels: {
+    standard: "Standard SEO Structure",
+    advanced: "Advanced / Technical SEO"
+  },
+  timelines: {
+    standard: "Standard (4-6 Weeks)",
+    relaxed: "Relaxed (8-10 Weeks)",
+    expedited: "Expedited (1-2 Weeks)"
+  },
+  constraint: {
+    title: "Architectural Constraint",
+    desc: "A complex platform cannot be expedited. Please prioritize standard or relaxed timelines for proper engineering."
+  },
+  form: {
+    credentials: "Credentials",
+    entity: "Entity Name *",
+    website: "Current URL",
+    goals: "Primary Objective & Goals *",
+    goalsPlace: "Describe the ultimate purpose of this platform...",
+    competitors: "Competitors or Inspirations",
+    architecture: "Architecture",
+    archDesc: "Select the engineering framework for your application.",
+    pages: "Estimated Number of Pages/Screens",
+    design: "Aesthetics",
+    designDesc: "How should the platform feel? Select your direction.",
+    color: "Primary Color",
+    accent: "Accent Color",
+    hasAccent: "Has Accent Color?",
+    fonts: "Typography Preference",
+    content: "Content & Copy",
+    copy: "Include Professional Copywriting",
+    assets: "Attach Brand Assets / Brief (Max 100MB)",
+    integrations: "Integrations & Functionality",
+    intDesc: "Select the complex features and third-party API syncs.",
+    seo: "Visibility",
+    seoDesc: "Select content engineering and indexing strategy.",
+    timeline: "Logistics",
+    timelineDesc: "Let's define the required deployment timeline.",
+    maintenance: "Continuous Support",
+    maintenanceDesc: "Include post-launch maintenance & security retainer.",
+    maintenanceCheck: "Include priority maintenance",
+    client: "Identify Client",
+    clientSub: "Provide billing details to securely log this discovery into our systems.",
+    name: "Full Name / Point of Contact *",
+    email: "Corporate Email Address *",
+    phone: "Corporate Phone Number *",
+    address: "Billing Address (City, Country) *",
+    vat: "VAT Number (Optional)",
+    notes: "Design Notes",
+    notesPlace: "Share any specific visual directions or technical notes..."
+  },
+  summary: {
+    title: "Intelligence Summary",
+    desc: "A baseline algorithmic blueprint of your defined parameters.",
+    notBinding: "NOT BINDING",
+    platform: "Platform Architecture",
+    logistics: "Deployment Timeline",
+    copywriting: "Copywriting",
+    maintenance: "Maintenance",
+    design: "Design Direction",
+    integrations: "Integrations",
+    total: "Live Calculation (€)"
+  },
+  btn: {
+    prev: "Previous Phase",
+    next: "Next Phase",
+    submit: "Lock Discovery & Blueprint",
+    encrypting: "Encrypting...",
+    finish: "Start Discovery",
+    pdf: "Generate & Download PDF",
+    hub: "Return to Hub"
+  },
+  success: {
+    title: "Blueprint Locked.",
+    sub: "Definitive Discovery",
+    desc: "Your secure reference ID is logged. We will review your blueprint and email you within 24-48 hours with a Definitive Proposal.",
+    dsNumber: "DS Number"
+  }
+},
+
     contactPage: {
-      title: "Start the",
-      subtitle: "Dialogue.",
-      desc: "Have a project in mind? I'm ready to help you build the next generation of digital products with precision and scale.",
-      studioName: "Novatrum Studio",
-      studioLoc: "Based in Dilbeek, Belgium",
-      studioOper: "Global Operations // Remote-First",
-      roadmapTitle: "The Next Steps",
+      title: "Initiate Contact",
+      subtitle: "Digital Engineering.",
+      desc: "Discuss your technical requirements or request a private consultation with our engineering team.",
+      studioName: "Novatrum Studio.",
+      studioLoc: "Dilbeek, Belgium",
+      studioOper: "Available for global operations",
+      roadmapTitle: "ENGINEERING ROADMAP",
       steps: [
-        { s: "01", t: "Initial Review", d: "I analyze your inquiry and technical needs within 24 hours." },
-        { s: "02", t: "Discovery Session", d: "A deep-dive call to align on goals, features, and timeline." },
-        { s: "03", t: "Custom Proposal", d: "You receive a detailed roadmap and a transparent quote." }
+        { s: "01", t: "Discovery & Strategy", d: "We discuss your goals, technical requirements, and define the scope." },
+        { s: "02", t: "Architecture & UI", d: "We map out the system architecture and design the user experience." },
+        { s: "03", t: "Core Development", d: "We build the platform and deploy it to a secure, scalable environment." }
       ],
-      badge: "Currently booking for next month",
+      badge: "Accepting New Projects",
       form: {
-        nameLabel: "Full Name",
-        namePlaceholder: "John Doe",
-        emailLabel: "Email",
-        emailPlaceholder: "john@example.com",
-        categoryLabel: "Project Category",
-        categoryValue: "Custom Software Development",
-        briefLabel: "Project Brief",
-        briefPlaceholder: "What are we building together?",
-        submit: "Send Inquiry"
+        nameLabel: "Full Name *",
+        namePlaceholder: "e.g. John Doe",
+        emailLabel: "Corporate Email *",
+        emailPlaceholder: "john@company.com",
+        categoryLabel: "Inquiry Type",
+        categoryValue: "Digital Product Engineering",
+        briefLabel: "Project Details *",
+        briefPlaceholder: "Describe your architectural needs...",
+        submit: "Transmit Message",
+        sending: "Sending..."
+      },
+      success: {
+        title: "Transmission Successful.",
+        desc: "Your message has been securely logged. Our team will review your requirements and respond shortly.",
+        button: "Transmit Another Note"
       },
       faqTitle: "Common",
-      faqSubtitle: "Questions",
-      faqDesc: "Everything you need to know about starting a project with me.",
+      faqSubtitle: "Inquiries.",
+      faqDesc: "Here are some frequent questions regarding our engineering process and technical capabilities.",
       faqs: [
-        { q: "How fast can we start?", a: "Typically, I can kick off a discovery phase within 1 week of initial contact depending on the project complexity." },
-        { q: "How do you handle pricing?", a: "For standard requirements, I have fixed-price packages. For complex solutions, I provide a dynamic estimate via the Calculator." },
-        { q: "Which technologies do you use?", a: "I specialize in high-performance stacks: Next.js, TypeScript, Tailwind CSS, and Supabase." },
-        { q: "Do you offer post-launch support?", a: "Absolutely. I provide ongoing maintenance and scaling support to ensure your product stays up-to-date." }
+        { q: "What is your typical project timeline?", a: "Depending on structural complexity, standard deployments take 4 to 8 weeks. Expedited options are available." },
+        { q: "Do you offer post-launch maintenance?", a: "Yes, we provide priority maintenance retainers including security patches and continuous optimization." },
+        { q: "What is your core technology stack?", a: "We engineer systems using Next.js, React, Tailwind CSS, Node.js, and PostgreSQL via Supabase." }
       ]
     },
+
     calculator: {
-      title: "Project",
-      subtitle: "Configurator.",
-      stepInfo: "Step",
+      title: "Architectural Estimate",
+      subtitle: "Define baseline parameters",
+      stepInfo: "Phase",
       of: "of",
-      tag: "Precision Pricing",
-      btnPrev: "Previous Step",
-      btnNext: "Continue",
-      btnFinish: "See Final Estimate",
+      tag: "ESTIMATE",
       included: "Included",
       monthly: "mo",
-      customPalette: "Custom Palette",
-      shuffleColors: "Shuffle Colors",
-      paletteSelected: "Palette Selected",
-      applyPalette: "Apply This Palette",
-      builderTitle: "Custom Palette Builder",
-      builderDesc: "Define your own 3-color brand identity.",
-      textPlaceholder: "Tell me about your brand personality, desired features, or reference websites you love...",
-      estimateGen: "Estimate Generated",
-      totalInv: "Total Investment",
-      recurringLabel: "Recurring Support & Hosting",
       month: "month",
-      formNameLabel: "Full Name",
-      formNamePlace: "John Doe",
-      formCompanyLabel: "Company / Brand",
-      formCompanyPlace: "Acme Corp",
-      formEmailLabel: "Email Address",
-      formEmailPlace: "john@example.com",
-      btnSend: "Send Proposal to Email",
-      btnSending: "Sending Proposal...",
-      notice: "A detailed overview will be sent to your email.",
-      successTitle: "Proposal Sent",
-      successDesc: "Please check your inbox (and spam folder) for the detailed estimate. I will be in touch shortly.",
-      emailSubject: "Digital Project Proposal",
-      emailScope: "Scope of Work",
-      emailRecurring: "Recurring Services:",
-      emailTotal: "Total Estimated Investment",
-      emailVat: "Prices exclude VAT where applicable.",
-      emailGenerated: "Generated via Novatrum Engine. Not a final legal contract.",
+      customPalette: "Custom Colors",
+      builderTitle: "Brand Identity",
+      builderDesc: "Select your precise hex codes.",
+      shuffleColors: "Shuffle",
+      applyPalette: "Apply Custom Colors",
+      paletteSelected: "Palette Applied",
+      textPlaceholder: "Describe any specific functionality, integrations, or competitor references here...",
+      estimateGen: "Blueprint Calculated",
+      totalInv: "Estimated Investment",
+      recurringLabel: "Recurring Retainer",
+      btnPrev: "Previous Phase",
+      btnReset: "Restart Process",
+      btnNext: "Next Phase",
+      btnFinish: "Generate Estimate",
+      formNameLabel: "Entity Name",
+      formNamePlace: "Company or Your Name",
+      formCompanyLabel: "Current Website (Optional)",
+      formCompanyPlace: "https://...",
+      formEmailLabel: "Secure Email",
+      formEmailPlace: "Where should we send the data?",
+      btnSending: "Compiling Data...",
+      btnSend: "Reveal Estimate",
+      notice: "This is a non-binding algorithmic estimate.",
+      successTitle: "Estimate Dispatched",
+      successDesc: "A copy of your baseline estimate has been sent to your email. We will contact you to discuss definitive parameters.",
+      liveTotal: "Live Calculation",
+      resetConfirm: "Are you sure you want to purge current selections and restart the calculation?",
+      opt2Btn: "Start Definitive Discovery",
+      returnHub: "Return to Hub",
       stepsData: [
         {
-          title: "Base Architecture",
-          subtitle: "Select the foundation of your digital presence.",
+          title: "Core Infrastructure",
+          subtitle: "Select the foundational architecture of your platform.",
           options: [
-            { id: "landing", label: "High-Conversion Landing", desc: "Single-page scroll experience. (1 Page Only)" },
-            { id: "business", label: "Multi-Page Business Site", desc: "Professional corporate architecture. (Up to 8 Pages)" },
-            { id: "standard-store", label: "Standard Store Setup", desc: "Basic e-commerce capabilities. (Up to 50 Products)" },
-            { id: "advanced-api", label: "Advanced API Store", desc: "Complex store with external integrations. (Unlimited)" },
-            { id: "ecommerce", label: "Premium E-Commerce", desc: "The ultimate bespoke shopping experience. (Custom Architecture)" }
+            { label: "Landing Page", desc: "High-conversion single page presence." },
+            { label: "Corporate Site", desc: "Multi-page professional business architecture." },
+            { label: "Standard E-Commerce", desc: "Digital storefront with standard cart flows." },
+            { label: "Advanced Integration", desc: "Platform requiring complex third-party API syncs." },
+            { label: "SaaS / Web App", desc: "Custom software with complex database logic." }
           ]
         },
-        { title: "Visual Identity", subtitle: "Choose a professional palette or build your own from scratch." },
+        { title: "Aesthetics & UI", subtitle: "Select your visual direction." },
         {
-          title: "Design & Branding", subtitle: "Enhance your visual assets. (You can select multiple)",
+          title: "Branding Assets",
+          subtitle: "Do you require custom visual asset creation?",
           options: [
-            { id: "logo", label: "Professional Logo Design", desc: "Custom brand mark and typography." },
-            { id: "custom-ui", label: "Custom Graphics & UI Elements", desc: "Bespoke illustrations and interface details." }
-          ]
-        },
-        {
-          title: "Content & SEO", subtitle: "Boost your reach and messaging. (You can select multiple)",
-          options: [
-            { id: "seo-basic", label: "Basic SEO Setup", desc: "Foundational metadata and search engine indexing." },
-            { id: "copywriting", label: "Professional Content Writing", desc: "Engaging, conversion-focused copywriting." },
-            { id: "seo-adv", label: "Advanced SEO Strategy", desc: "Deep keyword targeting and technical SEO optimization." }
+            { label: "Brand Identity Design", desc: "Logo, typography, and core brand guidelines." },
+            { label: "Bespoke UI Design", desc: "Custom wireframing and high-fidelity mockups." }
           ]
         },
         {
-          title: "Functional Features", subtitle: "Add specific capabilities to your site. (You can select multiple)",
+          title: "Content & SEO",
+          subtitle: "Select content engineering requirements.",
           options: [
-            { id: "contact-form", label: "Advanced Contact Form", desc: "Complex conditional logic and multi-step forms." },
-            { id: "newsletter", label: "Newsletter System", desc: "Capture leads and grow your audience." },
-            { id: "email-marketing", label: "Email Marketing Integration", desc: "Connect directly to Mailchimp, ActiveCampaign, etc." }
+            { label: "Standard SEO Setup", desc: "Basic meta tags and indexing." },
+            { label: "Professional Copywriting", desc: "SEO-optimized sales copy for all pages." },
+            { label: "Advanced Technical SEO", desc: "Schema markup and programmatic architecture." }
           ]
         },
         {
-          title: "Performance & Support", subtitle: "Speed upgrades and ongoing maintenance. (You can select multiple)",
+          title: "Lead Generation",
+          subtitle: "Select user acquisition tools.",
           options: [
-            { id: "speed-basic", label: "Basic Speed Optimization", desc: "Asset minification and basic caching." },
-            { id: "speed-ultra", label: "Ultra-Fast Performance Bundle", desc: "Server-side optimizations for maximum speed." },
-            { id: "hosting", label: "Premium Hosting Management", desc: "Secure, high-uptime cloud hosting." },
-            { id: "maintenance", label: "Monthly Maintenance & Support", desc: "Regular updates, backups, and priority support." }
+            { label: "Advanced Contact Forms", desc: "Conditional logic and webhook routing." },
+            { label: "Newsletter Sync", desc: "Integration with Mailchimp/ConvertKit." },
+            { label: "CRM Integration", desc: "Direct sync with Hubspot or Salesforce." }
           ]
         },
         {
-          title: "Delivery Timeline", subtitle: "How fast do you need this project launched?",
+          title: "Performance & Logistics",
+          subtitle: "Select hosting and ongoing engineering support.",
           options: [
-            { id: "timeline-standard", label: "Standard Pace (4-6 Weeks)", desc: "My standard, high-quality development cycle." },
-            { id: "timeline-rush", label: "Priority Rush (1-2 Weeks)", desc: "Skip the queue. I work overtime to deliver ASAP." }
+            { label: "Standard Optimization", desc: "Standard caching and asset delivery." },
+            { label: "Ultra Performance", desc: "Guaranteed 95+ Core Web Vitals score." },
+            { label: "Premium Hosting", desc: "Dedicated resources and daily backups." },
+            { label: "Priority Maintenance", desc: "Ongoing code updates and security patches." }
           ]
         },
-        { title: "The Vision", subtitle: "Tell me more about your specific needs or references." }
+        {
+          title: "Deployment Timeline",
+          subtitle: "Select your required launch schedule.",
+          options: [
+            { label: "Standard Queue (4-6 Weeks)", desc: "Regular engineering priority." },
+            { label: "Expedited (1-2 Weeks)", desc: "Priority delivery. Premium applied." }
+          ]
+        },
+        { title: "Architectural Vision", subtitle: "Provide any final directives or technical notes." }
       ],
       palettes: [
-        { name: "Novatrum Dark", desc: "The signature look. Deep, premium, and bold." },
-        { name: "Nordic Clean", desc: "Airy, minimalist, and focuses on typography." },
-        { name: "Midnight Tech", desc: "Modern blue tones for tech-focused startups." },
-        { name: "Industrial Gold", desc: "High-contrast with elegant golden accents." }
+        { name: "Novatrum Dark", desc: "Our signature look. Deep, premium, and bold." },
+        { name: "Nordic Clean", desc: "Light, minimal, focused on typography." },
+        { name: "Midnight Tech", desc: "Modern blue tones for tech-driven startups." },
+        { name: "Industrial Gold", desc: "High contrast with elegant gold accents." }
       ]
     },
+
     processPage: {
-      title: "How I",
-      subtitle: "Work.",
-      desc: "A transparent, step-by-step methodology designed to turn complex ideas into elegant digital realities.",
+      title: "Engineering",
+      subtitle: "Methodology.",
+      desc: "A transparent, step-by-step framework designed to turn complex logic into elegant, high-performance digital realities.",
       steps: [
-        { num: "01", title: "Discovery & Strategy", subtitle: "Understanding your vision", desc: "I start by deeply analyzing your business goals, target audience, and technical requirements. Together, we define the project scope, feature list, and establish a clear roadmap for success." },
-        { num: "02", title: "UI/UX Design", subtitle: "Crafting the experience", desc: "Before writing any code, I create wireframes and high-fidelity designs. I focus on modern, minimalist aesthetics and intuitive user journeys that align perfectly with your brand identity." },
-        { num: "03", title: "Development", subtitle: "Building the engine", desc: "This is where the magic happens. I write clean, scalable, and secure code using modern frameworks like Next.js and Tailwind CSS. The result is a robust architecture that performs effortlessly." },
-        { num: "04", title: "Testing & Refinement", subtitle: "Ensuring perfection", desc: "I conduct rigorous testing across different devices and browsers. I optimize loading speeds, ensure SEO best practices, and squash any bugs to guarantee a flawless user experience." },
-        { num: "05", title: "Deployment & Handoff", subtitle: "Going live", desc: "I deploy your project to high-performance global networks like Vercel. Once live, I provide you with all necessary documentation and a smooth handoff, ensuring you are ready to scale." }
+        { num: "01", title: "Discovery & Blueprinting", subtitle: "Defining the Architecture", desc: "We initiate with a deep dive into your technical requirements and business objectives. Together, we lock in the project scope and establish a definitive engineering roadmap." },
+        { num: "02", title: "UI/UX Engineering", subtitle: "Designing the Interface", desc: "We draft the visual architecture. Rejecting generic templates, every interface is custom-engineered to ensure pixel-perfect alignment with your brand's digital identity." },
+        { num: "03", title: "Core Development", subtitle: "Writing the Logic", desc: "Our team writes clean, modular, and highly scalable code. You receive continuous progress updates and access to a secure staging environment to monitor the build." },
+        { num: "04", title: "Testing & Deployment", subtitle: "Going Live", desc: "Following rigorous cross-device quality assurance, we execute the deployment protocol. We ensure your platform is secure, optimized, and built to handle enterprise traffic." }
       ],
-      ctaTitle: "Ready to start step one?",
-      ctaButton: "Estimate Your Project"
+      ctaTitle: "Ready to initiate your build?",
+      ctaButton: "Commence Discovery"
+    },
+
+    servicesPage: {
+      title: "Bespoke Architectures",
+      subtitle: "We engineer fast, scalable, and conversion-focused digital platforms using state-of-the-art open-source technologies.",
+      s1: {
+        title: "Custom Frontend Engineering",
+        desc: "We develop bespoke user interfaces with an uncompromising focus on sub-second load times and fluid interactions. No templates—just pure performance and seamless digital experiences.",
+        tech: "REACT • NEXT.JS • TAILWIND",
+        features: [
+          "Sub-second rendering performance",
+          "Fluid responsive architecture across all viewports",
+          "Advanced interactive UI and WebGL elements"
+        ]
+      },
+      s2: {
+        title: "Full-Stack SaaS Systems",
+        desc: "End-to-end web application engineering. From encrypted user authentication flows to complex relational database logic, we build robust architectures ready for enterprise scale.",
+        tech: "NODE.JS • SUPABASE • POSTGRES",
+        features: [
+          "Encrypted user authentication and authorization",
+          "Real-time database synchronization",
+          "Complex third-party API and webhook routing"
+        ]
+      },
+      s3: {
+        title: "E-Commerce Infrastructure",
+        desc: "High-performance digital storefronts engineered to maximize transaction conversion rates, handle massive traffic spikes, and ensure bank-grade checkout security.",
+        tech: "STRIPE • CUSTOM CMS • ANALYTICS",
+        features: [
+          "Bank-grade secure payment gateway integration",
+          "Conversion-optimized checkout pipelines",
+          "Granular sales and user behavior analytics"
+        ]
+      },
+      ctaTitle: "Ready to define your parameters?",
+      ctaButton: "Start Project Discovery"
     }
   },
+
   nl: {
-    nav: { home: "Home", services: "Diensten", process: "Proces", contact: "Contact", privacy: "Privacy", terms: "Voorwaarden" },
-    footer: { rights: "Alle rechten voorbehouden.", builtIn: "Gebouwd in Dilbeek, België.", lang: "Taal" },
+    nav: { home: "Home", services: "Diensten", process: "Methodologie", contact: "Contact", privacy: "Privacy", terms: "Voorwaarden", gateway: "Klantenportaal" },
+    footer: { rights: "Alle rechten voorbehouden.", builtIn: "Ontwikkeld in Dilbeek, België.", lang: "Taal" },
+
     hero: {
       badge: "Digitale Studio • Dilbeek, België",
       title: "Digitale producten.",
-      subtitle: "Correct gebouwd.",
-      desc: "Ik bouw snelle, schaalbare webapplicaties met moderne open-source tools. Schone code, functioneel ontwerp en transparante prijzen.",
+      subtitle: "Perfect gebouwd.",
+      desc: "Wij engineeren snelle, schaalbare webapplicaties met moderne open-source tools. Schone code, functioneel design en transparante processen.",
       ctaStart: "Project Starten",
-      ctaExplore: "Diensten Ontdekken"
+      ctaExplore: "Onze Expertise"
     },
+
     services: {
-      title: "Gerichte capaciteiten.",
-      subtitle: "Alles wat je nodig hebt om te lanceren.",
-      frontend: { title: "Frontend Ontwikkeling", desc: "Snelle, responsieve interfaces gebouwd met React en Tailwind CSS." },
-      fullstack: { title: "Fullstack Systemen", desc: "Robuuste architectuur met Next.js. Veilig, schaalbaar en eenvoudig te onderhouden." }
+      title: "Engineering Capaciteiten.",
+      subtitle: "Architecturale aandachtsgebieden.",
+      frontend: { title: "Frontend Architectuur", desc: "Custom user interfaces met sub-seconde laadtijden. Gebouwd met React en Tailwind CSS." },
+      fullstack: { title: "Full-Stack Systemen", desc: "Robuuste relationele databases en veilige backends. Geëngineerd voor schaalbaarheid." }
     },
+
     process: {
-      title: "Hoe ik werk.",
-      subtitle: "Een eenvoudig, effectief ontwikkelingsproces.",
-      step1: { label: "01. Ontdekken", title: "Scope & Strategie", desc: "We definiëren de projectvereisten, architectuur en selecteren de juiste tech stack." },
-      step2: { label: "02. Bouwen", title: "Ontwikkeling", desc: "Schone, modulaire code schrijven. Je krijgt regelmatige updates." },
-      step3: { label: "03. Lancering", title: "Deployment", desc: "Laatste tests, prestatie-optimalisatie en livegang." }
+      title: "Engineering Workflow.",
+      subtitle: "Een transparante deployment pipeline.",
+      step1: { label: "01. Scope", title: "Strategie", desc: "We definiëren exacte projectparameters en technische eisen." },
+      step2: { label: "02. Build", title: "Ontwikkeling", desc: "Schrijven van schone, modulaire code in een beveiligde testomgeving." },
+      step3: { label: "03. Launch", title: "Deployment", desc: "Grondige cross-device testing en naadloze server deployment." }
     },
-    pricing: {
-      tag: "Transparante Prijzen",
-      title: "Ken je kosten vooraf.",
-      desc: "Gebruik de interactieve configurator om je projectscope te definiëren en krijg direct een schatting.",
-      check1: "Gespecificeerde uitsplitsing van kosten",
-      check2: "Modulaire functieselectie",
-      check3: "Directe offerte generatie",
-      cta: "Open Configurator"
-    },
+
     tech: {
-      tag: "Prestaties Eerst",
-      title: "Mogelijk gemaakt door open source.",
-      desc: "Ik vertrouw op industriestandaard open-source technologieën om veerkrachtige applicaties te bouwen.",
-      items: {
-        next: "Het React Framework",
-        ts: "Type-safe JavaScript",
-        tailwind: "Utility-first styling",
-        supabase: "Open source database",
-        vercel: "Wereldwijd edge netwerk",
-        framer: "Vloeiende animaties"
-      }
+      tag: "KERNTECHNOLOGIEËN",
+      items: { next: "Next.js", ts: "TypeScript", tailwind: "Tailwind CSS", supabase: "Supabase", vercel: "Vercel" }
     },
+
+    pricing: {
+      tag: "ALGORITMISCHE SCHATTINGEN",
+      title: "Bereken parameters.",
+      desc: "Geen verborgen kosten. Genereer een basisberekening voor uw architectuur voordat we starten.",
+      check1: "Directe basisindicatie",
+      check2: "Niet-bindende berekening",
+      check3: "Afgestemd op uw scope",
+      button: "Start Calculator"
+    },
+
     contact: {
-      title: "Laten we praten.",
-      subtitle: "Stuur me een bericht en ik neem binnen 24 uur contact met je op.",
-      namePlaceholder: "Je Naam",
-      emailPlaceholder: "Je E-mail",
-      messagePlaceholder: "Vertel me over je project...",
+      title: "Contact Opnemen.",
+      subtitle: "Beveiligd communicatiekanaal.",
+      namePlaceholder: "Entiteitsnaam",
+      emailPlaceholder: "Zakelijk E-mailadres",
+      messagePlaceholder: "Projectspecificaties...",
       button: "Bericht Verzenden"
     },
-    terms: {
-      title: "Project",
-      subtitle: "Richtlijnen.",
-      tag: "Website Ontwikkelingsregels // Novatrum",
-      lastUpdated: "Laatst bijgewerkt: Maart 2026",
-      sec1Title: "01. Originaliteit & Anti-Kloon",
-      sec1Desc: "Het ontwerp en de unieke animaties van deze website zijn het originele werk van Novatrum.",
-      sec1Notice: "Let op: Het kopiëren van de specifieke visuele identiteit van deze site is ten strengste verboden.",
-      sec2Title: "02. Website Standaarden",
-      sec2Desc: "Wij focussen ons uitsluitend op het bouwen van hoogwaardige, moderne websites.",
-      rule1Title: "Regel #01 — Alleen Moderne Tech",
-      rule1Desc: "Wij bouwen met Next.js en Tailwind CSS. Wij werken niet met verouderde builders of templates.",
-      rule2Title: "Regel #02 — Gereedheid van Content",
-      rule2Desc: "De klant dient alle nodige teksten en afbeeldingen aan te leveren voordat de bouwfase begint.",
-      rule3Title: "Regel #03 — Eerlijke Revisies",
-      rule3Desc: "We hanteren een specifiek aantal aanpassingen om te zorgen dat het project op schema blijft.",
-      sec3Title: "03. Gebruik van deze Site",
-      sec3Desc: "U bent vrij om ons portfolio te verkennen en de prijscalculator te gebruiken.",
-      sec4Title: "04. Eigendom",
-      sec4Desc: "Zodra de eindfactuur volledig is betaald, bent u de volledige eigenaar van de website.",
-      footerTag: "Bouw snel. Bouw schoon.",
-      cta: "Ik begrijp het. Project starten."
+
+    gateway: {
+      title: "Project Initiatie",
+      subtitle: "Kies uw gewenste traject om het engineeringsproces te starten.",
+      opt1Title: "Snelle Schatting",
+      opt1Time: "3 - 5 Minuten",
+      opt1Desc: "Krijg een indicatie op basis van standaardparameters. Perfect als u in de vroege fase van budgetplanning zit.",
+      opt1Feat1: "Snel & Eenvoudig",
+      opt1Feat2: "Geen verplichtingen",
+      opt1Feat3: "Enkel een indicatieve prijs",
+      opt1Btn: "Schatting Berekenen",
+      opt2Title: "Definitieve Blueprint",
+      opt2Time: "10 - 12 Minuten",
+      opt2Desc: "Een diepgaande analyse van uw technische behoeften. Wij leggen uw parameters vast en bieden een contractklaar voorstel.",
+      opt2NoticeTitle: "Technische Vereiste",
+      opt2NoticeDesc: "Dit formulier is zeer gedetailleerd. Ga alleen verder als u klaar bent om uw projectomvang te schetsen.",
+      opt2Btn: "Start Discovery",
+      returnHub: "Terug naar Hub"
     },
-    servicesPage: {
-      title: "Gespecialiseerde",
-      subtitle: "Oplossingen.",
-      desc: "Ik maak gebruik van moderne frameworks om digitale producten te bouwen die moeiteloos presteren.",
-      s1: { tag: "01 // Frontend", title: "Moderne Webapplicaties", desc: "Ik bouw razendsnelle, interactieve interfaces met Next.js en Tailwind CSS.", tech: "Next.js + Tailwind" },
-      s2: { tag: "02 // Backend", title: "Schaalbare Databases", desc: "Met Supabase creëer ik veilige authenticatiesystemen en real-time databases.", tech: "Supabase" },
-      s3: { tag: "03 // Deployment", title: "Zero-Downtime Infrastructuur", desc: "Ik implementeer projecten via Vercel voor maximale uptime.", tech: "Vercel" },
-      ctaTitle: "Klaar om iets geweldigs te bouwen?",
-      ctaButton: "Projectkosten Berekenen"
-    },
-    privacy: {
-      title: "Zero Data",
-      subtitle: "Focus.",
-      tag: "Privacy First // Novatrum",
-      lastUpdated: "Laatst bijgewerkt: Maart 2026",
-      intro: "Wij respecteren uw privacy en doen er alles aan om uw persoonlijke gegevens te beschermen.",
-      sec1Title: "01. Geen Persoonlijke Gegevens",
-      sec1Desc: "Ik verzamel uw naam, telefoonnummer of fysieke adres niet automatisch. Mijn bedrijf bouwt snelle websites, handelt niet in gegevens.",
-      sec1Notice: "Let op: Deze site werkt zonder te vragen wie u bent. Uw digitale voetafdruk is alleen van u.",
-      sec2Title: "02. Minimaal Contact",
-      sec2Desc: "Wanneer u mijn formulier gebruikt, vraag ik alleen om projectdetails en een e-mailadres.",
-      rule1: "Geen nieuwsbrieven.",
-      rule2: "Geen marketing e-mails.",
-      rule3: "Geen delen van uw e-mail met derden.",
-      sec3Title: "03. Geen Tracking",
-      sec3Desc: "Ik gebruik geen trackingpixels, Google Analytics of invasieve cookies. Snelheid en privacy zijn mijn prioriteiten.",
-      sec4Title: "04. Beveiliging",
-      sec4Desc: "Elke interactie op deze site is gecodeerd via SSL.",
-      footerTag: "Privacy is een recht, geen functie.",
-      cta: "Start een Privé Gesprek"
-    },
+
+    discoveryPage: {
+  title: "Definitieve",
+  subtitle: "Discovery.",
+  desc: "Voer de gedetailleerde parameters van uw project in. Wij maken bir exact technisch plan en een contractklaar voorstel.",
+  liveEstimate: "Live Schatting",
+  phase: "Fase",
+  of: "van",
+  fileUploading: "Encrypting Upload...",
+  fileClick: "Klik of sleep bestanden hierheen",
+  integrations: {
+    stripe: "Stripe Betalingsgateway",
+    auth: "Kullanıcı Veri ve Yetkilendirme",
+    crm: "CRM / Hubspot Synchronisatie",
+    mail: "Nieuwsbrief & E-mail Synchronisatie",
+    analytics: "Geavanceerde Gebeurtenisanalyses",
+    ai: "Bespoke AI / ML Integratie",
+    sockets: "Real-time Veri / Sockets",
+    cms: "Custom Content Management (CMS)",
+    multilang: "Meertalige Alfa's"
+  },
+  designStyles: {
+    minimal: "Minimal & Focus op Typografie",
+    bold: "Vet, Premium & Brand Driven",
+    corporate: "Profesyonel & Kurumsal Yapı",
+    interactive: "Hoog Interactief & Complex UI"
+  },
+  fontPrefs: {
+    sans: "Modern Sans-Serif",
+    serif: "Classic Serif",
+    mono: "Industrial Monospace"
+  },
+  seoLevels: {
+    standard: "Standaard SEO Yapısı",
+    advanced: "Geavanceerd / Technisch SEO"
+  },
+  timelines: {
+    standard: "Standaard (4-6 Weken)",
+    relaxed: "Relaxed (8-10 Weken)",
+    expedited: "Versneld (1-2 Weken)"
+  },
+  constraint: {
+    title: "Architecturale Beperking",
+    desc: "Een complex platform kan niet worden versneld. Geef a.u.b. prioriteit aan standaard- of relaxte tijdlijnen voor een goede technische uitvoering."
+  },
+  form: {
+    credentials: "Credentials",
+    entity: "Entiteitsnaam *",
+    website: "Huidige URL",
+    goals: "Primaire Doelstelling & Doelen *",
+    goalsPlace: "Beschrijf het ultieme doel van dit platform...",
+    competitors: "Concurrenten of Inspiraties",
+    architecture: "Architectuur",
+    archDesc: "Selecteer het technische framework voor uw applicatie.",
+    pages: "Geschat aantal Pagina's/Schermen",
+    design: "Esthetiek",
+    designDesc: "Hoe moet het platform aanvoelen? Selecteer uw richting.",
+    color: "Primaire Kleur",
+    accent: "Accentkleur",
+    hasAccent: "Accentkleur?",
+    fonts: "Typografievoorkeur",
+    content: "Inhoud & Copy",
+    copy: "Include Professional Copywriting",
+    assets: "Attach Brand Assets / Brief (Max 100MB)",
+    integrations: "Integraties & Functionaliteit",
+    intDesc: "Selecteer de complexe functies en API-synchronisaties.",
+    seo: "Zichtbaarheid",
+    seoDesc: "Selecteer de strategie voor content engineering en indexering.",
+    timeline: "Logistiek",
+    timelineDesc: "Laten we de vereiste lanceringstermijn bepalen.",
+    maintenance: "Continu Onderhoud",
+    maintenanceDesc: "Include post-launch maintenance & security retainer.",
+    maintenanceCheck: "Include priority maintenance",
+    client: "Identificeer Klant",
+    clientSub: "Voer uw facturatiegegevens in om deze discovery veilig in onze systemen op te slaan.",
+    name: "Volledige Naam / Contactpersoon *",
+    email: "Zakelijk E-mailadres *",
+    phone: "Kurumsal Telefoonnummer *",
+    address: "Billing Adres (Stad, Land) *",
+    vat: "BTW-nummer (Optioneel)",
+    notes: "Ontwerpnotities",
+    notesPlace: "Deel specifieke visuele richtlijnen of technische opmerkingen..."
+  },
+  summary: {
+    title: "Intelligence Samenvatting",
+    desc: "Een basis algoritmisch plan van uw gedefinieerde parameters.",
+    notBinding: "NIET BINDEND",
+    platform: "Platform Architectuur",
+    logistics: "Deployment Tijdlijn",
+    copywriting: "Copywriting",
+    maintenance: "Onderhoud",
+    design: "Ontwerprichting",
+    integrations: "Integraties",
+    total: "Canlı Hesaplama (€)"
+  },
+  btn: {
+    prev: "Vorige Fase",
+    next: "Volgende Fase",
+    submit: "Vergrendel Plan & Blueprint",
+    encrypting: "Versleutelen...",
+    finish: "Start Discovery",
+    pdf: "Genereer & Download PDF",
+    hub: "Terug naar Hub"
+  },
+  success: {
+    title: "Plan Vergrendeld.",
+    sub: "Definitieve Discovery",
+    desc: "Uw beveiligde referentie-ID is vastgelegd. Wij zullen uw blueprint beoordelen en u binnen 24-48 uur e-mailen met bir Definitief Voorstel.",
+    dsNumber: "DS Nummer"
+  }
+},
+
     contactPage: {
-      title: "Start de",
-      subtitle: "Dialoog.",
-      desc: "Heb je een project in gedachten? Ik ben klaar om je te helpen de volgende generatie digitale producten te bouwen.",
-      studioName: "Novatrum Studio",
-      studioLoc: "Gevestigd in Dilbeek, België",
-      studioOper: "Wereldwijde Operaties // Remote-First",
-      roadmapTitle: "De Volgende Stappen",
+      title: "Contact Opnemen",
+      subtitle: "Digitale Engineering.",
+      desc: "Bespreek uw technische vereisten of vraag een consultatie aan met ons engineeringteam.",
+      studioName: "Novatrum Studio.",
+      studioLoc: "Dilbeek, België",
+      studioOper: "Beschikbaar voor wereldwijde operaties",
+      roadmapTitle: "ENGINEERING ROADMAP",
       steps: [
-        { s: "01", t: "Eerste Beoordeling", d: "Ik analyseer je aanvraag binnen 24 uur." },
-        { s: "02", t: "Ontdekkingssessie", d: "Een diepgaand gesprek om doelen en tijdlijnen op elkaar af te stemmen." },
-        { s: "03", t: "Voorstel op Maat", d: "Je ontvangt een gedetailleerde roadmap en een transparante offerte." }
+        { s: "01", t: "Ontdekking & Strategie", d: "We bespreken uw doelen, technische eisen en bepalen de scope." },
+        { s: "02", t: "Architectuur & UI", d: "We ontwerpen de systeemarchitectuur en de gebruikerservaring." },
+        { s: "03", t: "Kernontwikkeling", d: "We bouwen het platform en implementeren het in een veilige omgeving." }
       ],
-      badge: "Momenteel aan het boeken voor volgende maand",
+      badge: "Accepteert Nieuwe Projecten",
       form: {
-        nameLabel: "Volledige Naam",
-        namePlaceholder: "Jan Jansen",
-        emailLabel: "E-mail",
-        emailPlaceholder: "jan@voorbeeld.nl",
-        categoryLabel: "Project Categorie",
-        categoryValue: "Maatwerk Softwareontwikkeling",
-        briefLabel: "Projectomschrijving",
-        briefPlaceholder: "Wat gaan we samen bouwen?",
-        submit: "Aanvraag Verzenden"
+        nameLabel: "Volledige Naam *",
+        namePlaceholder: "bijv. Jan Jansen",
+        emailLabel: "Zakelijk E-mailadres *",
+        emailPlaceholder: "jan@bedrijf.nl",
+        categoryLabel: "Type Aanvraag",
+        categoryValue: "Digital Product Engineering",
+        briefLabel: "Projectdetails *",
+        briefPlaceholder: "Beschrijf uw architecturale behoeften...",
+        submit: "Bericht Verzenden",
+        sending: "Verzenden..."
+      },
+      success: {
+        title: "Transmissie Succesvol.",
+        desc: "Uw bericht is veilig geregistreerd. Ons team zal uw vereisten beoordelen en spoedig reageren.",
+        button: "Nog Een Bericht Verzenden"
       },
       faqTitle: "Veelgestelde",
-      faqSubtitle: "Vragen",
-      faqDesc: "Alles wat je moet weten over het starten van een project met mij.",
+      faqSubtitle: "Vragen.",
+      faqDesc: "Hier zijn enkele veelgestelde vragen over ons engineeringsproces en onze technische capaciteiten.",
       faqs: [
-        { q: "Hoe snel kunnen we beginnen?", a: "Meestal kan ik binnen 1 week na het eerste contact starten." },
-        { q: "Hoe ga je om met prijzen?", a: "Voor maatwerk geef ik een dynamische schatting via de Prijscalculator." },
-        { q: "Welke technologieën gebruik je?", a: "Ik ben gespecialiseerd in Next.js, TypeScript, Tailwind CSS en Supabase." },
-        { q: "Bied je ondersteuning na de lancering?", a: "Absoluut. Ik bied doorlopend onderhoud en ondersteuning." }
+        { q: "Wat is uw typische projecttijdlijn?", a: "Afhankelijk van structurele complexiteit duren standaardimplementaties 4 tot 8 weken. Versnelde opties zijn mogelijk." },
+        { q: "Biedt u onderhoud na de lancering?", a: "Ja, wij bieden prioritaire onderhoudscontracten inclusief beveiligingspatches en continue optimalisatie." },
+        { q: "Wat is uw kerntechnologie stack?", a: "Wij engineeren systemen met Next.js, React, Tailwind CSS, Node.js en PostgreSQL via Supabase." }
       ]
     },
+
     calculator: {
-      title: "Project",
-      subtitle: "Configurator.",
-      stepInfo: "Stap",
+      title: "Architecturale Schatting",
+      subtitle: "Definieer basisparameters",
+      stepInfo: "Fase",
       of: "van",
-      tag: "Precisie Prijzen",
-      btnPrev: "Vorige Stap",
-      btnNext: "Doorgaan",
-      btnFinish: "Bekijk Eindschatting",
+      tag: "SCHATTING",
       included: "Inbegrepen",
       monthly: "mnd",
-      customPalette: "Aangepast Palet",
-      shuffleColors: "Kleuren Mixen",
-      paletteSelected: "Palet Geselecteerd",
-      applyPalette: "Dit Palet Toepassen",
-      builderTitle: "Aangepaste Palet Bouwer",
-      builderDesc: "Definieer je eigen 3-kleuren merkidentiteit.",
-      textPlaceholder: "Vertel me over je merkpersoonlijkheid, gewenste functies of referentiewebsites...",
-      estimateGen: "Schatting Gegenereerd",
-      totalInv: "Totale Investering",
-      recurringLabel: "Terugkerende Ondersteuning & Hosting",
       month: "maand",
-      formNameLabel: "Volledige Naam",
-      formNamePlace: "Jan Jansen",
-      formCompanyLabel: "Bedrijf / Merk",
-      formCompanyPlace: "Acme Corp",
-      formEmailLabel: "E-mailadres",
-      formEmailPlace: "jan@voorbeeld.nl",
-      btnSend: "Offerte naar e-mail sturen",
-      btnSending: "Offerte verzenden...",
-      notice: "Een gedetailleerd overzicht wordt naar je e-mail gestuurd.",
-      successTitle: "Offerte Verzonden",
-      successDesc: "Controleer je inbox (en spamfolder) voor de gedetailleerde schatting. Ik neem binnenkort contact op.",
-      emailSubject: "Digitale Project Offerte",
-      emailScope: "Omvang van het werk",
-      emailRecurring: "Terugkerende diensten:",
-      emailTotal: "Totale Geschatte Investering",
-      emailVat: "Prijzen zijn exclusief BTW waar van toepassing.",
-      emailGenerated: "Gegenereerd via Novatrum Engine. Geen definitief juridisch contract.",
+      customPalette: "Aangepaste Kleuren",
+      builderTitle: "Merkidentiteit",
+      builderDesc: "Selecteer uw exacte hex-codes.",
+      shuffleColors: "Wisselen",
+      applyPalette: "Kleuren Toepassen",
+      paletteSelected: "Palet Toegepast",
+      textPlaceholder: "Beschrijf hier specifieke functionaliteiten, integraties of concurrenten...",
+      estimateGen: "Blueprint Berekend",
+      totalInv: "Geschatte Investering",
+      recurringLabel: "Terugkerende Kosten",
+      btnPrev: "Vorige Fase",
+      btnReset: "Proces Herstarten",
+      btnNext: "Volgende Fase",
+      btnFinish: "Schatting Genereren",
+      formNameLabel: "Entiteitsnaam",
+      formNamePlace: "Bedrijf of Uw Naam",
+      formCompanyLabel: "Huidige Website (Optioneel)",
+      formCompanyPlace: "https://...",
+      formEmailLabel: "Veilig E-mailadres",
+      formEmailPlace: "Waar mogen we de data heen sturen?",
+      btnSending: "Data Verwerken...",
+      btnSend: "Schatting Bekijken",
+      notice: "Dit is een niet-bindende algoritmische schatting.",
+      successTitle: "Schatting Verzonden",
+      successDesc: "Een kopie van uw basisschatting is naar uw e-mail verzonden. Wij nemen contact op voor de definitieve parameters.",
+      liveTotal: "Live Berekening",
+      resetConfirm: "Weet u zeker dat u de huidige selecties wilt wissen en opnieuw wilt beginnen?",
+      opt2Btn: "Start Definitieve Discovery",
+      returnHub: "Terug naar Hub",
       stepsData: [
         {
-          title: "Basis Architectuur",
-          subtitle: "Selecteer de basis van je digitale aanwezigheid.",
+          title: "Kerninfrastructuur",
+          subtitle: "Selecteer de basisarchitectuur van uw platform.",
           options: [
-            { id: "landing", label: "High-Conversion Landing", desc: "Single-page scroll ervaring. (Slechts 1 pagina)" },
-            { id: "business", label: "Multi-Page Bedrijfssite", desc: "Professionele bedrijfsarchitectuur. (Tot 8 pagina's)" },
-            { id: "standard-store", label: "Standaard Winkel", desc: "Basis e-commerce mogelijkheden. (Tot 50 producten)" },
-            { id: "advanced-api", label: "Geavanceerde API Winkel", desc: "Complexe winkel met externe integraties. (Onbeperkt)" },
-            { id: "ecommerce", label: "Premium E-Commerce", desc: "De ultieme op maat gemaakte winkelervaring. (Maatwerk Architectuur)" }
+            { label: "Landing Page", desc: "Conversiegerichte single-page aanwezigheid." },
+            { label: "Corporate Site", desc: "Meerdere pagina's professionele bedrijfsarchitectuur." },
+            { label: "Standaard E-Commerce", desc: "Digitale winkel met standaard winkelwagen." },
+            { label: "Geavanceerde Integratie", desc: "Platform dat complexe externe API-syncs vereist." },
+            { label: "SaaS / Web App", desc: "Maatwerk software met complexe databaselogica." }
           ]
         },
-        { title: "Visuele Identiteit", subtitle: "Kies een professioneel palet of bouw je eigen palet." },
+        { title: "Esthetiek & UI", subtitle: "Selecteer uw visuele richting." },
         {
-          title: "Design & Branding", subtitle: "Verbeter je visuele middelen. (Meerdere keuzes mogelijk)",
+          title: "Merkidentiteit",
+          subtitle: "Heeft u visuele middelen op maat nodig?",
           options: [
-            { id: "logo", label: "Professioneel Logo Ontwerp", desc: "Op maat gemaakt merk en typografie." },
-            { id: "custom-ui", label: "Aangepaste UI Elementen", desc: "Op maat gemaakte illustraties en interfacedetails." }
-          ]
-        },
-        {
-          title: "Content & SEO", subtitle: "Vergroot je bereik en boodschap. (Meerdere keuzes mogelijk)",
-          options: [
-            { id: "seo-basic", label: "Basis SEO Setup", desc: "Fundamentele metadata en zoekmachine indexering." },
-            { id: "copywriting", label: "Professionele Content", desc: "Boeiende, conversiegerichte copywriting." },
-            { id: "seo-adv", label: "Geavanceerde SEO Strategie", desc: "Diepgaande zoekwoordtargeting en technische SEO." }
+            { label: "Merkidentiteit Design", desc: "Logo, typografie en merkrichtlijnen." },
+            { label: "Bespoke UI Design", desc: "Maatwerk wireframing en high-fidelity mockups." }
           ]
         },
         {
-          title: "Functionele Kenmerken", subtitle: "Voeg specifieke mogelijkheden toe. (Meerdere keuzes mogelijk)",
+          title: "Content & SEO",
+          subtitle: "Selecteer contentvereisten.",
           options: [
-            { id: "contact-form", label: "Geavanceerd Contactformulier", desc: "Complexe logica en formulieren met meerdere stappen." },
-            { id: "newsletter", label: "Nieuwsbrief Systeem", desc: "Vang leads op en laat je publiek groeien." },
-            { id: "email-marketing", label: "E-mailmarketing Integratie", desc: "Directe verbinding met Mailchimp, ActiveCampaign, etc." }
+            { label: "Standaard SEO Setup", desc: "Basis meta-tags en indexering." },
+            { label: "Professionele Copywriting", desc: "SEO-geoptimaliseerde wervende teksten." },
+            { label: "Geavanceerde Technische SEO", desc: "Schema markup en programmatische architectuur." }
           ]
         },
         {
-          title: "Prestaties & Ondersteuning", subtitle: "Snelheidsupgrades en onderhoud. (Meerdere keuzes mogelijk)",
+          title: "Leadgeneratie",
+          subtitle: "Selecteer tools voor gebruikersacquisitie.",
           options: [
-            { id: "speed-basic", label: "Basis Snelheidsoptimalisatie", desc: "Asset minification en basis caching." },
-            { id: "speed-ultra", label: "Ultra-Fast Prestatiebundel", desc: "Server-side optimalisaties voor maximale snelheid." },
-            { id: "hosting", label: "Premium Hostingbeheer", desc: "Veilige, high-uptime cloud hosting." },
-            { id: "maintenance", label: "Maandelijks Onderhoud & Support", desc: "Regelmatige updates, back-ups en prioriteitsondersteuning." }
+            { label: "Geavanceerde Formulieren", desc: "Conditionele logica en webhook-routering." },
+            { label: "Nieuwsbrief Sync", desc: "Integratie met Mailchimp/ConvertKit." },
+            { label: "CRM Integratie", desc: "Directe synchronisatie met Hubspot of Salesforce." }
           ]
         },
         {
-          title: "Leveringstijdlijn", subtitle: "Hoe snel moet dit project gelanceerd worden?",
+          title: "Prestaties & Logistiek",
+          subtitle: "Selecteer hosting en doorlopende support.",
           options: [
-            { id: "timeline-standard", label: "Standaard Tempo (4-6 Weken)", desc: "Mijn standaard, hoogwaardige ontwikkelingscyclus." },
-            { id: "timeline-rush", label: "Prioriteit Rush (1-2 Weken)", desc: "Sla de wachtrij over. Ik werk over om zo snel mogelijk te leveren." }
+            { label: "Standaard Optimalisatie", desc: "Standaard caching en asset delivery." },
+            { label: "Ultra Prestaties", desc: "Gegarandeerde 95+ Core Web Vitals score." },
+            { label: "Premium Hosting", desc: "Toegewezen bronnen en dagelijkse back-ups." },
+            { label: "Prioriteit Onderhoud", desc: "Continue code-updates en beveiligingspatches." }
           ]
         },
-        { title: "De Visie", subtitle: "Vertel me meer over je specifieke behoeften of referenties." }
+        {
+          title: "Leveringstermijn",
+          subtitle: "Selecteer uw gewenste lanceringsschema.",
+          options: [
+            { label: "Standaard (4-6 Weken)", desc: "Reguliere engineeringprioriteit." },
+            { label: "Versneld (1-2 Weken)", desc: "Prioriteitslevering. Premiumtarief van toepassing." }
+          ]
+        },
+        { title: "Architecturale Visie", subtitle: "Geef uw laatste richtlijnen of technische notities door." }
       ],
       palettes: [
-        { name: "Novatrum Dark", desc: "De kenmerkende look. Diep, premium en gedurfd." },
-        { name: "Nordic Clean", desc: "Luchtig, minimalistisch en gericht op typografie." },
-        { name: "Midnight Tech", desc: "Moderne blauwe tinten voor tech-startups." },
+        { name: "Novatrum Dark", desc: "Onze signatuur look. Diep, premium en krachtig." },
+        { name: "Nordic Clean", desc: "Licht, minimalistisch, gericht op typografie." },
+        { name: "Midnight Tech", desc: "Moderne blauwtinten voor tech-startups." },
         { name: "Industrial Gold", desc: "Hoog contrast met elegante gouden accenten." }
       ]
     },
+
     processPage: {
-      title: "Hoe ik",
-      subtitle: "Werk.",
-      desc: "Een transparante, stapsgewijze methodologie ontworpen om complexe ideeën om te zetten in elegante digitale realiteiten.",
+      title: "Engineering",
+      subtitle: "Methodologie.",
+      desc: "Een transparant, stapsgewijs framework ontworpen om complexe logica om te zetten in elegante, hoogwaardige digitale realiteiten.",
       steps: [
-        { num: "01", title: "Ontdekking & Strategie", subtitle: "Je visie begrijpen", desc: "Ik begin met een diepgaande analyse van je bedrijfsdoelen, doelgroep en technische vereisten. Samen definiëren we de projectscope en stellen we een duidelijke roadmap op." },
-        { num: "02", title: "UI/UX Ontwerp", subtitle: "De ervaring vormgeven", desc: "Voordat ik code schrijf, maak ik wireframes en ontwerpen in hoge resolutie. Ik focus op een moderne esthetiek en intuïtieve gebruikersreizen die perfect aansluiten bij je merk." },
-        { num: "03", title: "Ontwikkeling", subtitle: "De motor bouwen", desc: "Hier gebeurt de magie. Ik schrijf schone, schaalbare code met Next.js en Tailwind CSS. Het resultaat is een robuuste architectuur." },
-        { num: "04", title: "Testen & Verfijnen", subtitle: "Perfectie garanderen", desc: "Ik voer strenge tests uit op verschillende apparaten en browsers, optimaliseer de snelheid en los bugs op voor een vlekkeloze ervaring." },
-        { num: "05", title: "Deployment & Oplevering", subtitle: "Live gaan", desc: "Ik implementeer je project op wereldwijde netwerken zoals Vercel. Eenmaal live voorzie ik je van alle documentatie." }
+        { num: "01", title: "Ontdekking & Blueprinting", subtitle: "De Architectuur Bepalen", desc: "We starten met een diepgaande analyse van uw technische eisen en doelen. Samen bepalen we de scope en stellen we een roadmap op." },
+        { num: "02", title: "UI/UX Engineering", subtitle: "De Interface Ontwerpen", desc: "Wij tekenen de visuele architectuur uit. Geen generieke templates—elke interface wordt op maat gemaakt om perfect aan te sluiten bij uw merk." },
+        { num: "03", title: "Kernontwikkeling", subtitle: "De Logica Schrijven", desc: "Ons team schrijft schone, modulaire en schaalbare code. U ontvangt continue updates en krijgt toegang tot een testomgeving." },
+        { num: "04", title: "Testen & Lancering", subtitle: "Live Gaan", desc: "Na grondige kwaliteitscontrole voeren wij het implementatieprotocol uit. Wij zorgen ervoor dat uw platform veilig en geoptimaliseerd is." }
       ],
-      ctaTitle: "Klaar voor stap één?",
-      ctaButton: "Schat je project in"
+      ctaTitle: "Klaar om uw bouw te starten?",
+      ctaButton: "Start Discovery"
+    },
+
+    servicesPage: {
+      title: "Maatwerk Architectuur",
+      subtitle: "Wij engineeren snelle, schaalbare en conversiegerichte digitale platformen met state-of-the-art open-source technologieën.",
+      s1: {
+        title: "Custom Frontend Engineering",
+        desc: "Wij ontwikkelen op maat gemaakte interfaces met een onvoorwaardelijke focus op sub-seconde laadtijden en vloeiende interacties. Geen templates—puur prestaties.",
+        tech: "REACT • NEXT.JS • TAILWIND",
+        features: [
+          "Sub-seconde rendering prestaties",
+          "Vloeiende responsieve architectuur",
+          "Geavanceerde interactieve UI en WebGL"
+        ]
+      },
+      s2: {
+        title: "Full-Stack SaaS Systemen",
+        desc: "End-to-end webapplicatie-engineering. Van versleutelde authenticatie tot complexe relationele databaselogica, wij bouwen robuuste architecturen.",
+        tech: "NODE.JS • SUPABASE • POSTGRES",
+        features: [
+          "Versleutelde authenticatie en autorisatie",
+          "Real-time database synchronisatie",
+          "Complexe API en webhook routering"
+        ]
+      },
+      s3: {
+        title: "E-Commerce Infrastructuur",
+        desc: "High-performance digitale winkels ontworpen om conversieratio's te maximaliseren, enorme verkeerspieken te verwerken en bankwaardige veiligheid te garanderen.",
+        tech: "STRIPE • CUSTOM CMS • ANALYTICS",
+        features: [
+          "Bankwaardige betalingsgateway integratie",
+          "Conversie-geoptimaliseerde checkouts",
+          "Gedetailleerde verkoop- en gebruikersanalyses"
+        ]
+      },
+      ctaTitle: "Klaar om uw parameters te bepalen?",
+      ctaButton: "Start Project Discovery"
     }
   },
+
   fr: {
-    nav: { home: "Accueil", services: "Services", process: "Processus", contact: "Contact", privacy: "Confidentialité", terms: "Conditions" },
+    nav: { home: "Accueil", services: "Services", process: "Méthodologie", contact: "Contact", privacy: "Confidentialité", terms: "Conditions", gateway: "Portail Client" },
     footer: { rights: "Tous droits réservés.", builtIn: "Conçu à Dilbeek, Belgique.", lang: "Langue" },
+
     hero: {
-      badge: "Studio Numérique • Dilbeek, Belgique",
-      title: "Produits digitaux.",
-      subtitle: "Bien conçus.",
-      desc: "Je conçois des applications web rapides et évolutives avec des outils open-source. Code propre, design fonctionnel et prix transparents.",
-      ctaStart: "Lancer un projet",
-      ctaExplore: "Explorer les services"
+      badge: "Studio Digital • Dilbeek, Belgique",
+      title: "Produits numériques.",
+      subtitle: "Parfaitement conçus.",
+      desc: "Nous concevons des applications web rapides et évolutives avec des outils open-source modernes. Code propre et processus transparents.",
+      ctaStart: "Initier le Projet",
+      ctaExplore: "Explorer nos Compétences"
     },
+
     services: {
-      title: "Capacités ciblées.",
-      subtitle: "Tout ce dont vous avez besoin pour le lancement.",
-      frontend: { title: "Développement Frontend", desc: "Interfaces rapides et réactives construites avec React et Tailwind CSS." },
-      fullstack: { title: "Systèmes Fullstack", desc: "Architecture robuste utilisant Next.js. Sécurisée, évolutive et facile à maintenir." }
+      title: "Capacités d'Ingénierie.",
+      subtitle: "Domaines d'expertise architecturale.",
+      frontend: { title: "Architecture Frontend", desc: "Interfaces utilisateur sur mesure avec des temps de chargement ultra-rapides. Construit avec React et Tailwind CSS." },
+      fullstack: { title: "Systèmes Full-Stack", desc: "Bases de données relationnelles robustes et backends sécurisés. Conçu pour l'évolutivité." }
     },
+
     process: {
-      title: "Ma méthode.",
-      subtitle: "Un processus de développement simple et efficace.",
-      step1: { label: "01. Découvrir", title: "Portée & Stratégie", desc: "Nous définissons les besoins du projet et l'architecture." },
-      step2: { label: "02. Construire", title: "Développement", desc: "Écriture d'un code propre et modulaire. Mises à jour régulières." },
-      step3: { label: "03. Lancer", title: "Déploiement", desc: "Tests finaux et mise en ligne de votre produit." }
+      title: "Processus d'Ingénierie.",
+      subtitle: "Un pipeline de déploiement transparent.",
+      step1: { label: "01. Portée", title: "Stratégie", desc: "Nous définissons les paramètres exacts du projet et les exigences techniques." },
+      step2: { label: "02. Build", title: "Développement", desc: "Écriture d'un code propre et modulaire dans un environnement de test sécurisé." },
+      step3: { label: "03. Launch", title: "Déploiement", desc: "Tests rigoureux sur tous les appareils et déploiement fluide sur serveur." }
     },
-    pricing: {
-      tag: "Prix Transparent",
-      title: "Connaître vos coûts à l'avance.",
-      desc: "Utilisez le configurateur interactif pour obtenir une estimation immédiate.",
-      check1: "Répartition détaillée des coûts",
-      check2: "Sélection modulaire des fonctionnalités",
-      check3: "Génération instantanée de devis",
-      cta: "Ouvrir le configurateur"
-    },
+
     tech: {
-      tag: "Performance d'abord",
-      title: "Propulsé par l'open source.",
-      desc: "Je m'appuie sur des technologies open-source standards pour construire des applications résilientes.",
-      items: {
-        next: "Le framework React",
-        ts: "JavaScript typé",
-        tailwind: "Stylisation utilitaire",
-        supabase: "Base de données open source",
-        vercel: "Réseau edge mondial",
-        framer: "Animations fluides"
-      }
+      tag: "TECHNOLOGIES DE POINTE",
+      items: { next: "Next.js", ts: "TypeScript", tailwind: "Tailwind CSS", supabase: "Supabase", vercel: "Vercel" }
     },
+
+    pricing: {
+      tag: "ESTIMATIONS ALGORITHMIQUES",
+      title: "Calculez les paramètres.",
+      desc: "Aucun frais caché. Générez un calcul de base pour votre architecture avant de commencer la découverte.",
+      check1: "Estimation de base instantanée",
+      check2: "Calcul sans engagement",
+      check3: "Adapté à votre portée",
+      button: "Démarrer le Calculateur"
+    },
+
     contact: {
-      title: "Parlons-en.",
-      subtitle: "Envoyez-moi un message et je vous répondrai dans les 24 heures.",
-      namePlaceholder: "Votre Nom",
-      emailPlaceholder: "Votre Email",
-      messagePlaceholder: "Parlez-moi de votre projet...",
-      button: "Envoyer le message"
+      title: "Établir le Contact.",
+      subtitle: "Canal de communication sécurisé.",
+      namePlaceholder: "Nom de l'Entité",
+      emailPlaceholder: "E-mail Professionnel",
+      messagePlaceholder: "Spécifications du projet...",
+      button: "Transmettre le Message"
     },
-    terms: {
-      title: "Directives",
-      subtitle: "de Projet.",
-      tag: "Règles de Développement Web // Novatrum",
-      lastUpdated: "Dernière mise à jour : Mars 2026",
-      sec1Title: "01. Originalité & Anti-Clone",
-      sec1Desc: "Le design et les animations uniques de ce site sont l'œuvre originale de Novatrum.",
-      sec1Notice: "Avis : Le clonage de l'identité visuelle de ce site est strictement interdit.",
-      sec2Title: "02. Standards du Site Web",
-      sec2Desc: "Nous nous concentrons exclusivement sur la création de sites web modernes.",
-      rule1Title: "Règle #01 — Technologie Moderne Uniquement",
-      rule1Desc: "Nous construisons avec Next.js et Tailwind CSS.",
-      rule2Title: "Règle #02 — Préparation du Contenu",
-      rule2Desc: "Le client doit fournir tous les textes et images avant le début.",
-      rule3Title: "Règle #03 — Révisions Équitables",
-      rule3Desc: "Nous incluons un nombre spécifique d'ajustements pour garantir le respect des délais.",
-      sec3Title: "03. Utilisation du Site",
-      sec3Desc: "Vous êtes libre d'explorer notre portfolio et le calculateur de prix.",
-      sec4Title: "04. Propriété",
-      sec4Desc: "Une fois la facture finale payée, vous êtes l'entier propriétaire du site.",
-      footerTag: "Construisez vite. Construisez proprement.",
-      cta: "Je comprends. Lancer le projet."
+
+    gateway: {
+      title: "Initiation de Projet",
+      subtitle: "Sélectionnez votre voie préférée pour commencer le processus d'ingénierie.",
+      opt1Title: "Estimation Rapide",
+      opt1Time: "3 - 5 Minutes",
+      opt1Desc: "Obtenez une indication basée sur des paramètres standards. Idéal pour la planification budgétaire.",
+      opt1Feat1: "Rapide & Simple",
+      opt1Feat2: "Sans engagement",
+      opt1Feat3: "Prix approximatif uniquement",
+      opt1Btn: "Calculer l'Estimation",
+      opt2Title: "Blueprint Définitif",
+      opt2Desc: "Une analyse approfondie de vos besoins techniques. Nous définirons vos paramètres et fournirons une proposition contractuelle.",
+      opt2Time: "10 - 12 Minutes",
+      opt2NoticeTitle: "Exigence Technique",
+      opt2NoticeDesc: "Ce formulaire est très détaillé. Ne continuez que si vous êtes prêt à définir la portée de votre projet.",
+      opt2Btn: "Démarrer la Découverte",
+      returnHub: "Retour au Hub"
     },
-    servicesPage: {
-      title: "Solutions",
-      subtitle: "Spécialisées.",
-      desc: "J'utilise des frameworks modernes pour créer des produits digitaux performants.",
-      s1: { tag: "01 // Frontend", title: "Applications Web Modernes", desc: "Je crée des interfaces utilisateur rapides et réactives avec Next.js et Tailwind CSS.", tech: "Next.js + Tailwind" },
-      s2: { tag: "02 // Backend", title: "Bases de données évolutives", desc: "Avec Supabase, je crée des systèmes d'authentification sécurisés.", tech: "Supabase" },
-      s3: { tag: "03 // Déploiement", title: "Infrastructure sans temps d'arrêt", desc: "Je déploie vos projets via Vercel pour une disponibilité maximale.", tech: "Vercel" },
-      ctaTitle: "Prêt à construire quelque chose d'exceptionnel ?",
-      ctaButton: "Calculer le coût du projet"
-    },
-    privacy: {
-      title: "Zéro Donnée",
-      subtitle: "Focus.",
-      tag: "Priorité à la confidentialité // Novatrum",
-      lastUpdated: "Dernière mise à jour : Mars 2026",
-      intro: "Nous respectons votre vie privée et sommes déterminés à protéger vos données personnelles.",
-      sec1Title: "01. Aucune donnée personnelle",
-      sec1Desc: "Je ne collecte pas automatiquement votre nom ou adresse physique. Mon entreprise construit des sites web, elle ne vend pas de données.",
-      sec1Notice: "Avis : Ce site fonctionne sans vous demander qui vous êtes.",
-      sec2Title: "02. Contact Minimal",
-      sec2Desc: "Lorsque vous utilisez mon formulaire, je ne demande que les détails du projet et une adresse e-mail.",
-      rule1: "Pas de newsletters.",
-      rule2: "Pas d'e-mails marketing.",
-      rule3: "Pas de partage de votre e-mail.",
-      sec3Title: "03. Aucun Suivi",
-      sec3Desc: "Je n'utilise pas de pixels de suivi ou de cookies invasifs. La vitesse et la confidentialité sont mes priorités.",
-      sec4Title: "04. Sécurité",
-      sec4Desc: "Chaque interaction sur ce site est cryptée via SSL.",
-      footerTag: "La confidentialité est un droit, pas une fonctionnalité.",
-      cta: "Démarrer une conversation privée"
-    },
+
+    discoveryPage: {
+  title: "Découverte",
+  subtitle: "Définitive.",
+  desc: "Fournissez les paramètres détaillés de votre projet. Nous concevrons un plan technique précis et une proposition prête pour le contrat.",
+  liveEstimate: "Estimation en Direct",
+  phase: "Phase",
+  of: "de",
+  fileUploading: "Encrypting Upload...",
+  fileClick: "Cliquez ou glissez les fichiers ici",
+  integrations: {
+    stripe: "Passerelle de Paiement Stripe",
+    auth: "Authentification & Autorisation Utilisateur",
+    crm: "Synchronisation CRM / Hubspot",
+    mail: "Synchronisation Newsletter & Email",
+    analytics: "Analyses d'Evénements Avancées",
+    ai: "Intégration AI / ML sur mesure",
+    sockets: "Données en Temps Réel / Sockets",
+    cms: "Gestionnaire de Contenu (CMS)",
+    multilang: "Alphas Multilingues"
+  },
+  designStyles: {
+    minimal: "Minimal & Focus sur la Typographie",
+    bold: "Gras, Premium & Brand Driven",
+    corporate: "Structure Professionnelle & Entreprise",
+    interactive: "Hautement Interactif & Complex UI"
+  },
+  fontPrefs: {
+    sans: "Modern Sans-Serif",
+    serif: "Classic Serif",
+    mono: "Industrial Monospace"
+  },
+  seoLevels: {
+    standard: "Structure SEO Standart",
+    advanced: "SEO Avancé / Technique"
+  },
+  timelines: {
+    standard: "Standart (4-6 Semaines)",
+    relaxed: "Relax (8-10 Semaines)",
+    expedited: "Accéléré (1-2 Semaines)"
+  },
+  constraint: {
+    title: "Contrainte Architecturale",
+    desc: "Une plateforme complexe ne peut pas être accélérée. Veuillez privilégier les calendriers standard ou détendus pour une ingénierie appropriée."
+  },
+  form: {
+    credentials: "Credentials",
+    entity: "Nom de l'Entité *",
+    website: "URL Actuelle",
+    goals: "Objectif Principal & Buts *",
+    goalsPlace: "Décrivez le but ultime de cette plateforme...",
+    competitors: "Concurrents ou Inspirations",
+    architecture: "Architecture",
+    archDesc: "Sélectionnez le cadre d'ingénierie pour votre application.",
+    pages: "Nombre Estimé de Pages/Écrans",
+    design: "Esthétique",
+    designDesc: "Quelle sensation la plateforme doit-elle dégager ? Sélectionnez votre direction.",
+    color: "Couleur Principale",
+    accent: "Couleur d'Accent",
+    hasAccent: "Couleur d'Accent?",
+    fonts: "Préférence de Typographie",
+    content: "Contenu & Copy",
+    copy: "Include Professional Copywriting",
+    assets: "Attach Brand Assets / Brief (Max 100MB)",
+    integrations: "Intégrations & Fonctionnalités",
+    intDesc: "Sélectionnez les fonctionnalités complexes et les synchronisations API.",
+    seo: "Visibilité",
+    seoDesc: "Sélectionnez content engineering et la stratégie d'indexation.",
+    timeline: "Logistique",
+    timelineDesc: "Définissons le calendrier de déploiement requis.",
+    maintenance: "Soutien Continu",
+    maintenanceDesc: "Include post-launch maintenance & security retainer.",
+    maintenanceCheck: "Include priority maintenance",
+    client: "Identifier Client",
+    clientSub: "Fournissez vos coordonnées de facturation pour enregistrer cette découverte en toute sécurité.",
+    name: "Nom Complet / Point de Contact *",
+    email: "Adresse E-mail Professionnelle *",
+    phone: "Téléphone Professionnel *",
+    address: "Adresse de Facturation (Ville, Pays) *",
+    vat: "Numéro de TVA (Optionnel)",
+    notes: "Notes de Conception",
+    notesPlace: "Partagez toute direction visuelle spécifique ou note technique..."
+  },
+  summary: {
+    title: "Résumé d'Intelligence",
+    desc: "Un blueprint algorithmique de base de vos paramètres définis.",
+    notBinding: "NON BINDING",
+    platform: "Architecture de la Plateforme",
+    logistics: "Calendrier de Déploiement",
+    copywriting: "Copywriting",
+    maintenance: "Maintenance",
+    design: "Direction de Conception",
+    integrations: "Intégrations",
+    total: "Calcul en Direct (€)"
+  },
+  btn: {
+    prev: "Phase Précédente",
+    next: "Phase Suivante",
+    submit: "Verrouiller Plan & Blueprint",
+    encrypting: "Chiffrement...",
+    finish: "Démarrer Découverte",
+    pdf: "Générer & Télécharger PDF",
+    hub: "Retour au Hub"
+  },
+  success: {
+    title: "Blueprint Verrouillé.",
+    sub: "Découverte Définitive",
+    desc: "Votre ID de référence sécurisé est enregistré. Nous examinerons votre blueprint et vous enverrons un e-mail dans les 24-48 heures avec une Proposition Définitive.",
+    dsNumber: "Numéro DS"
+  }
+},
+
     contactPage: {
-      title: "Commencer le",
-      subtitle: "Dialogue.",
-      desc: "Vous avez un projet en tête ? Je suis prêt à vous aider à créer la prochaine génération de produits digitaux.",
-      studioName: "Novatrum Studio",
-      studioLoc: "Basé à Dilbeek, Belgique",
-      studioOper: "Opérations Mondiales // Remote-First",
-      roadmapTitle: "Les Prochaines Étapes",
+      title: "Établir le Contact",
+      subtitle: "Ingénierie Numérique.",
+      desc: "Discutez de vos exigences techniques ou demandez une consultation avec notre équipe d'ingénierie.",
+      studioName: "Novatrum Studio.",
+      studioLoc: "Dilbeek, Belgique",
+      studioOper: "Disponible pour des opérations mondiales",
+      roadmapTitle: "FEUILLE DE ROUTE D'INGÉNIERIE",
       steps: [
-        { s: "01", t: "Examen Initial", d: "J'analyse votre demande et vos besoins techniques dans les 24 heures." },
-        { s: "02", t: "Session de Découverte", d: "Un appel approfondi pour s'aligner sur les objectifs et le calendrier." },
-        { s: "03", t: "Proposition Sur Mesure", d: "Vous recevez une feuille de route détaillée et un devis transparent." }
+        { s: "01", t: "Découverte & Stratégie", d: "Nous discutons de vos objectifs, de vos exigences techniques et définissons la portée." },
+        { s: "02", t: "Architecture & UI", d: "Nous cartographions l'architecture du système et concevons l'expérience utilisateur." },
+        { s: "03", t: "Développement Central", d: "Nous construisons la plateforme et la déployons dans un environnement sécurisé." }
       ],
-      badge: "Actuellement en réservation pour le mois prochain",
+      badge: "Accepte de Nouveaux Projets",
       form: {
-        nameLabel: "Nom Complet",
-        namePlaceholder: "Jean Dupont",
-        emailLabel: "Email",
-        emailPlaceholder: "jean@exemple.fr",
-        categoryLabel: "Catégorie de Projet",
-        categoryValue: "Développement de Logiciels Sur Mesure",
-        briefLabel: "Description du Projet",
-        briefPlaceholder: "Qu'allons-nous construire ensemble ?",
-        submit: "Envoyer la Demande"
+        nameLabel: "Nom Complet *",
+        namePlaceholder: "ex. Jean Dupont",
+        emailLabel: "E-mail Professionnel *",
+        emailPlaceholder: "jean@entreprise.fr",
+        categoryLabel: "Type de Demande",
+        categoryValue: "Ingénierie de Produits Numériques",
+        briefLabel: "Détails du Projet *",
+        briefPlaceholder: "Décrivez vos besoins architecturaux...",
+        submit: "Transmettre le Message",
+        sending: "Envoi en cours..."
+      },
+      success: {
+        title: "Transmission Réussie.",
+        desc: "Votre message a été enregistré en toute sécurité. Notre équipe examinera vos exigences et vous répondra sous peu.",
+        button: "Transmettre un Autre Message"
       },
       faqTitle: "Questions",
-      faqSubtitle: "Fréquentes",
-      faqDesc: "Tout ce que vous devez savoir pour démarrer un projet avec moi.",
+      faqSubtitle: "Fréquentes.",
+      faqDesc: "Voici quelques questions fréquentes concernant notre processus d'ingénierie et nos capacités techniques.",
       faqs: [
-        { q: "À quelle vitesse pouvons-nous commencer ?", a: "En général, je peux lancer une phase de découverte dans un délai d'une semaine après le premier contact." },
-        { q: "Comment gérez-vous la tarification ?", a: "Pour des solutions complexes, j'utilise le calculateur de prix pour fournir une estimation dynamique." },
-        { q: "Quelles technologies utilisez-vous ?", a: "Je me spécialise dans : Next.js, TypeScript, Tailwind CSS et Supabase." },
-        { q: "Offrez-vous un support après le lancement ?", a: "Absolument. Je fournis un support de maintenance continu." }
+        { q: "Quel est le calendrier typique d'un projet ?", a: "Selon la complexité structurelle, les déploiements standards prennent de 4 à 8 semaines. Des options accélérées sont disponibles." },
+        { q: "Proposez-vous une maintenance après le lancement ?", a: "Oui, nous fournissons des contrats de maintenance prioritaires incluant des correctifs de sécurité et une optimisation continue." },
+        { q: "Quelle est votre pile technologique de base ?", a: "Nous concevons des systèmes utilisant Next.js, React, Tailwind CSS, Node.js et PostgreSQL via Supabase." }
       ]
     },
+
     calculator: {
-      title: "Projet",
-      subtitle: "Configurateur.",
-      stepInfo: "Étape",
+      title: "Estimation Architecturale",
+      subtitle: "Définissez les paramètres de base",
+      stepInfo: "Phase",
       of: "sur",
-      tag: "Tarification de Précision",
-      btnPrev: "Étape Précédente",
-      btnNext: "Continuer",
-      btnFinish: "Voir l'estimation finale",
+      tag: "ESTIMATION",
       included: "Inclus",
       monthly: "mois",
-      customPalette: "Palette Personnalisée",
-      shuffleColors: "Mélanger les couleurs",
-      paletteSelected: "Palette Sélectionnée",
-      applyPalette: "Appliquer cette palette",
-      builderTitle: "Créateur de palette personnalisée",
-      builderDesc: "Définissez votre propre identité de marque en 3 couleurs.",
-      textPlaceholder: "Parlez-moi de la personnalité de votre marque, des fonctionnalités souhaitées ou des sites Web de référence que vous aimez...",
-      estimateGen: "Estimation Générée",
-      totalInv: "Investissement Total",
-      recurringLabel: "Support Récurrent et Hébergement",
       month: "mois",
-      formNameLabel: "Nom Complet",
-      formNamePlace: "Jean Dupont",
-      formCompanyLabel: "Entreprise / Marque",
-      formCompanyPlace: "Acme Corp",
-      formEmailLabel: "Adresse Email",
-      formEmailPlace: "jean@exemple.fr",
-      btnSend: "Envoyer le devis par email",
-      btnSending: "Envoi du devis...",
-      notice: "Un aperçu détaillé sera envoyé à votre adresse e-mail.",
-      successTitle: "Devis Envoyé",
-      successDesc: "Veuillez vérifier votre boîte de réception pour l'estimation détaillée. Je vous contacterai sous peu.",
-      emailSubject: "Devis de Projet Digital",
-      emailScope: "Périmètre du travail",
-      emailRecurring: "Services récurrents :",
-      emailTotal: "Investissement Total Estimé",
-      emailVat: "Les prix s'entendent hors TVA où applicable.",
-      emailGenerated: "Généré via Novatrum Engine. Ceci n'est pas un contrat légal.",
+      customPalette: "Couleurs Personnalisées",
+      builderTitle: "Identité de Marque",
+      builderDesc: "Sélectionnez vos codes hexadécimaux.",
+      shuffleColors: "Mélanger",
+      applyPalette: "Appliquer les Couleurs",
+      paletteSelected: "Palette Appliquée",
+      textPlaceholder: "Décrivez ici toute fonctionnalité spécifique, intégration ou référence...",
+      estimateGen: "Blueprint Calculé",
+      totalInv: "Investissement Estimé",
+      recurringLabel: "Frais Récurrents",
+      btnPrev: "Phase Précédente",
+      btnReset: "Redémarrer",
+      btnNext: "Phase Suivante",
+      btnFinish: "Générer l'Estimation",
+      formNameLabel: "Nom de l'Entité",
+      formNamePlace: "Entreprise ou Votre Nom",
+      formCompanyLabel: "Site Web Actuel (Optionnel)",
+      formCompanyPlace: "https://...",
+      formEmailLabel: "E-mail Sécurisé",
+      formEmailPlace: "Où devons-nous envoyer les données ?",
+      btnSending: "Compilation des Données...",
+      btnSend: "Révéler l'Estimation",
+      notice: "Ceci est une estimation algorithmique non contraignante.",
+      successTitle: "Estimation Envoyée",
+      successDesc: "Une copie de votre estimation a été envoyée à votre adresse e-mail. Nous vous contacterons pour discuter des paramètres.",
+      liveTotal: "Calcul en Direct",
+      resetConfirm: "Êtes-vous sûr de vouloir effacer les sélections actuelles et recommencer ?",
+      opt2Btn: "Démarrer la Découverte Définitive",
+      returnHub: "Retour au Hub",
       stepsData: [
         {
-          title: "Architecture de base",
-          subtitle: "Sélectionnez la base de votre présence numérique.",
+          title: "Infrastructure de Base",
+          subtitle: "Sélectionnez l'architecture de votre plateforme.",
           options: [
-            { id: "landing", label: "Landing Page Haute Conversion", desc: "Expérience de défilement sur une seule page. (1 Page)" },
-            { id: "business", label: "Site d'Entreprise Multi-Pages", desc: "Architecture d'entreprise professionnelle. (Jusqu'à 8 pages)" },
-            { id: "standard-store", label: "Boutique Standard", desc: "Fonctionnalités e-commerce de base. (Jusqu'à 50 produits)" },
-            { id: "advanced-api", label: "Boutique API Avancée", desc: "Boutique complexe avec intégrations externes. (Illimité)" },
-            { id: "ecommerce", label: "E-Commerce Premium", desc: "L'expérience d'achat sur mesure ultime. (Architecture sur mesure)" }
+            { label: "Landing Page", desc: "Page unique à fort taux de conversion." },
+            { label: "Site d'Entreprise", desc: "Architecture professionnelle multi-pages." },
+            { label: "E-Commerce Standard", desc: "Boutique numérique avec panier." },
+            { label: "Intégration Avancée", desc: "Plateforme nécessitant des API complexes." },
+            { label: "SaaS / Web App", desc: "Logiciel sur mesure avec logique de base de données." }
           ]
         },
-        { title: "Identité Visuelle", subtitle: "Choisissez une palette professionnelle ou créez la vôtre." },
+        { title: "Esthétique & UI", subtitle: "Sélectionnez votre direction visuelle." },
         {
-          title: "Design & Branding", subtitle: "Améliorez vos atouts visuels. (Vous pouvez en sélectionner plusieurs)",
+          title: "Identité de Marque",
+          subtitle: "Avez-vous besoin d'une création visuelle sur mesure ?",
           options: [
-            { id: "logo", label: "Design de Logo Professionnel", desc: "Marque et typographie sur mesure." },
-            { id: "custom-ui", label: "Éléments UI Personnalisés", desc: "Illustrations et détails d'interface sur mesure." }
-          ]
-        },
-        {
-          title: "Contenu & SEO", subtitle: "Améliorez votre portée. (Vous pouvez en sélectionner plusieurs)",
-          options: [
-            { id: "seo-basic", label: "Configuration SEO de base", desc: "Métadonnées fondamentales et indexation." },
-            { id: "copywriting", label: "Rédaction de contenu professionnel", desc: "Rédaction engageante et axée sur la conversion." },
-            { id: "seo-adv", label: "Stratégie SEO avancée", desc: "Ciblage de mots-clés et optimisation SEO technique." }
+            { label: "Design d'Identité", desc: "Logo, typographie et directives de marque." },
+            { label: "Design UI Sur Mesure", desc: "Maquettes personnalisées haute fidélité." }
           ]
         },
         {
-          title: "Fonctionnalités", subtitle: "Ajoutez des capacités spécifiques à votre site.",
+          title: "Contenu & SEO",
+          subtitle: "Sélectionnez les exigences en matière de contenu.",
           options: [
-            { id: "contact-form", label: "Formulaire de contact avancé", desc: "Logique conditionnelle complexe et formulaires à plusieurs étapes." },
-            { id: "newsletter", label: "Système de newsletter", desc: "Capturez des prospects et développez votre audience." },
-            { id: "email-marketing", label: "Intégration d'Email Marketing", desc: "Connectez-vous directement à Mailchimp, ActiveCampaign, etc." }
+            { label: "Configuration SEO Standard", desc: "Balises meta de base et indexation." },
+            { label: "Copywriting Professionnel", desc: "Textes de vente optimisés pour le SEO." },
+            { label: "SEO Technique Avancé", desc: "Balisage Schema et architecture programmatique." }
           ]
         },
         {
-          title: "Performance & Support", subtitle: "Mises à niveau de vitesse et maintenance continue.",
+          title: "Génération de Leads",
+          subtitle: "Sélectionnez les outils d'acquisition.",
           options: [
-            { id: "speed-basic", label: "Optimisation de vitesse de base", desc: "Minification des ressources et mise en cache." },
-            { id: "speed-ultra", label: "Pack de Performance Ultra-Rapide", desc: "Optimisations côté serveur pour une vitesse maximale." },
-            { id: "hosting", label: "Gestion d'Hébergement Premium", desc: "Hébergement cloud sécurisé et haute disponibilité." },
-            { id: "maintenance", label: "Maintenance Mensuelle & Support", desc: "Mises à jour régulières, sauvegardes et support." }
+            { label: "Formulaires Avancés", desc: "Logique conditionnelle et webhooks." },
+            { label: "Synchronisation Newsletter", desc: "Intégration avec Mailchimp/ConvertKit." },
+            { label: "Intégration CRM", desc: "Synchronisation directe avec Hubspot ou Salesforce." }
           ]
         },
         {
-          title: "Délai de Livraison", subtitle: "À quelle vitesse avez-vous besoin de ce projet ?",
+          title: "Performance & Logistique",
+          subtitle: "Sélectionnez l'hébergement et le support continu.",
           options: [
-            { id: "timeline-standard", label: "Rythme standard (4-6 semaines)", desc: "Mon cycle de développement standard de haute qualité." },
-            { id: "timeline-rush", label: "Urgence Prioritaire (1-2 semaines)", desc: "Évitez la file d'attente. Je fais des heures supplémentaires pour livrer le plus tôt possible." }
+            { label: "Optimisation Standard", desc: "Mise en cache standard et livraison des ressources." },
+            { label: "Ultra Performance", desc: "Score Core Web Vitals garanti > 95." },
+            { label: "Hébergement Premium", desc: "Ressources dédiées et sauvegardes quotidiennes." },
+            { label: "Maintenance Prioritaire", desc: "Mises à jour du code et correctifs de sécurité." }
           ]
         },
-        { title: "La Vision", subtitle: "Dites-m'en plus sur vos besoins spécifiques ou références." }
+        {
+          title: "Délai de Déploiement",
+          subtitle: "Sélectionnez votre calendrier de lancement.",
+          options: [
+            { label: "Standard (4-6 Semaines)", desc: "Priorité d'ingénierie régulière." },
+            { label: "Accéléré (1-2 Semaines)", desc: "Livraison prioritaire. Prime appliquée." }
+          ]
+        },
+        { title: "Vision Architecturale", subtitle: "Fournissez vos directives finales ou notes techniques." }
       ],
       palettes: [
-        { name: "Novatrum Dark", desc: "Le look signature. Profond, premium et audacieux." },
-        { name: "Nordic Clean", desc: "Aéré, minimaliste et axé sur la typographie." },
-        { name: "Midnight Tech", desc: "Tons bleus modernes pour les startups axées sur la technologie." },
-        { name: "Industrial Gold", desc: "Contraste élevé avec des accents dorés élégants." }
+        { name: "Novatrum Dark", desc: "Notre look signature. Profond, premium et audacieux." },
+        { name: "Nordic Clean", desc: "Lumineux, minimaliste, axé sur la typographie." },
+        { name: "Midnight Tech", desc: "Tons bleus modernes pour les startups." },
+        { name: "Industrial Gold", desc: "Contraste élevé avec d'élégants accents dorés." }
       ]
     },
+
     processPage: {
-      title: "Comment je",
-      subtitle: "Travaille.",
-      desc: "Une méthodologie transparente, étape par étape, conçue pour transformer des idées complexes en réalités numériques élégantes.",
+      title: "Ingénierie",
+      subtitle: "Méthodologie.",
+      desc: "Un cadre transparent, étape par étape, conçu pour transformer une logique complexe en réalités numériques élégantes.",
       steps: [
-        { num: "01", title: "Découverte & Stratégie", subtitle: "Comprendre votre vision", desc: "Je commence par analyser vos objectifs commerciaux et vos exigences techniques. Ensemble, nous définissons la portée du projet et établissons une feuille de route claire." },
-        { num: "02", title: "Design UI/UX", subtitle: "Créer l'expérience", desc: "Avant de coder, je crée des maquettes et des designs haute fidélité. Je me concentre sur une esthétique moderne et des parcours utilisateurs intuitifs." },
-        { num: "03", title: "Développement", subtitle: "Construire le moteur", desc: "C'est ici que la magie opère. J'écris un code propre et évolutif en utilisant Next.js et Tailwind CSS pour une architecture robuste." },
-        { num: "04", title: "Tests & Affinement", subtitle: "Assurer la perfection", desc: "Je mène des tests rigoureux sur différents appareils et navigateurs pour garantir une expérience utilisateur sans faille." },
-        { num: "05", title: "Déploiement & Transfert", subtitle: "Mise en ligne", desc: "Je déploie votre projet sur des réseaux mondiaux comme Vercel et vous fournis toute la documentation nécessaire." }
+        { num: "01", title: "Découverte & Blueprinting", subtitle: "Définir l'Architecture", desc: "Nous commençons par une plongée approfondie dans vos exigences techniques. Ensemble, nous établissons une feuille de route d'ingénierie." },
+        { num: "02", title: "Ingénierie UI/UX", subtitle: "Concevoir l'Interface", desc: "Nous dessinons l'architecture visuelle. Rejetant les modèles génériques, chaque interface est conçue sur mesure." },
+        { num: "03", title: "Développement Central", subtitle: "Écrire la Logique", desc: "Notre équipe écrit un code propre et évolutif. Vous recevez des mises à jour continues et accédez à un environnement sécurisé." },
+        { num: "04", title: "Test & Déploiement", subtitle: "Mise en Ligne", desc: "Après une assurance qualité rigoureuse, nous exécutons le déploiement. Votre plateforme est optimisée pour le trafic d'entreprise." }
       ],
-      ctaTitle: "Prêt à commencer l'étape un ?",
-      ctaButton: "Estimer votre projet"
+      ctaTitle: "Prêt à initier votre construction ?",
+      ctaButton: "Commencer la Découverte"
+    },
+
+    servicesPage: {
+      title: "Architectures Sur Mesure",
+      subtitle: "Nous concevons des plateformes numériques rapides et évolutives avec des technologies open-source de pointe.",
+      s1: {
+        title: "Ingénierie Frontend Personnalisée",
+        desc: "Nous développons des interfaces avec une attention sans compromis sur les temps de chargement. Pas de modèles, juste des performances pures.",
+        tech: "REACT • NEXT.JS • TAILWIND",
+        features: [
+          "Performances de rendu inférieures à une seconde",
+          "Architecture fluide sur tous les appareils",
+          "UI interactive avancée et éléments WebGL"
+        ]
+      },
+      s2: {
+        title: "Systèmes SaaS Full-Stack",
+        desc: "Ingénierie d'applications web de bout en bout. De l'authentification chiffrée à la logique de base de données complexe.",
+        tech: "NODE.JS • SUPABASE • POSTGRES",
+        features: [
+          "Authentification et autorisation chiffrées",
+          "Synchronisation de base de données en temps réel",
+          "Routage complexe d'API et de webhooks"
+        ]
+      },
+      s3: {
+        title: "Infrastructure E-Commerce",
+        desc: "Vitrines numériques haute performance conçues pour maximiser les conversions et assurer une sécurité bancaire.",
+        tech: "STRIPE • CUSTOM CMS • ANALYTICS",
+        features: [
+          "Intégration de passerelle de paiement sécurisée",
+          "Pipelines de paiement optimisés pour la conversion",
+          "Analyses granulaires des ventes et des utilisateurs"
+        ]
+      },
+      ctaTitle: "Prêt à définir vos paramètres ?",
+      ctaButton: "Démarrer la Découverte du Projet"
     }
   },
+
   tr: {
-    nav: { home: "Anasayfa", services: "Hizmetler", process: "Süreç", contact: "İletişim", privacy: "Gizlilik", terms: "Kurallar" },
-    footer: { rights: "Tüm hakları saklıdır.", builtIn: "Dilbeek, Belçika'da üretildi.", lang: "Dil" },
+    nav: { home: "Ana Sayfa", services: "Hizmetler", process: "Metodoloji", contact: "İletişim", privacy: "Gizlilik", terms: "Şartlar", gateway: "Müşteri Portalı" },
+    footer: { rights: "Tüm hakları saklıdır.", builtIn: "Dilbeek, Belçika'da geliştirildi.", lang: "Dil" },
+
     hero: {
       badge: "Dijital Stüdyo • Dilbeek, Belçika",
       title: "Dijital ürünler.",
       subtitle: "Doğru inşa edilmiş.",
-      desc: "Modern açık kaynaklı araçlarla hızlı ve ölçeklenebilir web uygulamaları geliştiriyorum. Temiz kod, işlevsel tasarım ve şeffaf fiyatlandırma.",
-      ctaStart: "Projeye Başla",
-      ctaExplore: "Hizmetleri Keşfet"
+      desc: "Modern açık kaynaklı araçlar kullanarak hızlı, ölçeklenebilir web uygulamaları geliştiriyoruz. Temiz kod, işlevsel tasarım ve şeffaf iş akışları.",
+      ctaStart: "Projeyi Başlat",
+      ctaExplore: "Yetenekleri Keşfet"
     },
+
     services: {
-      title: "Odaklanmış yetenekler.",
-      subtitle: "Lansman için ihtiyacınız olan her şey.",
-      frontend: { title: "Frontend Geliştirme", desc: "React ve Tailwind CSS ile oluşturulmuş hızlı, duyarlı arayüzler." },
-      fullstack: { title: "Fullstack Sistemler", desc: "Next.js kullanan sağlam mimari. Güvenli, ölçeklenebilir ve bakımı kolay." }
+      title: "Mühendislik Yetenekleri.",
+      subtitle: "Mimari odak alanları.",
+      frontend: { title: "Frontend Mimarisi", desc: "Saniyenin altında yükleme hızına sahip özel kullanıcı arayüzleri. React ve Tailwind CSS ile inşa edilmiştir." },
+      fullstack: { title: "Full-Stack Sistemler", desc: "Sağlam ilişkisel veritabanları ve güvenli arka uçlar. Kurumsal ölçeklenebilirlik için tasarlandı." }
     },
+
     process: {
-      title: "Nasıl çalışırım.",
-      subtitle: "Basit ve etkili bir geliştirme süreci.",
-      step1: { label: "01. Keşif", title: "Kapsam ve Strateji", desc: "Proje gereksinimlerini tanımlayıp teknoloji yığınını seçiyoruz." },
-      step2: { label: "02. İnşa", title: "Geliştirme", desc: "Temiz ve modüler kod yazımı. Düzenli güncellemeler alırsınız." },
-      step3: { label: "03. Lansman", title: "Yayınlama", desc: "Final testleri ve ürününüzü dünyaya duyurma." }
+      title: "Mühendislik İş Akışı.",
+      subtitle: "Şeffaf bir dağıtım süreci.",
+      step1: { label: "01. Kapsam", title: "Strateji", desc: "Kesin proje parametrelerini ve teknik gereksinimleri tanımlıyoruz." },
+      step2: { label: "02. İnşa", title: "Geliştirme", desc: "Güvenli bir test ortamında temiz, modüler kod yazımı." },
+      step3: { label: "03. Lansman", title: "Dağıtım", desc: "Cihazlar arası titiz testler ve sorunsuz sunucu dağıtımı." }
     },
-    pricing: {
-      tag: "Şeffaf Fiyatlandırma",
-      title: "Maliyetlerinizi önceden bilin.",
-      desc: "Anında tahmin almak için interaktif yapılandırıcıyı kullanın.",
-      check1: "Maliyetlerin kalem kalem dökümü",
-      check2: "Modüler özellik seçimi",
-      check3: "Anında teklif oluşturma",
-      cta: "Yapılandırıcıyı Aç"
-    },
+
     tech: {
-      tag: "Önce Performans",
-      title: "Gücünü açık kaynaktan alır.",
-      desc: "Dayanıklı uygulamalar oluşturmak için açık kaynaklı teknolojilere güveniyorum.",
-      items: {
-        next: "React Çerçevesi",
-        ts: "Tip güvenli JavaScript",
-        tailwind: "Yardımcı öncelikli stil",
-        supabase: "Açık kaynak veritabanı",
-        vercel: "Küresel edge ağı",
-        framer: "Pürüzsüz animasyonlar"
-      }
+      tag: "TEMEL TEKNOLOJİLER",
+      items: { next: "Next.js", ts: "TypeScript", tailwind: "Tailwind CSS", supabase: "Supabase", vercel: "Vercel" }
     },
+
+    pricing: {
+      tag: "ALGORİTMİK TAHMİNLER",
+      title: "Parametreleri hesaplayın.",
+      desc: "Gizli ücret yok. Keşfe başlamadan önce mimariniz için temel bir hesaplama oluşturun.",
+      check1: "Anında temel fiyat",
+      check2: "Bağlayıcı olmayan hesaplama",
+      check3: "Kapsamınıza göre uyarlandı",
+      button: "Hesaplayıcıyı Başlat"
+    },
+
     contact: {
-      title: "Konuşalım.",
-      subtitle: "Mesaj gönderin, 24 saat içinde size döneceğim.",
-      namePlaceholder: "Adınız",
-      emailPlaceholder: "E-postanız",
-      messagePlaceholder: "Projenizden bahsedin...",
-      button: "Mesaj Gönder"
+      title: "İletişim Kur.",
+      subtitle: "Güvenli iletişim kanalı.",
+      namePlaceholder: "Kurum Adı",
+      emailPlaceholder: "Kurumsal E-posta",
+      messagePlaceholder: "Proje özellikleri...",
+      button: "Mesajı İlet"
     },
-    terms: {
-      title: "Proje",
-      subtitle: "Kuralları.",
-      tag: "Web Sitesi Geliştirme Kuralları // Novatrum",
-      lastUpdated: "Son Güncelleme: Mart 2026",
-      sec1Title: "01. Özgünlük ve Klonlama Yasağı",
-      sec1Desc: "Bu web sitesinin tasarımı Novatrum'un özgün çalışmasıdır.",
-      sec1Notice: "Not: Bu sitenin görsel kimliğini kopyalamak kesinlikle yasaktır.",
-      sec2Title: "02. Web Sitesi Standartları",
-      sec2Desc: "Sadece yüksek performanslı web siteleri oluşturmaya odaklanıyoruz.",
-      rule1Title: "Kural #01 — Sadece Modern Teknoloji",
-      rule1Desc: "Next.js ve Tailwind CSS kullanarak inşa ediyoruz.",
-      rule2Title: "Kural #02 — İçerik Hazırlığı",
-      rule2Desc: "Müşteri, inşa başlamadan tüm materyalleri sağlamalıdır.",
-      rule3Title: "Kural #03 — Adil Revizyonlar",
-      rule3Desc: "Projenin hızını korumak için belirli sayıda revizyon hakkı tanıyoruz.",
-      sec3Title: "03. Sitenin Kullanımı",
-      sec3Desc: "Portfolyomuzu incelemekte ve hesaplayıcıyı kullanmakta özgürsünüz.",
-      sec4Title: "04. Mülkiyet Hakkı",
-      sec4Desc: "Final faturası ödendiğinde mülkiyet tamamen size geçer.",
-      footerTag: "Hızlı inşa et. Temiz inşa et.",
-      cta: "Anladım. Projeye Başla."
+
+    gateway: {
+      title: "Proje Başlangıcı",
+      subtitle: "Mühendislik sürecine başlamak için tercih ettiğiniz yolu seçin.",
+      opt1Title: "Hızlı Tahmin",
+      opt1Time: "3 - 5 Dakika",
+      opt1Desc: "Standart parametrelere dayalı olarak bir fiyat aralığı alın. Bütçe planlamasının ilk aşamalarındaysanız idealdir.",
+      opt1Feat1: "Hızlı ve Basit",
+      opt1Feat2: "Taahhüt gerektirmez",
+      opt1Feat3: "Yalnızca yaklaşık fiyatlandırma",
+      opt1Btn: "Tahmini Hesapla",
+      opt2Title: "Kesin Proje Planı",
+      opt2Time: "10 - 12 Dakika",
+      opt2Desc: "Teknik ihtiyaçlarınıza derinlemesine bir bakış. Parametrelerinizi belirleyecek ve sözleşmeye hazır kesin bir teklif sunacağız.",
+      opt2NoticeTitle: "Mühendislik Gereksinimi",
+      opt2NoticeDesc: "Bu form oldukça detaylıdır. Lütfen yalnızca projenizin teknik kapsamını belirlemeye hazırsanız devam edin.",
+      opt2Btn: "Keşfe Başla",
+      returnHub: "Merkeze Dön"
     },
-    servicesPage: {
-      title: "Özelleştirilmiş",
-      subtitle: "Çözümler.",
-      desc: "Zahmetsizce çalışan dijital ürünler için modern araçlar kullanıyorum.",
-      s1: { tag: "01 // Frontend", title: "Modern Web Uygulamaları", desc: "Next.js ve Tailwind CSS ile hızlı ve duyarlı arayüzler oluşturuyorum.", tech: "Next.js + Tailwind" },
-      s2: { tag: "02 // Backend", title: "Ölçeklenebilir Veritabanı", desc: "Supabase ile güvenli kimlik doğrulama ve veritabanı kuruyorum.", tech: "Supabase" },
-      s3: { tag: "03 // Dağıtım", title: "Kesintisiz Altyapı", desc: "Projelerinizi maksimum çalışma süresi için Vercel üzerinden yayınlıyorum.", tech: "Vercel" },
-      ctaTitle: "Harika bir şey inşa etmeye hazır mısınız?",
-      ctaButton: "Proje Maliyetini Hesapla"
-    },
-    privacy: {
-      title: "Sıfır Veri",
-      subtitle: "Odaklı.",
-      tag: "Önce Gizlilik // Novatrum",
-      lastUpdated: "Son Güncelleme: Mart 2026",
-      intro: "Gizliliğinize saygı duyuyor ve kişisel verilerinizi korumayı taahhüt ediyoruz.",
-      sec1Title: "01. Kişisel Veri Yok",
-      sec1Desc: "Adınızı, telefon numaranızı veya adresinizi otomatik olarak toplamıyorum. İşim kaliteli web siteleri oluşturmak, veri ticareti yapmak değil.",
-      sec1Notice: "Not: Bu site kim olduğunuzu sormadan çalışır.",
-      sec2Title: "02. Minimal İletişim",
-      sec2Desc: "İletişim formunu kullandığınızda, yalnızca proje detaylarını ve e-posta adresini istiyorum.",
-      rule1: "Bülten yok.",
-      rule2: "Pazarlama e-postası yok.",
-      rule3: "E-postanızı üçüncü şahıslarla paylaşmak yok.",
-      sec3Title: "03. Takip Yok",
-      sec3Desc: "Takip pikselleri veya Google Analytics kullanmıyorum. Hız ve gizlilik en büyük önceliğimdir.",
-      sec4Title: "04. Güvenlik",
-      sec4Desc: "Bu sitedeki her etkileşim SSL ile şifrelenir.",
-      footerTag: "Gizlilik bir özellik değil, haktır.",
-      cta: "Özel Bir Görüşme Başlat"
-    },
+
+    discoveryPage: {
+  title: "Kesin Keşif",
+  subtitle: "Süreci.",
+  desc: "Projenizin detaylı parametrelerini girin. Sizin için hassas bir teknik plan ve sözleşmeye hazır bir teklif hazırlayalım.",
+  liveEstimate: "Canlı Tahmin",
+  phase: "Aşama",
+  of: "/",
+  fileUploading: "Şifrelenmiş Yükleme...",
+  fileClick: "Dosyaları buraya tıklayın veya sürükleyin",
+  integrations: {
+    stripe: "Stripe Ödeme Altyapısı",
+    auth: "Kullanıcı Doğrulama ve Yetkilendirme",
+    crm: "CRM / Hubspot Senkronizasyonu",
+    mail: "Bülten ve E-posta Senkronizasyonu",
+    analytics: "Gelişmiş Olay Analitiği",
+    ai: "Özel AI / ML Entegrasyonu",
+    sockets: "Gerçek Zamanlı Veri / Sockets",
+    cms: "Özel İçerik Yönetimi (CMS)",
+    multilang: "Çok Dilli Altyapı"
+  },
+  designStyles: {
+    minimal: "Minimal & Tipografi Odaklı",
+    bold: "Cesur, Premium & Marka Odaklı",
+    corporate: "Profesyonel & Kurumsal Yapı",
+    interactive: "Yüksek Etkileşimli & Karmaşık UI"
+  },
+  fontPrefs: {
+    sans: "Modern Sans-Serif",
+    serif: "Klasik Serif",
+    mono: "Endüstriyel Monospace"
+  },
+  seoLevels: {
+    standard: "Standart SEO Yapısı",
+    advanced: "Gelişmiş / Teknik SEO"
+  },
+  timelines: {
+    standard: "Standart (4-6 Hafta)",
+    relaxed: "Esnek (8-10 Hafta)",
+    expedited: "Hızlandırılmış (1-2 Hafta)"
+  },
+  constraint: {
+    title: "Mühendislik Kısıtlaması",
+    desc: "Karmaşık bir platform hızlandırılamaz. Lütfen düzgün bir mühendislik süreci için standart veya esnek takvimlere öncelik verin."
+  },
+  form: {
+    credentials: "Kimlik Bilgileri",
+    entity: "Kurum / Marka Adı *",
+    website: "Mevcut URL",
+    goals: "Temel Hedef ve Amaçlar *",
+    goalsPlace: "Bu platformun nihai amacını açıklayın...",
+    competitors: "Rakipler veya İlham Kaynakları",
+    architecture: "Mimari",
+    archDesc: "Uygulamanız için mühendislik çerçevesini seçin.",
+    pages: "Tahmini Sayfa/Ekran Sayısı",
+    design: "Estetik",
+    designDesc: "Platform nasıl hissettirmeli? Markanıza özel tasarım sistemleri geliştiriyoruz.",
+    color: "Ana Renk",
+    accent: "Vurgu Rengi",
+    hasAccent: "Vurgu Rengi mi?",
+    fonts: "Tipografi Tercihi",
+    content: "İçerik ve Copy",
+    copy: "Profesyonel Copywriting Dahil",
+    assets: "Marka Varlıkları / Brief (Maks 100MB)",
+    integrations: "Entegrasyonlar ve İşlevsellik",
+    intDesc: "Karmaşık özellikleri ve üçüncü taraf API senkronizasyonlarını seçin.",
+    seo: "Görünürlük",
+    seoDesc: "İçerik mühendisliği ve indeksleme stratejisini seçin.",
+    timeline: "Lojistik",
+    timelineDesc: "Gerekli lansman takvimini belirleyelim.",
+    maintenance: "Sürekli Destek",
+    maintenanceDesc: "Lansman sonrası bakım ve güvenlik desteği dahil.",
+    maintenanceCheck: "Öncelikli bakım dahil",
+    client: "Kimlik Doğrulama",
+    clientSub: "Bu keşfi sistemlerimize güvenli bir şekilde kaydetmek için fatura bilgilerinizi girin.",
+    name: "Tam Ad / İletişim Kişisi *",
+    email: "Kurumsal E-posta Adresi *",
+    phone: "Kurumsal Telefon Numarası *",
+    address: "Fatura Adresi (Şehir, Ülke) *",
+    vat: "Vergi Numarası (Opsiyonel)",
+    notes: "Tasarım Notları",
+    notesPlace: "Belirli görsel yönlendirmeleri veya teknik notları paylaşın..."
+  },
+  summary: {
+    title: "Zeka Özeti",
+    desc: "Tanımladığınız parametrelerin temel algoritmik bir taslağı.",
+    notBinding: "BAĞLAYICI DEĞİLDİR",
+    platform: "Platform Mimarisi",
+    logistics: "Dağıtım Takvimi",
+    copywriting: "Metin Yazarlığı",
+    maintenance: "Bakım",
+    design: "Tasarım Yönü",
+    integrations: "Entegrasyonlar",
+    total: "Canlı Hesaplama (€)"
+  },
+  btn: {
+    prev: "Önceki Aşama",
+    next: "Sonraki Aşama",
+    submit: "Planı ve Taslağı Kilitle",
+    encrypting: "Şifreleniyor...",
+    finish: "Kesin Keşfi Başlat",
+    pdf: "PDF Üret ve İndir",
+    hub: "Merkeze Dön"
+    
+  },
+  success: {
+    title: "Plan Kilitlendi.",
+    sub: "Kesin Keşif Süreci",
+    desc: "Güvenli referans kimliğiniz kaydedildi. Blueprint'inizi inceleyeceğiz ve 24-48 saat içinde size Kesin Teklif ile e-postayla ulaşacağız.",
+    dsNumber: "DS Numarası"
+  }
+},
+
     contactPage: {
-      title: "Diyaloğu",
-      subtitle: "Başlat.",
-      desc: "Aklınızda bir proje mi var? Yeni nesil dijital ürünleri hassasiyetle inşa etmenize yardımcı olmaya hazırım.",
-      studioName: "Novatrum Studio",
-      studioLoc: "Dilbeek, Belçika Merkezli",
-      studioOper: "Küresel Operasyonlar // Uzaktan Çalışma",
-      roadmapTitle: "Sonraki Adımlar",
+      title: "İletişim Kur",
+      subtitle: "Dijital Mühendislik.",
+      desc: "Teknik gereksinimlerinizi tartışın veya mühendislik ekibimizden özel bir danışmanlık talep edin.",
+      studioName: "Novatrum Stüdyo.",
+      studioLoc: "Dilbeek, Belçika",
+      studioOper: "Küresel operasyonlar için uygundur",
+      roadmapTitle: "MÜHENDİSLİK YOL HARİTASI",
       steps: [
-        { s: "01", t: "İlk İnceleme", d: "Talebinizi ve teknik ihtiyaçlarınızı 24 saat içinde analiz ederim." },
-        { s: "02", t: "Keşif Görüşmesi", d: "Hedefleri, özellikleri ve zaman çizelgesini netleştirmek için detaylı bir görüşme." },
-        { s: "03", t: "Özel Teklif", d: "Detaylı bir yol haritası ve şeffaf bir fiyat teklifi alırsınız." }
+        { s: "01", t: "Keşif ve Strateji", d: "Hedeflerinizi, teknik gereksinimlerinizi tartışıyor ve kapsamı belirliyoruz." },
+        { s: "02", t: "Mimari ve UI", d: "Sistem mimarisinin haritasını çıkarıyor ve kullanıcı deneyimini tasarlıyoruz." },
+        { s: "03", t: "Temel Geliştirme", d: "Platformu inşa ediyor ve güvenli, ölçeklenebilir bir ortama dağıtıyoruz." }
       ],
-      badge: "Gelecek ay için rezervasyonlar alınıyor",
+      badge: "Yeni Projeleri Kabul Ediyor",
       form: {
-        nameLabel: "Ad Soyad",
-        namePlaceholder: "Ahmet Yılmaz",
-        emailLabel: "E-posta",
-        emailPlaceholder: "ahmet@ornek.com",
-        categoryLabel: "Proje Kategorisi",
-        categoryValue: "Özel Yazılım Geliştirme",
-        briefLabel: "Proje Özeti",
-        briefPlaceholder: "Birlikte ne inşa ediyoruz?",
-        submit: "Talebi Gönder"
+        nameLabel: "Tam Adınız *",
+        namePlaceholder: "örn. Ahmet Yılmaz",
+        emailLabel: "Kurumsal E-posta *",
+        emailPlaceholder: "ahmet@sirket.com",
+        categoryLabel: "Talep Türü",
+        categoryValue: "Dijital Ürün Mühendisliği",
+        briefLabel: "Proje Detayları *",
+        briefPlaceholder: "Mimari ihtiyaçlarınızı açıklayın...",
+        submit: "Mesajı İlet",
+        sending: "Gönderiliyor..."
+      },
+      success: {
+        title: "İletim Başarılı.",
+        desc: "Mesajınız güvenli bir şekilde kaydedildi. Ekibimiz gereksinimlerinizi inceleyecek ve kısa süre içinde yanıt verecektir.",
+        button: "Başka Bir Mesaj İlet"
       },
       faqTitle: "Sıkça Sorulan",
-      faqSubtitle: "Sorular",
-      faqDesc: "Benimle bir projeye başlamak hakkında bilmeniz gereken her şey.",
+      faqSubtitle: "Sorular.",
+      faqDesc: "Mühendislik sürecimiz ve teknik yeteneklerimiz hakkında sıkça sorulan bazı sorular.",
       faqs: [
-        { q: "Ne kadar hızlı başlayabiliriz?", a: "Genellikle, projenin karmaşıklığına bağlı olarak 1 hafta içinde keşif aşamasına başlayabilirim." },
-        { q: "Fiyatlandırmayı nasıl yapıyorsunuz?", a: "Karmaşık çözümler için Fiyat Hesaplayıcı üzerinden dinamik bir tahmin sunuyorum." },
-        { q: "Hangi teknolojileri kullanıyorsunuz?", a: "Yüksek performanslı yığınlarda uzmanım: Next.js, TypeScript, Tailwind CSS ve Supabase." },
-        { q: "Lansman sonrası destek sunuyor musunuz?", a: "Kesinlikle. Ürününüzün güncel kalması için sürekli destek sağlıyorum." }
+        { q: "Tipik proje zaman çizelgeniz nedir?", a: "Yapısal karmaşıklığa bağlı olarak, standart dağıtımlar 4 ila 8 hafta sürer. Hızlandırılmış seçenekler mevcuttur." },
+        { q: "Lansman sonrası bakım sunuyor musunuz?", a: "Evet, güvenlik yamalarını ve sürekli optimizasyonu içeren öncelikli bakım sözleşmeleri sağlıyoruz." },
+        { q: "Temel teknoloji yığınınız nedir?", a: "Sistemleri Next.js, React, Tailwind CSS, Node.js ve Supabase aracılığıyla PostgreSQL kullanarak inşa ediyoruz." }
       ]
     },
+
     calculator: {
-      title: "Proje",
-      subtitle: "Yapılandırıcısı.",
-      stepInfo: "Adım",
+      title: "Mimari Tahmin",
+      subtitle: "Temel parametreleri tanımlayın",
+      stepInfo: "Aşama",
       of: "/",
-      tag: "Hassas Fiyatlandırma",
-      btnPrev: "Önceki Adım",
-      btnNext: "Devam Et",
-      btnFinish: "Son Tahmini Gör",
+      tag: "TAHMİN",
       included: "Dahil",
       monthly: "ay",
-      customPalette: "Özel Palet",
-      shuffleColors: "Renkleri Karıştır",
-      paletteSelected: "Palet Seçildi",
-      applyPalette: "Bu Paleti Uygula",
-      builderTitle: "Özel Palet Oluşturucu",
-      builderDesc: "Kendi 3 renkli marka kimliğinizi tanımlayın.",
-      textPlaceholder: "Bana marka kişiliğinizden, istediğiniz özelliklerden veya sevdiğiniz web sitelerinden bahsedin...",
-      estimateGen: "Tahmin Oluşturuldu",
-      totalInv: "Toplam Yatırım",
-      recurringLabel: "Tekrarlayan Destek ve Barındırma",
       month: "ay",
-      formNameLabel: "Ad Soyad",
-      formNamePlace: "Ahmet Yılmaz",
-      formCompanyLabel: "Şirket / Marka",
-      formCompanyPlace: "Acme A.Ş.",
-      formEmailLabel: "E-posta Adresi",
-      formEmailPlace: "ahmet@ornek.com",
-      btnSend: "Teklifi E-postaya Gönder",
-      btnSending: "Teklif Gönderiliyor...",
-      notice: "Detaylı bir özet e-posta adresinize gönderilecektir.",
-      successTitle: "Teklif Gönderildi",
-      successDesc: "Lütfen detaylı tahmin için gelen kutunuzu (ve spam klasörünüzü) kontrol edin. Kısa süre içinde iletişime geçeceğim.",
-      emailSubject: "Dijital Proje Teklifi",
-      emailScope: "İş Kapsamı",
-      emailRecurring: "Tekrarlayan Hizmetler:",
-      emailTotal: "Tahmini Toplam Yatırım",
-      emailVat: "Fiyatlara uygun olan yerlerde KDV dahil değildir.",
-      emailGenerated: "Novatrum Engine üzerinden oluşturulmuştur. Nihai bir yasal sözleşme değildir.",
+      customPalette: "Özel Renkler",
+      builderTitle: "Marka Kimliği",
+      builderDesc: "Kesin hex kodlarınızı seçin.",
+      shuffleColors: "Karıştır",
+      applyPalette: "Renkleri Uygula",
+      paletteSelected: "Palet Uygulandı",
+      textPlaceholder: "Belirli bir işlevi, entegrasyonu veya rakip referansını burada açıklayın...",
+      estimateGen: "Plan Hesaplandı",
+      totalInv: "Tahmini Yatırım",
+      recurringLabel: "Aylık Ücret",
+      btnPrev: "Önceki Aşama",
+      btnReset: "Süreci Yeniden Başlat",
+      btnNext: "Sonraki Aşama",
+      btnFinish: "Tahmin Üret",
+      formNameLabel: "Kurum Adı",
+      formNamePlace: "Şirket veya Kendi Adınız",
+      formCompanyLabel: "Mevcut Web Sitesi (İsteğe Bağlı)",
+      formCompanyPlace: "https://...",
+      formEmailLabel: "Güvenli E-posta",
+      formEmailPlace: "Verileri nereye göndermeliyiz?",
+      btnSending: "Veriler Derleniyor...",
+      btnSend: "Tahmini Göster",
+      notice: "Bu bağlayıcı olmayan algoritmik bir tahmindir.",
+      successTitle: "Tahmin Gönderildi",
+      successDesc: "Temel tahmininizin bir kopyası e-postanıza gönderildi. Kesin parametreleri tartışmak için sizinle iletişime geçeceğiz.",
+      liveTotal: "Canlı Hesaplama",
+      resetConfirm: "Mevcut seçimleri temizlemek ve hesaplamayı yeniden başlatmak istediğinizden emin misiniz?",
+      opt2Btn: "Kesin Keşif Sürecini Başlat",
+      returnHub: "Merkeze Dön",
       stepsData: [
         {
-          title: "Temel Mimari",
-          subtitle: "Dijital varlığınızın temelini seçin.",
+          title: "Temel Altyapı",
+          subtitle: "Platformunuzun temel mimarisini seçin.",
           options: [
-            { id: "landing", label: "Yüksek Dönüşümlü Landing", desc: "Tek sayfalık kaydırma deneyimi. (Sadece 1 Sayfa)" },
-            { id: "business", label: "Çok Sayfalı Kurumsal Site", desc: "Profesyonel kurumsal mimari. (8 Sayfaya Kadar)" },
-            { id: "standard-store", label: "Standart Mağaza Kurulumu", desc: "Temel e-ticaret yetenekleri. (50 Ürüne Kadar)" },
-            { id: "advanced-api", label: "Gelişmiş API Mağazası", desc: "Harici entegrasyonlara sahip karmaşık mağaza. (Sınırsız)" },
-            { id: "ecommerce", label: "Premium E-Ticaret", desc: "Nihai özel alışveriş deneyimi. (Özel Mimari)" }
+            { label: "Açılış Sayfası (Landing)", desc: "Yüksek dönüşümlü tek sayfalık varlık." },
+            { label: "Kurumsal Site", desc: "Çok sayfalı profesyonel şirket mimarisi." },
+            { label: "Standart E-Ticaret", desc: "Standart sepet akışlarına sahip dijital vitrin." },
+            { label: "Gelişmiş Entegrasyon", desc: "Karmaşık üçüncü taraf API senkronizasyonları." },
+            { label: "SaaS / Web App", desc: "Karmaşık veritabanı mantığına sahip özel yazılım." }
           ]
         },
-        { title: "Görsel Kimlik", subtitle: "Profesyonel bir palet seçin veya sıfırdan kendi paletinizi oluşturun." },
+        { title: "Estetik ve UI", subtitle: "Görsel yönünüzü seçin." },
         {
-          title: "Tasarım ve Markalaşma", subtitle: "Görsel varlıklarınızı geliştirin. (Birden fazla seçebilirsiniz)",
+          title: "Marka Varlıkları",
+          subtitle: "Özel görsel varlık oluşturulmasına ihtiyacınız var mı?",
           options: [
-            { id: "logo", label: "Profesyonel Logo Tasarımı", desc: "Özel marka işareti ve tipografi." },
-            { id: "custom-ui", label: "Özel UI Elemanları", desc: "Özel çizimler ve arayüz detayları." }
-          ]
-        },
-        {
-          title: "İçerik ve SEO", subtitle: "Erişiminizi ve mesajınızı güçlendirin. (Birden fazla seçebilirsiniz)",
-          options: [
-            { id: "seo-basic", label: "Temel SEO Kurulumu", desc: "Temel meta veriler ve arama motoru dizini." },
-            { id: "copywriting", label: "Profesyonel İçerik Yazımı", desc: "Etkileyici, dönüşüm odaklı metin yazarlığı." },
-            { id: "seo-adv", label: "Gelişmiş SEO Stratejisi", desc: "Derin anahtar kelime hedefleme ve teknik SEO optimizasyonu." }
+            { label: "Marka Kimliği Tasarımı", desc: "Logo, tipografi ve temel marka yönergeleri." },
+            { label: "Özel UI Tasarımı", desc: "Özel taslaklar ve yüksek kaliteli mockuplar." }
           ]
         },
         {
-          title: "İşlevsel Özellikler", subtitle: "Sitenize özel yetenekler ekleyin. (Birden fazla seçebilirsiniz)",
+          title: "İçerik ve SEO",
+          subtitle: "İçerik mühendisliği gereksinimlerini seçin.",
           options: [
-            { id: "contact-form", label: "Gelişmiş İletişim Formu", desc: "Karmaşık koşullu mantık ve çok adımlı formlar." },
-            { id: "newsletter", label: "Bülten Sistemi", desc: "Potansiyel müşterileri yakalayın ve kitlenizi büyütün." },
-            { id: "email-marketing", label: "E-posta Pazarlama Entegrasyonu", desc: "Mailchimp, ActiveCampaign vb. araçlara doğrudan bağlantı." }
+            { label: "Standart SEO Kurulumu", desc: "Temel meta etiketler ve indeksleme." },
+            { label: "Profesyonel Metin Yazarlığı", desc: "Tüm sayfalar için SEO uyumlu satış metni." },
+            { label: "Gelişmiş Teknik SEO", desc: "Schema işaretlemesi ve programatik mimari." }
           ]
         },
         {
-          title: "Performans ve Destek", subtitle: "Hız yükseltmeleri ve sürekli bakım. (Birden fazla seçebilirsiniz)",
+          title: "Müşteri Kazanımı",
+          subtitle: "Kullanıcı kazanım araçlarını seçin.",
           options: [
-            { id: "speed-basic", label: "Temel Hız Optimizasyonu", desc: "Varlık küçültme ve temel önbellekleme." },
-            { id: "speed-ultra", label: "Ultra Hızlı Performans Paketi", desc: "Maksimum hız için sunucu tarafı optimizasyonları." },
-            { id: "hosting", label: "Premium Barındırma Yönetimi", desc: "Güvenli, yüksek çalışma süreli bulut barındırma." },
-            { id: "maintenance", label: "Aylık Bakım ve Destek", desc: "Düzenli güncellemeler, yedeklemeler ve öncelikli destek." }
+            { label: "Gelişmiş İletişim Formları", desc: "Koşullu mantık ve webhook yönlendirmesi." },
+            { label: "Bülten Senkronizasyonu", desc: "Mailchimp/ConvertKit ile entegrasyon." },
+            { label: "CRM Entegrasyonu", desc: "Hubspot veya Salesforce ile doğrudan senkronizasyon." }
           ]
         },
         {
-          title: "Teslimat Süresi", subtitle: "Bu projenin ne kadar hızlı başlatılmasına ihtiyacınız var?",
+          title: "Performans ve Lojistik",
+          subtitle: "Hosting ve devam eden mühendislik desteğini seçin.",
           options: [
-            { id: "timeline-standard", label: "Standart Hız (4-6 Hafta)", desc: "Standart, yüksek kaliteli geliştirme döngüm." },
-            { id: "timeline-rush", label: "Öncelikli Teslimat (1-2 Hafta)", desc: "Sırayı atlayın. Mümkün olan en kısa sürede teslim etmek için fazla mesai yaparım." }
+            { label: "Standart Optimizasyon", desc: "Standart önbelleğe alma ve varlık teslimi." },
+            { label: "Ultra Performans", desc: "Garantili 95+ Core Web Vitals puanı." },
+            { label: "Premium Hosting", desc: "Ayrılmış kaynaklar ve günlük yedeklemeler." },
+            { label: "Öncelikli Bakım", desc: "Devam eden kod güncellemeleri ve güvenlik yamaları." }
           ]
         },
-        { title: "Vizyon", subtitle: "Bana özel ihtiyaçlarınızdan veya referanslarınızdan bahsedin." }
+        {
+          title: "Dağıtım Takvimi",
+          subtitle: "Gerekli lansman programınızı seçin.",
+          options: [
+            { label: "Standart Sıra (4-6 Hafta)", desc: "Normal mühendislik önceliği." },
+            { label: "Acil (1-2 Hafta)", desc: "Öncelikli teslimat. Premium uygulanır." }
+          ]
+        },
+        { title: "Mimari Vizyon", subtitle: "Son direktifleri veya teknik notları ekleyin." }
       ],
       palettes: [
-        { name: "Novatrum Dark", desc: "İmza görünüm. Derin, premium ve cesur." },
-        { name: "Nordic Clean", desc: "Havadar, minimalist ve tipografiye odaklı." },
-        { name: "Midnight Tech", desc: "Teknoloji odaklı girişimler için modern mavi tonlar." },
-        { name: "Industrial Gold", desc: "Zarif altın vurgularla yüksek kontrast." }
+        { name: "Novatrum Dark", desc: "İmza görünümümüz. Derin, premium ve cesur." },
+        { name: "Nordic Clean", desc: "Aydınlık, minimal, tipografi odaklı." },
+        { name: "Midnight Tech", desc: "Teknoloji girişimleri için modern mavi tonlar." },
+        { name: "Industrial Gold", desc: "Zarif altın detaylarla yüksek kontrast." }
       ]
     },
+
     processPage: {
-      title: "Nasıl",
-      subtitle: "Çalışırım.",
-      desc: "Karmaşık fikirleri zarif dijital gerçekliklere dönüştürmek için tasarlanmış şeffaf, adım adım bir metodoloji.",
+      title: "Mühendislik",
+      subtitle: "Metodolojisi.",
+      desc: "Karmaşık mantığı zarif, yüksek performanslı dijital gerçekliklere dönüştürmek için tasarlanmış şeffaf bir çerçeve.",
       steps: [
-        { num: "01", title: "Keşif ve Strateji", subtitle: "Vizyonunuzu Anlamak", desc: "İş hedeflerinizi, hedef kitlenizi ve teknik gereksinimlerinizi derinlemesine analiz ederek başlarım. Birlikte proje kapsamını belirler ve net bir yol haritası oluştururuz." },
-        { num: "02", title: "UI/UX Tasarımı", subtitle: "Deneyimi Şekillendirmek", desc: "Herhangi bir kod yazmadan önce tel çerçeveler ve yüksek çözünürlüklü tasarımlar oluştururum. Modern estetiğe ve marka kimliğinizle uyumlu sezgisel kullanıcı yolculuklarına odaklanırım." },
-        { num: "03", title: "Geliştirme", subtitle: "Motoru İnşa Etmek", desc: "Sihrin gerçekleştiği yer burası. Next.js ve Tailwind CSS kullanarak temiz ve ölçeklenebilir kod yazıyorum. Sonuç, zahmetsizce çalışan sağlam bir mimaridir." },
-        { num: "04", title: "Test ve İyileştirme", subtitle: "Mükemmelliği Sağlamak", desc: "Farklı cihaz ve tarayıcılarda titiz testler yapıyorum. Hızı optimize ediyor, SEO ayarlarını yapıyor ve kusursuz bir deneyim için tüm hataları gideriyorum." },
-        { num: "05", title: "Canlıya Alma ve Teslim", subtitle: "Yayına Girmek", desc: "Projenizi Vercel gibi küresel ağlarda yayınlıyorum. Canlıya alındıktan sonra gerekli tüm belgeleri sağlıyor ve pürüzsüz bir teslimat gerçekleştiriyorum." }
+        { num: "01", title: "Keşif ve Planlama", subtitle: "Mimarinin Tanımlanması", desc: "Teknik gereksinimlerinize ve hedeflerinize derinlemesine bir bakışla başlıyoruz. Birlikte proje kapsamını kilitliyor ve bir yol haritası oluşturuyoruz." },
+        { num: "02", title: "UI/UX Mühendisliği", subtitle: "Arayüzün Tasarlanması", desc: "Görsel mimariyi çiziyoruz. Jenerik şablonları reddederek, her arayüz markanızın dijital kimliğiyle kusursuz uyum sağlamak için özel olarak tasarlanır." },
+        { num: "03", title: "Temel Geliştirme", subtitle: "Mantığın Yazılması", desc: "Ekibimiz temiz, modüler ve yüksek düzeyde ölçeklenebilir kod yazar. Sürekli güncellemeler alır ve süreci izlemek için güvenli bir test ortamına erişirsiniz." },
+        { num: "04", title: "Test ve Dağıtım", subtitle: "Canlıya Alma", desc: "Titiz kalite güvencesinin ardından dağıtım protokolünü uyguluyoruz. Platformunuzun güvenli, optimize edilmiş ve kurumsal trafiği kaldırabilecek şekilde olmasını sağlıyoruz." }
       ],
-      ctaTitle: "İlk adıma hazır mısınız?",
-      ctaButton: "Proje Maliyetini Hesapla"
-    }
-  },
-  ko: {
-    nav: { home: "홈", services: "서비스", process: "프로세스", contact: "문의하기", privacy: "개인정보보호", terms: "이용약관" },
-    footer: { rights: "모든 권리 보유.", builtIn: "벨기에 딜베크에서 제작되었습니다.", lang: "언어" },
-    hero: {
-      badge: "디지털 스튜디오 • 벨기에 딜베크",
-      title: "디지털 제품.",
-      subtitle: "올바른 구축.",
-      desc: "현대적인 오픈 소스 도구를 사용하여 빠르고 확장 가능한 웹 애플리케이션을 설계합니다. 깨끗한 코드, 기능적인 디자인.",
-      ctaStart: "프로젝트 시작",
-      ctaExplore: "서비스 살펴보기"
+      ctaTitle: "İnşaata başlamaya hazır mısınız?",
+      ctaButton: "Keşfi Başlat"
     },
-    services: {
-      title: "집중된 역량.",
-      subtitle: "출시에 필요한 모든 것.",
-      frontend: { title: "프론트엔드 개발", desc: "React 및 Tailwind CSS로 제작된 인터페이스." },
-      fullstack: { title: "풀스택 시스템", desc: "Next.js를 사용한 견고한 아키텍처." }
-    },
-    process: {
-      title: "협업 방식.",
-      subtitle: "단순하고 효과적인 개발 프로세스.",
-      step1: { label: "01. 발견", title: "범위 및 전략", desc: "프로젝트 요구 사항을 정의합니다." },
-      step2: { label: "02. 구축", title: "개발", desc: "깨끗한 코드를 작성합니다." },
-      step3: { label: "03. 출시", title: "배포", desc: "전 세계에 실시간으로 출시합니다." }
-    },
-    pricing: {
-      tag: "투명한 가격 책정",
-      title: "비용을 미리 파악하세요.",
-      desc: "즉시 견적을 확인하세요.",
-      check1: "항목별 비용 내역서",
-      check2: "모듈형 기능 선택",
-      check3: "즉각적인 제안서 생성",
-      cta: "구성 도구 열기"
-    },
-    tech: {
-      tag: "성능 우선",
-      title: "오픈 소스 기반.",
-      desc: "업계 표준 오픈 소스 기술에 의존합니다.",
-      items: {
-        next: "React 프레임워크",
-        ts: "타입 안전 JavaScript",
-        tailwind: "유틸리티 우선 스타일링",
-        supabase: "오픈 소스 데이터베이스",
-        vercel: "글로벌 엣지 네트워크",
-        framer: "부드러운 애니메이션"
-      }
-    },
-    contact: {
-      title: "이야기해 봅시다.",
-      subtitle: "24시간 이내에 회신해 드리겠습니다.",
-      namePlaceholder: "이름",
-      emailPlaceholder: "이메일",
-      messagePlaceholder: "프로젝트에 대해 알려주세요...",
-      button: "메시지 보내기"
-    },
-    terms: {
-      title: "프로젝트",
-      subtitle: "지침.",
-      tag: "웹사이트 개발 규칙 // Novatrum",
-      lastUpdated: "최종 업데이트: 2026년 3월",
-      sec1Title: "01. 독창성 및 복제 금지",
-      sec1Desc: "이 웹사이트의 디자인은 Novatrum의 독창적인 작업물입니다.",
-      sec1Notice: "주의: 이 사이트의 시각적 정체성을 복제하는 것은 엄격히 금지됩니다.",
-      sec2Title: "02. 웹사이트 표준",
-      sec2Desc: "우리는 고성능 현대식 웹사이트 구축에만 집중합니다.",
-      rule1Title: "규칙 #01 — 현대적 기술 우선",
-      rule1Desc: "Next.js와 Tailwind CSS를 사용합니다.",
-      rule2Title: "규칙 #02 — 콘텐츠 준비",
-      rule2Desc: "고객은 모든 콘텐츠를 제공해야 합니다.",
-      rule3Title: "규칙 #03 — 공정한 수정",
-      rule3Desc: "정해진 횟수의 수정을 포함합니다.",
-      sec3Title: "03. 사이트 이용",
-      sec3Desc: "포트폴리오를 탐색할 수 있습니다.",
-      sec4Title: "04. 소유권",
-      sec4Desc: "결제가 완료되면 소유권이 이전됩니다.",
-      footerTag: "빠르고 깔끔하게 구축합니다.",
-      cta: "이해했습니다. 프로젝트 시작."
-    },
+
     servicesPage: {
-      title: "전문적인",
-      subtitle: "솔루션.",
-      desc: "최신 프레임워크를 활용하여 디지털 제품을 구축합니다.",
-      s1: { tag: "01 // 프론트엔드", title: "최신 웹 애플리케이션", desc: "Next.js 및 Tailwind CSS를 사용하여 인터페이스를 구축합니다.", tech: "Next.js + Tailwind" },
-      s2: { tag: "02 // 백엔드", title: "확장 가능한 데이터베이스", desc: "Supabase를 사용하여 안전한 시스템을 만듭니다.", tech: "Supabase" },
-      s3: { tag: "03 // 배포", title: "무중단 인프라", desc: "Vercel을 통해 프로젝트를 배포합니다.", tech: "Vercel" },
-      ctaTitle: "멋진 제품을 만들 준비가 되셨나요?",
-      ctaButton: "프로젝트 비용 계산"
-    },
-    privacy: {
-      title: "제로 데이터",
-      subtitle: "포커스.",
-      tag: "개인정보 최우선 // Novatrum",
-      lastUpdated: "최종 업데이트: 2026년 3월",
-      intro: "당사는 귀하의 개인정보를 존중하고 개인 데이터를 보호하기 위해 최선을 다하고 있습니다.",
-      sec1Title: "01. 개인 데이터 없음",
-      sec1Desc: "당사는 귀하의 이름, 전화번호를 자동으로 수집하지 않습니다.",
-      sec1Notice: "주의: 이 사이트는 귀하가 누구인지 묻지 않고 작동합니다.",
-      sec2Title: "02. 최소한의 연락",
-      sec2Desc: "문의 양식이나 계산기를 사용할 때, 이메일 주소만 요청합니다.",
-      rule1: "뉴스레터 없음.",
-      rule2: "마케팅 이메일 없음.",
-      rule3: "제3자와 이메일 공유 없음.",
-      sec3Title: "03. 추적 없음",
-      sec3Desc: "추적 픽셀이나 침입형 쿠키를 사용하지 않습니다.",
-      sec4Title: "04. 보안",
-      sec4Desc: "이 사이트의 모든 상호 작용은 SSL을 통해 암호화됩니다.",
-      footerTag: "프라이버시는 기능이 아니라 권리입니다.",
-      cta: "프라이빗 대화 시작"
-    },
-    contactPage: {
-      title: "대화",
-      subtitle: "시작하기.",
-      desc: "염두에 둔 프로젝트가 있으신가요? 차세대 디지털 제품을 구축할 수 있도록 도와드릴 준비가 되어 있습니다.",
-      studioName: "Novatrum Studio",
-      studioLoc: "벨기에 딜베크 기반",
-      studioOper: "글로벌 운영 // 원격 근무 우선",
-      roadmapTitle: "다음 단계",
-      steps: [
-        { s: "01", t: "초기 검토", d: "24시간 이내에 귀하의 문의 및 기술적 요구 사항을 분석합니다." },
-        { s: "02", t: "디스커버리 세션", d: "목표, 기능 및 일정을 조정하기 위한 심층 통화입니다." },
-        { s: "03", t: "맞춤형 제안", d: "상세한 로드맵과 투명한 견적을 받습니다." }
-      ],
-      badge: "현재 다음 달 예약 접수 중",
-      form: {
-        nameLabel: "성명",
-        namePlaceholder: "홍길동",
-        emailLabel: "이메일",
-        emailPlaceholder: "hong@example.com",
-        categoryLabel: "프로젝트 카테고리",
-        categoryValue: "맞춤형 소프트웨어 개발",
-        briefLabel: "프로젝트 개요",
-        briefPlaceholder: "우리가 함께 구축할 것은 무엇입니까?",
-        submit: "문의 보내기"
+      title: "Özel Mimariler",
+      subtitle: "Modern açık kaynaklı teknolojileri kullanarak hızlı, ölçeklenebilir ve dönüşüm odaklı dijital platformlar inşa ediyoruz.",
+      s1: {
+        title: "Özel Frontend Mühendisliği",
+        desc: "Saniyenin altında yükleme sürelerine ve akıcı etkileşimlere tavizsiz bir şekilde odaklanarak özel kullanıcı arayüzleri geliştiriyoruz. Şablon yok—sadece saf performans.",
+        tech: "REACT • NEXT.JS • TAILWIND",
+        features: [
+          "Saniyenin altında işleme performansı",
+          "Tüm cihazlarda akıcı duyarlı mimari",
+          "Gelişmiş etkileşimli UI ve WebGL öğeleri"
+        ]
       },
-      faqTitle: "자주 묻는",
-      faqSubtitle: "질문",
-      faqDesc: "프로젝트를 시작하는 데 필요한 모든 정보.",
-      faqs: [
-        { q: "얼마나 빨리 시작할 수 있습니까?", a: "일반적으로 첫 연락 후 1주일 이내에 디스커버리 단계를 시작할 수 있습니다." },
-        { q: "가격은 어떻게 처리합니까?", a: "복잡한 솔루션의 경우 가격 계산기를 통해 동적 견적을 제공합니다." },
-        { q: "어떤 기술을 사용하십니까?", a: "Next.js, TypeScript, Tailwind CSS, Supabase 등 고성능 스택을 전문으로 합니다." },
-        { q: "출시 후 지원을 제공하십니까?", a: "물론입니다. 제품이 최신 상태를 유지하도록 지원을 제공합니다." }
-      ]
-    },
-    calculator: {
-      title: "프로젝트",
-      subtitle: "구성 도구.",
-      stepInfo: "단계",
-      of: "/",
-      tag: "정밀 가격 책정",
-      btnPrev: "이전 단계",
-      btnNext: "계속",
-      btnFinish: "최종 견적 보기",
-      included: "포함됨",
-      monthly: "월",
-      customPalette: "맞춤형 팔레트",
-      shuffleColors: "색상 섞기",
-      paletteSelected: "팔레트 선택됨",
-      applyPalette: "이 팔레트 적용",
-      builderTitle: "맞춤형 팔레트 빌더",
-      builderDesc: "나만의 3색 브랜드 아이덴티티를 정의하세요.",
-      textPlaceholder: "브랜드 개성, 원하는 기능 또는 선호하는 참조 웹사이트에 대해 알려주세요...",
-      estimateGen: "견적 생성됨",
-      totalInv: "총 투자액",
-      recurringLabel: "반복 지원 및 호스팅",
-      month: "월",
-      formNameLabel: "성명",
-      formNamePlace: "홍길동",
-      formCompanyLabel: "회사 / 브랜드",
-      formCompanyPlace: "Acme Corp",
-      formEmailLabel: "이메일 주소",
-      formEmailPlace: "hong@example.com",
-      btnSend: "이메일로 제안서 보내기",
-      btnSending: "제안서 보내는 중...",
-      notice: "자세한 개요가 이메일로 전송됩니다.",
-      successTitle: "제안서 발송됨",
-      successDesc: "자세한 견적은 받은 편지함을 확인하십시오. 곧 연락 드리겠습니다.",
-      emailSubject: "디지털 프로젝트 제안서",
-      emailScope: "작업 범위",
-      emailRecurring: "반복 서비스:",
-      emailTotal: "총 예상 투자액",
-      emailVat: "해당되는 경우 VAT 별도 가격입니다.",
-      emailGenerated: "Novatrum Engine을 통해 생성되었습니다. 최종 법적 계약이 아닙니다.",
-      stepsData: [
-        {
-          title: "기본 아키텍처",
-          subtitle: "디지털 존재의 기반을 선택하십시오.",
-          options: [
-            { id: "landing", label: "고전환 랜딩 페이지", desc: "단일 페이지 스크롤 환경. (1페이지 전용)" },
-            { id: "business", label: "다중 페이지 비즈니스 사이트", desc: "전문적인 기업 아키텍처. (최대 8페이지)" },
-            { id: "standard-store", label: "표준 스토어 설정", desc: "기본 전자상거래 기능. (최대 50개 제품)" },
-            { id: "advanced-api", label: "고급 API 스토어", desc: "외부 통합이 포함된 복잡한 스토어. (무제한)" },
-            { id: "ecommerce", label: "프리미엄 전자상거래", desc: "최고의 맞춤형 쇼핑 경험. (맞춤형 아키텍처)" }
-          ]
-        },
-        { title: "시각적 아이덴티티", subtitle: "전문 팔레트를 선택하거나 나만의 팔레트를 구축하세요." },
-        {
-          title: "디자인 및 브랜딩", subtitle: "시각적 자산을 강화하세요. (다중 선택 가능)",
-          options: [
-            { id: "logo", label: "전문 로고 디자인", desc: "맞춤형 브랜드 마크 및 타이포그래피." },
-            { id: "custom-ui", label: "맞춤형 UI 요소", desc: "맞춤형 일러스트레이션 및 인터페이스 세부 정보." }
-          ]
-        },
-        {
-          title: "콘텐츠 및 SEO", subtitle: "도달 범위와 메시지를 강화하세요. (다중 선택 가능)",
-          options: [
-            { id: "seo-basic", label: "기본 SEO 설정", desc: "기초적인 메타데이터 및 검색 엔진 색인화." },
-            { id: "copywriting", label: "전문 콘텐츠 작성", desc: "매력적이고 전환에 초점을 맞춘 카피라이팅." },
-            { id: "seo-adv", label: "고급 SEO 전략", desc: "심층 키워드 타겟팅 및 기술적 SEO 최적화." }
-          ]
-        },
-        {
-          title: "기능적 특징", subtitle: "사이트에 특정 기능을 추가하세요. (다중 선택 가능)",
-          options: [
-            { id: "contact-form", label: "고급 문의 양식", desc: "복잡한 조건부 논리 및 다단계 양식." },
-            { id: "newsletter", label: "뉴스레터 시스템", desc: "리드를 확보하고 잠재고객을 늘리세요." },
-            { id: "email-marketing", label: "이메일 마케팅 통합", desc: "Mailchimp, ActiveCampaign 등에 직접 연결하세요." }
-          ]
-        },
-        {
-          title: "성능 및 지원", subtitle: "속도 업그레이드 및 지속적인 유지 관리. (다중 선택 가능)",
-          options: [
-            { id: "speed-basic", label: "기본 속도 최적화", desc: "자산 축소 및 기본 캐싱." },
-            { id: "speed-ultra", label: "초고속 성능 번들", desc: "최대 속도를 위한 서버 측 최적화." },
-            { id: "hosting", label: "프리미엄 호스팅 관리", desc: "안전하고 가동 시간이 높은 클라우드 호스팅." },
-            { id: "maintenance", label: "월간 유지 관리 및 지원", desc: "정기 업데이트, 백업 및 우선 지원." }
-          ]
-        },
-        {
-          title: "제공 일정", subtitle: "이 프로젝트를 얼마나 빨리 시작해야 합니까?",
-          options: [
-            { id: "timeline-standard", label: "표준 속도 (4-6주)", desc: "표준 고품질 개발 주기입니다." },
-            { id: "timeline-rush", label: "우선 처리 (1-2주)", desc: "대기열을 건너뜁니다. 최대한 빨리 제공하기 위해 초과 근무를 합니다." }
-          ]
-        },
-        { title: "비전", subtitle: "특정 요구 사항이나 참조 사항에 대해 자세히 알려주세요." }
-      ],
-      palettes: [
-        { name: "Novatrum Dark", desc: "시그니처 룩. 깊고, 프리미엄하며, 대담합니다." },
-        { name: "Nordic Clean", desc: "가볍고 미니멀하며 타이포그래피에 중점을 둡니다." },
-        { name: "Midnight Tech", desc: "기술 중심 스타트업을 위한 현대적인 블루 톤." },
-        { name: "Industrial Gold", desc: "우아한 골드 포인트와 높은 대비." }
-      ]
-    },
-    processPage: {
-      title: "나의",
-      subtitle: "작업 방식.",
-      desc: "복잡한 아이디어를 우아한 디지털 현실로 바꾸기 위해 설계된 투명하고 단계적인 방법론.",
-      steps: [
-        { num: "01", title: "발견 및 전략", subtitle: "비전 이해하기", desc: "귀하의 비즈니스 목표와 기술적 요구 사항을 심층적으로 분석하는 것으로 시작합니다. 함께 프로젝트 범위를 정의하고 명확한 로드맵을 설정합니다." },
-        { num: "02", title: "UI/UX 디자인", subtitle: "경험 제작", desc: "코드를 작성하기 전에 와이어프레임과 고화질 디자인을 만듭니다. 브랜드 정체성과 완벽하게 일치하는 직관적인 사용자 여정에 중점을 둡니다." },
-        { num: "03", title: "개발", subtitle: "엔진 구축", desc: "이곳이 마법이 일어나는 곳입니다. Next.js 및 Tailwind CSS를 사용하여 깨끗하고 확장 가능한 코드를 작성합니다." },
-        { num: "04", title: "테스트 및 개선", subtitle: "완벽 보장", desc: "다양한 장치와 브라우저에서 엄격한 테스트를 수행하여 결함 없는 사용자 경험을 보장합니다." },
-        { num: "05", title: "배포 및 인계", subtitle: "실시간 전환", desc: "Vercel과 같은 글로벌 네트워크에 프로젝트를 배포하고 필요한 모든 문서를 제공합니다." }
-      ],
-      ctaTitle: "첫 단계를 시작할 준비가 되셨나요?",
-      ctaButton: "프로젝트 견적 내기"
+      s2: {
+        title: "Full-Stack SaaS Sistemleri",
+        desc: "Uçtan uca web uygulaması mühendisliği. Şifrelenmiş kullanıcı doğrulama akışlarından karmaşık veritabanı mantığına kadar, kurumsal ölçeğe hazır mimariler oluşturuyoruz.",
+        tech: "NODE.JS • SUPABASE • POSTGRES",
+        features: [
+          "Şifrelenmiş kullanıcı doğrulama ve yetkilendirme",
+          "Gerçek zamanlı veritabanı senkronizasyonu",
+          "Karmaşık üçüncü taraf API ve webhook yönlendirmesi"
+        ]
+      },
+      s3: {
+        title: "E-Ticaret Altyapısı",
+        desc: "Dönüşüm oranlarını en üst düzeye çıkarmak, büyük trafik artışlarını yönetmek ve banka düzeyinde ödeme güvenliği sağlamak için tasarlanmış yüksek performanslı dijital vitrinler.",
+        tech: "STRIPE • CUSTOM CMS • ANALYTICS",
+        features: [
+          "Banka düzeyinde güvenli ödeme altyapısı",
+          "Dönüşüm odaklı optimize edilmiş ödeme süreçleri",
+          "Ayrıntılı satış ve kullanıcı davranışı analizi"
+        ]
+      },
+      ctaTitle: "Parametrelerinizi belirlemeye hazır mısınız?",
+      ctaButton: "Proje Keşfine Başla"
     }
   }
 };
-
-export type Language = keyof typeof translations;
