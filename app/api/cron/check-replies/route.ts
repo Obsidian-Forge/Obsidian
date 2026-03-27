@@ -8,9 +8,11 @@ const supabaseAdmin = createClient(
 
 export async function GET(request: Request) {
   try {
+    // 1 saat öncesini hesapla
     const birSaatOnce = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    // Sadece adminin attığı, müşterinin henüz okumadığı ve maili atılmamış mesajları bul
+    // support_replies tablosundan: 
+    // 1 saatten eski, admin tarafından atılmış, okunmamış ve maili henüz gitmemiş mesajları bul
     const { data: replies, error } = await supabaseAdmin
       .from('support_replies')
       .select('*, support_tickets(subject, client_id, clients(email, name))')
@@ -21,8 +23,12 @@ export async function GET(request: Request) {
 
     if (error) throw error;
 
+    if (!replies || replies.length === 0) {
+      return NextResponse.json({ success: true, message: "İşlenecek mesaj yok." });
+    }
+
     for (const reply of replies) {
-      // Mail API'sini tetikle
+      // Mevcut email API'ni tetikle
       await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -35,7 +41,7 @@ export async function GET(request: Request) {
         }),
       });
 
-      // Mailin tekrar gitmemesi için email_sent durumunu true yap
+      // Mesajı 'mail gönderildi' olarak işaretle
       await supabaseAdmin
         .from('support_replies')
         .update({ email_sent: true })
@@ -44,6 +50,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, processed: replies.length });
   } catch (error: any) {
+    console.error("Cron Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
