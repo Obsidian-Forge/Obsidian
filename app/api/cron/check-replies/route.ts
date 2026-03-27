@@ -10,6 +10,7 @@ export async function GET(request: Request) {
   try {
     const birSaatOnce = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
+    // Sadece adminin attığı, okunmamış ve maili henüz gitmemiş mesajları çek
     const { data: replies, error } = await supabaseAdmin
       .from('support_replies')
       .select('*, support_tickets(subject, client_id, clients(email, name))')
@@ -19,9 +20,13 @@ export async function GET(request: Request) {
       .eq('email_sent', false);
 
     if (error) throw error;
-    if (!replies || replies.length === 0) return NextResponse.json({ success: true, message: "No unread admin replies found." });
+
+    if (!replies || replies.length === 0) {
+      return NextResponse.json({ success: true, message: "No pending notifications." });
+    }
 
     for (const reply of replies) {
+      // Ana mail API'mizi tetikliyoruz
       await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -34,7 +39,11 @@ export async function GET(request: Request) {
         }),
       });
 
-      await supabaseAdmin.from('support_replies').update({ email_sent: true }).eq('id', reply.id);
+      // Mailin tekrar gitmemesi için işaretle
+      await supabaseAdmin
+        .from('support_replies')
+        .update({ email_sent: true })
+        .eq('id', reply.id);
     }
 
     return NextResponse.json({ success: true, processed: replies.length });
