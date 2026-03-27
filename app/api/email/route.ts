@@ -115,6 +115,23 @@ export async function POST(request: Request) {
                 `;
                 break;
 
+                case 'support_reminder':
+    finalSubject = `Update on your support ticket: ${body.ticketSubject}`;
+    finalHtml = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 10px;">
+            <h2 style="color: #000; text-transform: uppercase; font-weight: 900; letter-spacing: -1px;">Support Update</h2>
+            <p style="color: #52525b; font-size: 14px;">Hello <strong>${clientName}</strong>,</p>
+            <p style="color: #52525b; font-size: 14px;">You have a new unread message regarding your ticket: <strong>${body.ticketSubject}</strong></p>
+            
+            <div style="background-color: #f4f4f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="font-size: 12px; font-style: italic; color: #71717a;">"${body.messagePreview}"</p>
+            </div>
+            
+            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/client/support" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase;">View Full Thread</a>
+        </div>
+    `;
+    break;
+
             default:
                 throw new Error("Geçersiz e-posta türü belirtildi: " + type);
         }
