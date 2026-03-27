@@ -27,7 +27,7 @@ const INTEGRATION_OPTIONS = [
     { id: "crm", price: 1800, icon: "🤝", desc: "Direct sync with Hubspot or Salesforce." },
     { id: "mail", price: 400, icon: "📩", desc: "Automated email & newsletter flows." },
     { id: "analytics", price: 600, icon: "📈", desc: "Granular user behavior tracking." },
-    { id: "ai", price: 3500, icon: "🧠", desc: "Custom LLM logic and AI workflows." },
+    { id: "ai", price: 4500, icon: "🧠", desc: "Custom LLM logic and AI workflows." },
     { id: "sockets", price: 2500, icon: "⚡", desc: "Real-time data and live notifications." },
     { id: "cms", price: 2800, icon: "📝", desc: "Bespoke admin panel for content." },
     { id: "multilang", price: 1200, icon: "🌐", desc: "Full multi-language locale routing." }
@@ -38,6 +38,13 @@ const TIMELINES = [
     { id: "standard", multiplier: 1.0, desc: "Regular agency queue priority." },
     { id: "expedited", multiplier: 1.5, desc: "Fast-tracked delivery. 50% premium applied." },
     { id: "enterprise", multiplier: 1.1, desc: "Mandatory for complex scale architectures." }
+];
+
+const MAINTENANCE_OPTIONS = [
+    { id: "none", price: 0, title: "No Ongoing Support", desc: "Client assumes full responsibility for security and updates post-launch." },
+    { id: "essential", price: 299, title: "Essential", desc: "Proactive security patches, uptime monitoring, and core system updates." },
+    { id: "growth", price: 599, title: "Growth", desc: "Essential package + 5 hours of monthly continuous development & UI updates." },
+    { id: "scale", price: 999, title: "Scale", desc: "Essential package + 15 hours of monthly development. Your dedicated tech team." }
 ];
 
 export default function DefinitiveDiscoveryPage() {
@@ -74,7 +81,7 @@ export default function DefinitiveDiscoveryPage() {
         selectedIntegrations: [] as string[],
         seoLevel: 'standard', 
         timeline: 'standard', 
-        hasMaintenance: false,
+        maintenanceTier: 'essential',
         clientName: '',
         clientEmail: '',
         clientPhone: '',
@@ -99,20 +106,15 @@ export default function DefinitiveDiscoveryPage() {
         let total = 0;
         const arch = ARCHITECTURE_OPTIONS.find(a => a.id === formData.architecture);
         if (arch) total += arch.price;
-
         if (formData.estimatedPages > 5) total += (formData.estimatedPages - 5) * 200;
         if (formData.needsCopywriting) total += 1500;
-
         const design = DESIGN_STYLES.find(d => d.id === formData.designStyle);
         if (design) total += design.price;
-
         formData.selectedIntegrations.forEach(intId => {
             const intg = INTEGRATION_OPTIONS.find(i => i.id === intId);
             if (intg) total += intg.price;
         });
-
         if (formData.seoLevel === 'advanced') total += 1500;
-        if (formData.hasMaintenance) total += 2500;
 
         return total;
     };
@@ -124,6 +126,10 @@ export default function DefinitiveDiscoveryPage() {
         return Math.round(total); 
     };
 
+    // Geçerli aylık paketin fiyatını bulma
+    const currentMaintenance = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
+    const monthlyPrice = currentMaintenance ? currentMaintenance.price : 0;
+
     // --- DOSYA YÜKLEME (SUPABASE) ---
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
@@ -132,10 +138,10 @@ export default function DefinitiveDiscoveryPage() {
         const fileExt = file.name.split('.').pop();
         const fileName = `discovery-asset-${Date.now()}.${fileExt}`;
         const filePath = `discovery_uploads/${fileName}`;
-
         try {
             const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
             if (uploadError) throw uploadError;
+            
             const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filePath);
             setFormData(prev => ({
                 ...prev,
@@ -158,7 +164,7 @@ export default function DefinitiveDiscoveryPage() {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         let yPos = 90;
-
+        
         const loadImage = (url: string): Promise<string> => {
             return new Promise((resolve) => {
                 const img = new Image(); img.src = url;
@@ -191,14 +197,14 @@ export default function DefinitiveDiscoveryPage() {
         doc.setTextColor(113, 113, 122);
         doc.text(`Ref ID: ${discoveryId}`, pageWidth - 20, 38, { align: "right" });
         doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 20, 44, { align: "right" });
-
+        
         const checkPageBreak = (addedHeight: number) => {
             if (yPos + addedHeight > 280) {
                 doc.addPage();
                 yPos = 20;
             }
         };
-
+        
         const addSectionTitle = (title: string) => {
             checkPageBreak(15);
             doc.setFillColor(244, 244, 245);
@@ -250,7 +256,7 @@ export default function DefinitiveDiscoveryPage() {
         addRow("Project Goals:", formData.projectGoals);
         if (formData.competitors) addRow("Competitors/Refs:", formData.competitors);
         yPos += 5;
-
+        
         // 2. ARCHITECTURE & CONTENT
         addSectionTitle("ARCHITECTURE & DESIGN");
         const archLabel = cData.stepsData[0].options.find((o:any) => o.id === formData.architecture)?.label || "Not set";
@@ -258,7 +264,6 @@ export default function DefinitiveDiscoveryPage() {
         addRow("Core Platform:", archLabel, arch ? `+€${arch.price.toLocaleString()}` : "");
         const extraPagesCost = formData.estimatedPages > 5 ? (formData.estimatedPages - 5) * 200 : 0;
         addRow("Page Count:", `${formData.estimatedPages} Pages`, extraPagesCost > 0 ? `+€${extraPagesCost.toLocaleString()}` : "Included");
-
         const designLabel = dData.designStyles[formData.designStyle as keyof typeof dData.designStyles] || "Not set";
         const design = DESIGN_STYLES.find(d => d.id === formData.designStyle);
         addRow("Design Style:", designLabel, design && design.price > 0 ? `+€${design.price.toLocaleString()}` : "Included");
@@ -283,8 +288,6 @@ export default function DefinitiveDiscoveryPage() {
         }
 
         addRow("SEO Setup:", formData.seoLevel === 'advanced' ? dData.seoLevels.advanced : dData.seoLevels.standard, formData.seoLevel === 'advanced' ? "+€1,500" : "Included");
-        addRow("Support Package:", formData.hasMaintenance ? "6-Month Priority Maintenance" : "No ongoing support", formData.hasMaintenance ? "+€2,500" : "");
-        
         const timeLabel = formData.timeline === 'enterprise' ? "4 - 6 Months (Enterprise Scale)" : (dData.timelines[formData.timeline as keyof typeof dData.timelines] || "Standard");
         const time = TIMELINES.find(t => t.id === formData.timeline);
         let timeModStr = "Included";
@@ -294,6 +297,10 @@ export default function DefinitiveDiscoveryPage() {
             timeModStr = `${time.multiplier > 1 ? '+' : '-'}€${diff.toLocaleString()}`;
         }
         addRow("Timeline:", timeLabel, timeModStr);
+        
+        // AYLIK ABONELİK PDF'TE GÖSTERİMİ
+        const cMaint = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
+        addRow("Monthly Retainer:", cMaint ? cMaint.title : "None", cMaint && cMaint.price > 0 ? `+€${cMaint.price} / mo` : "");
         if (formData.designNotes) {
             addRow("Additional Notes:", formData.designNotes);
         }
@@ -311,6 +318,16 @@ export default function DefinitiveDiscoveryPage() {
         doc.setTextColor(16, 185, 129);
         doc.text(`€${calculateTotal().toLocaleString()}`, pageWidth - 25, yPos, { align: "right" });
         doc.setTextColor(24, 24, 27);
+        
+        // AYLIK ABONELİĞİ PDF'TE VURGULAMA
+        if (cMaint && cMaint.price > 0) {
+            yPos += 8;
+            doc.setFontSize(12);
+            doc.text("MONTHLY CONTINUOUS ENGINEERING", 25, yPos);
+            doc.setTextColor(16, 185, 129);
+            doc.text(`€${cMaint.price} / mo`, pageWidth - 25, yPos, { align: "right" });
+            doc.setTextColor(24, 24, 27);
+        }
 
         // --- FOOTER ---
         const footerY = doc.internal.pageSize.getHeight() - 25;
@@ -320,9 +337,9 @@ export default function DefinitiveDiscoveryPage() {
         doc.setFont("helvetica", "normal");
         doc.setTextColor(113, 113, 122);
         doc.text("This document is a definitive blueprint estimate securely logged in the Novatrum network.", 20, footerY + 5);
-        doc.text("I will personally review your parameters and contact you to finalize the contract.", 20, footerY + 10);
+        doc.text("Our team will review your parameters and send an Onboarding Invite to finalize integration.", 20, footerY + 10);
 
-        doc.save(`Novatrum_Architecture_${discoveryId}.pdf`);
+        doc.save(`Novatrum_Architecture_${discoveryId || 'Draft'}.pdf`);
         setDownloadingPdf(false);
     };
 
@@ -336,6 +353,7 @@ export default function DefinitiveDiscoveryPage() {
         let colorsString = `Primary: ${formData.primaryColor}, Secondary: ${formData.secondaryColor}`;
         if (formData.hasAccentColor) colorsString += `, Accent: ${formData.accentColor}`;
 
+        const cMaint = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
         const detailsPayload = {
             "Company": formData.companyName,
             "Goals": formData.projectGoals,
@@ -348,12 +366,12 @@ export default function DefinitiveDiscoveryPage() {
             "Integrations": formData.selectedIntegrations.map(id => dData.integrations[id as keyof typeof dData.integrations]).join(', '),
             "SEO Setup": formData.seoLevel,
             "Timeline": formData.timeline === 'enterprise' ? "4-6 Months" : formData.timeline,
-            "Maintenance": formData.hasMaintenance ? "6-Month Premium Support Included" : "None",
+            "Maintenance": cMaint ? `${cMaint.title} (€${cMaint.price}/mo)` : "None",
             "Assets": formData.uploadedFiles.map(f => f.url).join(' | '),
             "Notes": formData.designNotes
         };
-
         try {
+            // RLS kısıtlamalarına takılmamak için data geri istemiyoruz
             const { error } = await supabase.from('project_discovery').insert([{
                 discovery_number: dsNumber,
                 client_name: formData.clientName,
@@ -379,7 +397,7 @@ export default function DefinitiveDiscoveryPage() {
                     currency: 'EUR'
                 })
             }).catch(err => console.error("Email notification failed:", err));
-
+            
             setDiscoveryId(dsNumber);
             setCurrentStep(8);
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -389,7 +407,7 @@ export default function DefinitiveDiscoveryPage() {
             setLoading(false);
         }
     };
-
+    
     // --- ADIM KONTROLLERİ ---
     const isStepValid = () => {
         if (currentStep === 1) return formData.companyName.trim().length > 0 && formData.projectGoals.trim().length > 0;
@@ -398,18 +416,18 @@ export default function DefinitiveDiscoveryPage() {
         if (currentStep === 7) return formData.clientName.trim().length > 0 && formData.clientEmail.trim().length > 0 && formData.billingAddress.trim().length > 0;
         return true; 
     };
-
+    
     const nextStep = () => {
         if (isStepValid()) {
             setCurrentStep(prev => prev + 1);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
-
+    
     if (!dData || !cData) return <div className="pt-40 text-center font-mono text-xs uppercase tracking-widest text-zinc-400">Loading Translations...</div>;
-
+    
     return (
-        <div className="min-h-screen bg-white text-black font-sans pb-32 selection:bg-black selection:text-white relative">
+        <div className="min-h-screen bg-white text-black font-sans pb-32 md:pb-40 selection:bg-black selection:text-white relative">
             
             {/* ÜST PROGRESS BAR */}
             {currentStep < 8 && (
@@ -430,7 +448,10 @@ export default function DefinitiveDiscoveryPage() {
 
                         <div className="hidden md:flex items-center gap-3">
                             <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{dData.liveEstimate}</span>
-                            <span className="text-lg font-black font-mono text-emerald-600">€{calculateTotal().toLocaleString()}</span>
+                            <span className="text-lg font-black font-mono text-emerald-600">
+                                €{calculateTotal().toLocaleString()}
+                                {monthlyPrice > 0 && <span className="text-xs text-zinc-400 ml-1">+ €{monthlyPrice}/mo</span>}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -493,7 +514,7 @@ export default function DefinitiveDiscoveryPage() {
                                             architecture: optIds[index],
                                             estimatedPages: optIds[index] === 'landing' ? 1 : (prev.architecture === 'landing' ? 5 : prev.estimatedPages)
                                         }))}
-                                        className={`p-6 md:p-8 rounded-[32px] border-2 cursor-pointer transition-all duration-300 group ${isSelected ? 'border-black bg-zinc-50 ring-1 ring-black' : 'border-zinc-200 hover:border-zinc-400'}`}
+                                        className={`p-6 md:p-8 rounded-[32px] border-2 cursor-pointer transition-all duration-300 group ${isSelected ? 'border-black bg-zinc-50 ring-1 ring-black shadow-xl' : 'border-zinc-200 hover:border-zinc-400 bg-white'}`}
                                     >
                                         <div className="flex justify-between items-start mb-4">
                                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-300'}`}>
@@ -610,7 +631,7 @@ export default function DefinitiveDiscoveryPage() {
                             <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.contentSub}</p>
                         </div>
 
-                        <div className={`p-8 rounded-[32px] border-2 transition-all cursor-pointer ${formData.needsCopywriting ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-zinc-300'}`} onClick={() => setFormData({...formData, needsCopywriting: !formData.needsCopywriting})}>
+                        <div className={`p-8 rounded-[32px] border-2 transition-all cursor-pointer ${formData.needsCopywriting ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-zinc-300 bg-white'}`} onClick={() => setFormData({...formData, needsCopywriting: !formData.needsCopywriting})}>
                             <div className="flex justify-between items-center mb-2">
                                 <h3 className="text-xl font-black uppercase flex items-center gap-3">
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${formData.needsCopywriting ? 'border-emerald-500 bg-emerald-500' : 'border-zinc-300'}`}>
@@ -683,7 +704,7 @@ export default function DefinitiveDiscoveryPage() {
                                                 <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${isSelected ? 'border-white bg-white text-black' : 'border-zinc-300'}`}>
                                                     {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                                 </div>
-                                                <span className="font-black uppercase text-sm">{dData.integrations[opt.id as keyof typeof dData.integrations]}</span>
+                                                <span className="font-black uppercase text-sm">{dData.integrations[opt.id as keyof typeof dData.integrations] || opt.id}</span>
                                             </div>
                                             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md whitespace-nowrap ${isSelected ? 'bg-white/20' : 'bg-emerald-50 text-emerald-600'}`}>
                                                 +€{opt.price.toLocaleString()}
@@ -727,19 +748,17 @@ export default function DefinitiveDiscoveryPage() {
                                         
                                         // Büyük proje değilse enterprise gösterme
                                         if (isEnterprise && !isComplexProject) return null;
-
                                         // Büyük proje ise diğerlerini disable et
                                         const isDisabled = isComplexProject && !isEnterprise;
                                         const isSelected = formData.timeline === tId;
                                         const tInfo = TIMELINES.find(x => x.id === tId);
-
                                         return (
                                             <div 
                                                 key={tId} 
                                                 onClick={() => !isDisabled && setFormData({...formData, timeline: tId})} 
                                                 className={`p-5 rounded-2xl border-2 transition-all flex flex-col gap-2 
                                                     ${isDisabled ? 'opacity-40 bg-zinc-50 cursor-not-allowed border-zinc-100' : 'cursor-pointer hover:border-black'}
-                                                    ${isSelected && !isDisabled ? (tId === 'expedited' ? 'border-red-500 bg-red-50 shadow-md' : tId === 'relaxed' ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-black bg-zinc-50 shadow-md') : 'border-zinc-200'}
+                                                    ${isSelected && !isDisabled ? (tId === 'expedited' ? 'border-red-500 bg-red-50 shadow-md' : tId === 'relaxed' ? 'border-blue-500 bg-blue-50 shadow-md' : 'border-black bg-zinc-50 shadow-md') : 'border-zinc-200 bg-white'}
                                                 `}
                                             >
                                                 <div className="flex justify-between items-center w-full">
@@ -759,26 +778,35 @@ export default function DefinitiveDiscoveryPage() {
                                 </div>
                             </div>
 
-                            {/* MAINTENANCE UPSALE */}
-                            <div className="pt-4 border-t border-zinc-100">
-                                <div 
-                                    onClick={() => setFormData({...formData, hasMaintenance: !formData.hasMaintenance})}
-                                    className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all ${formData.hasMaintenance ? 'border-indigo-500 bg-indigo-50' : 'border-zinc-200 hover:border-indigo-300'}`}
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${formData.hasMaintenance ? 'border-indigo-500 bg-indigo-500' : 'border-zinc-300'}`}>
-                                                {formData.hasMaintenance && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                            {/* YENİ: AYLIK CONTINUOUS ENGINEERING PAKETLERİ (MRR) */}
+                            <div className="space-y-4 pt-4 border-t border-zinc-100">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Continuous Engineering (Monthly)</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {MAINTENANCE_OPTIONS.map(opt => {
+                                        const isSelected = formData.maintenanceTier === opt.id;
+                                        return (
+                                            <div 
+                                                key={opt.id} 
+                                                onClick={() => setFormData({...formData, maintenanceTier: opt.id})}
+                                                className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between 
+                                                    ${isSelected ? 'border-black bg-zinc-50 shadow-md' : 'border-zinc-200 hover:border-black bg-white'}
+                                                `}
+                                            >
+                                                <div className="flex justify-between items-start mb-2 w-full">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-300'}`}>
+                                                            {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                                                        </div>
+                                                        <h3 className={`font-black uppercase text-sm ${isSelected ? 'text-black' : 'text-zinc-800'}`}>{opt.title}</h3>
+                                                    </div>
+                                                    <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md whitespace-nowrap ${isSelected ? 'bg-white border border-zinc-200 text-black' : 'bg-zinc-100 text-zinc-500'}`}>
+                                                        {opt.price > 0 ? `+€${opt.price} / mo` : 'Included'}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs font-bold text-zinc-500 mt-2 ml-7 leading-relaxed">{opt.desc}</p>
                                             </div>
-                                            <h3 className={`font-black uppercase ${formData.hasMaintenance ? 'text-indigo-900' : 'text-zinc-800'}`}>{dData.form.maintenanceCheck}</h3>
-                                        </div>
-                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md whitespace-nowrap ${formData.hasMaintenance ? 'bg-white/50 text-indigo-600' : 'bg-zinc-100 text-zinc-500'}`}>
-                                            +€2,500
-                                        </span>
-                                    </div>
-                                    <p className={`text-xs font-bold ml-8 ${formData.hasMaintenance ? 'text-indigo-700/70' : 'text-zinc-400'}`}>
-                                        {dData.form.maintenanceDesc}
-                                    </p>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -786,11 +814,11 @@ export default function DefinitiveDiscoveryPage() {
                             <div className="space-y-4 pt-4 border-t border-zinc-100">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">SEO Optimization Level</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div onClick={() => setFormData({...formData, seoLevel: 'standard'})} className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.seoLevel === 'standard' ? 'border-black bg-zinc-50' : 'border-zinc-200 hover:border-black'}`}>
+                                    <div onClick={() => setFormData({...formData, seoLevel: 'standard'})} className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.seoLevel === 'standard' ? 'border-black bg-zinc-50' : 'border-zinc-200 hover:border-black bg-white'}`}>
                                         <h3 className="font-black uppercase mb-1">{dData.seoLevels.standard}</h3>
                                         <p className="text-xs font-bold text-zinc-500 mt-2">Included. Basic meta tags and fast load speeds.</p>
                                     </div>
-                                    <div onClick={() => setFormData({...formData, seoLevel: 'advanced'})} className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.seoLevel === 'advanced' ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-black'}`}>
+                                    <div onClick={() => setFormData({...formData, seoLevel: 'advanced'})} className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.seoLevel === 'advanced' ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-black bg-white'}`}>
                                         <div className="flex justify-between items-start mb-1 w-full">
                                             <h3 className="font-black uppercase text-emerald-800">{dData.seoLevels.advanced}</h3>
                                             <span className="text-[9px] font-black uppercase text-emerald-600 bg-white px-2 py-1 rounded-md border border-emerald-100 whitespace-nowrap">+€1,500</span>
@@ -862,10 +890,18 @@ export default function DefinitiveDiscoveryPage() {
                             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">{dData.success.dsNumber}</p>
                             <p className="text-5xl font-black font-mono tracking-tighter text-black select-all mb-8">{discoveryId}</p>
                             
-                            <div className="pt-8 border-t border-zinc-200 flex justify-between items-center mb-6">
+                            <div className="pt-8 border-t border-zinc-200 flex justify-between items-center mb-4">
                                 <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Final Estimate</span>
                                 <span className="text-2xl text-emerald-600 font-black font-mono">€{calculateTotal().toLocaleString()}</span>
                             </div>
+                            
+                            {/* Başarı ekranında aylık abonelik gösterimi */}
+                            {monthlyPrice > 0 && (
+                                <div className="flex justify-between items-center mb-8 border-t border-zinc-100 pt-4">
+                                    <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Monthly Retainer</span>
+                                    <span className="text-lg text-emerald-600 font-black font-mono">+€{monthlyPrice} / mo</span>
+                                </div>
+                            )}
 
                             <button 
                                 onClick={downloadClientCopy}
@@ -883,8 +919,18 @@ export default function DefinitiveDiscoveryPage() {
                             </button>
                         </div>
                         
+                        {/* YENİ: ONBOARDING BEKLENTİ BİLGİLENDİRMESİ */}
+                        <div className="mt-6 bg-zinc-50 border border-zinc-200 p-5 rounded-2xl max-w-lg mx-auto text-left shadow-sm">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-900 mb-2 flex items-center gap-2">
+                                <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Next Steps: Onboarding Protocol
+                            </p>
+                            <p className="text-xs font-bold text-zinc-500 leading-relaxed">
+                                Our engineering team will review your blueprint. Once approved, you will receive a secure <strong>Onboarding Invite</strong> via email to initialize your profile and generate your dedicated Deployment Key.
+                            </p>
+                        </div>
+
                         <div className="pt-8 flex flex-col items-center gap-4">
-                            <p className="text-xs font-bold text-zinc-400">Keep this ID for your records and initial consultation.</p>
                             <button onClick={() => router.push('/')} className="bg-black text-white px-12 py-5 rounded-full font-black uppercase text-xs tracking-[0.2em] hover:bg-zinc-800 transition-all shadow-lg active:scale-95">{dData.btn.hub}</button>
                         </div>
                     </div>
@@ -894,19 +940,22 @@ export default function DefinitiveDiscoveryPage() {
             {/* STICKY BOTTOM NAVIGATION BAR */}
             {currentStep < 8 && (
                 <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-zinc-200 p-4 md:p-6 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-                    <div className="max-w-6xl mx-auto flex items-center justify-between gap-6">
+                    <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 md:gap-6">
                         
-                        <div className="hidden sm:block">
-                            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-1">{dData.liveEstimate}</p>
-                            <p className="text-2xl font-black font-mono text-black">€{calculateTotal().toLocaleString()}</p>
+                        <div className="flex flex-col">
+                            <p className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-0.5 md:mb-1">{dData.liveEstimate}</p>
+                            <p className="text-lg md:text-2xl font-black font-mono text-black whitespace-nowrap">
+                                €{calculateTotal().toLocaleString()}
+                                {monthlyPrice > 0 && <span className="text-sm md:text-lg text-zinc-400 ml-1 md:ml-2">+€{monthlyPrice}/mo</span>}
+                            </p>
                         </div>
-                        
-                        <div className="flex gap-3 w-full sm:w-auto">
+                    
+                        <div className="flex gap-3">
                             {currentStep === 7 ? (
                                 <button 
                                     onClick={submitDiscovery}
                                     disabled={loading || !isStepValid()}
-                                    className="flex-1 sm:flex-none bg-emerald-500 text-white px-8 md:px-16 py-4 md:py-5 rounded-2xl md:rounded-[20px] font-black uppercase text-[10px] md:text-xs tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                                    className="bg-emerald-500 text-white px-6 md:px-16 py-3.5 md:py-5 rounded-2xl md:rounded-[20px] font-black uppercase text-[9px] md:text-xs tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3"
                                 >
                                     {loading ? (
                                         <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {dData.btn.encrypting}</>
@@ -918,7 +967,7 @@ export default function DefinitiveDiscoveryPage() {
                                 <button 
                                     onClick={nextStep}
                                     disabled={!isStepValid()}
-                                    className="flex-1 sm:flex-none bg-black text-white px-8 md:px-16 py-4 md:py-5 rounded-2xl md:rounded-[20px] font-black uppercase text-[10px] md:text-xs tracking-[0.2em] active:scale-95 transition-all shadow-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3 hover:bg-zinc-800"
+                                    className="bg-black text-white px-6 md:px-16 py-3.5 md:py-5 rounded-2xl md:rounded-[20px] font-black uppercase text-[9px] md:text-xs tracking-[0.2em] active:scale-95 transition-all shadow-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3 hover:bg-zinc-800"
                                 >
                                     {dData.btn.next} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </button>
