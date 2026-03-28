@@ -1,25 +1,54 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export function middleware(req: NextRequest) {
-  // Sadece admin sayfalarına girmeye çalışanları yakala
-  if (req.nextUrl.pathname.startsWith('/admin') && !req.nextUrl.pathname.startsWith('/admin/login')) {
-    
-    // Supabase'in tarayıcıya bıraktığı yetki çerezini (cookie) ara
-    const hasAuthCookie = req.cookies.getAll().some(cookie => 
-      cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')
-    );
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-    // Eğer çerez yoksa, sayfayı hiç yüklemeden anında Login'e fırlat!
-    if (!hasAuthCookie) {
-      return NextResponse.redirect(new URL('/admin/login', req.url));
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value, ...options })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({ name, value: '', ...options })
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
 
-  return NextResponse.next();
+  return response
 }
 
-// Middleware'in hangi sayfalarda tetikleneceğini belirliyoruz
 export const config = {
   matcher: ['/admin/:path*'],
 }

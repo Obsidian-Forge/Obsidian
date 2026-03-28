@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import LogoutButton from '@/app/components/LogoutButton';
 
 export default function AdminDashboardPage() {
     const router = useRouter();
@@ -41,26 +40,26 @@ export default function AdminDashboardPage() {
     const [projectFilesData, setProjectFilesData] = useState<any[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
+    // GÜVENLİ ÇIKIŞ FONKSİYONU
+    const handleLogout = async () => {
+        setLoading(true);
+        await supabase.auth.signOut();
+        router.push('/admin/login');
+    };
+
     // AUTO-LOGOFF SİSTEMİ (15 Dakika İşlemsizlik)
     useEffect(() => {
-        const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 dakika
+        const INACTIVITY_LIMIT = 15 * 60 * 1000; 
         let timeoutId: NodeJS.Timeout;
-
-        const logoutUser = async () => {
-            await supabase.auth.signOut();
-            router.push('/admin/login');
-        };
 
         const resetTimer = () => {
             clearTimeout(timeoutId);
-            timeoutId = setTimeout(logoutUser, INACTIVITY_LIMIT);
+            timeoutId = setTimeout(handleLogout, INACTIVITY_LIMIT);
         };
 
-        // Kullanıcı hareketlerini dinle
         const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
-        
         events.forEach(event => window.addEventListener(event, resetTimer));
-        resetTimer(); // İlk sayfa yüklendiğinde sayacı başlat
+        resetTimer();
 
         return () => {
             events.forEach(event => window.removeEventListener(event, resetTimer));
@@ -73,13 +72,11 @@ export default function AdminDashboardPage() {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             
-            // 1. Session yoksa anında şutla
             if (!session) { 
                 router.push('/admin/login'); 
                 return; 
             }
 
-            // 2. Rol kontrolü
             const { data: { user } } = await supabase.auth.getUser();
             const { data: member } = await supabase
                 .from('members')
@@ -87,17 +84,14 @@ export default function AdminDashboardPage() {
                 .eq('id', user?.id)
                 .single();
 
-            // 3. Admin değilse şutla
             if (member?.role !== 'admin') {
-                await supabase.auth.signOut(); // Zorla çıkış yaptır
-                router.push('/client/login');
+                await supabase.auth.signOut(); 
+                router.push('/admin/login'); 
                 return;
             } 
             
-            // Her şey tamamsa sistemi aç
             setIsAdmin(true);
             
-            // Verileri çekmeye başla
             fetchData();
             fetchQuickNotes();
             fetchDiscoveryCount();
@@ -426,7 +420,6 @@ export default function AdminDashboardPage() {
                                         Client Assets & Vault
                                     </h3>
                                     <div className="grid gap-3">
-                                        {/* Discovery'den gelen dosyalar */}
                                         {projectDiscoveryData?.details?.Assets && projectDiscoveryData.details.Assets.split(' | ').filter(Boolean).map((url: string, i: number) => (
                                             <div key={`disc-${i}`} className="flex items-center justify-between p-4 bg-white border border-zinc-200 rounded-xl hover:border-black transition-colors group">
                                                 <div className="flex items-center gap-3">
@@ -440,7 +433,6 @@ export default function AdminDashboardPage() {
                                             </div>
                                         ))}
 
-                                        {/* Vault'tan (Client Files) gelen dosyalar */}
                                         {projectFilesData.map((file) => (
                                             <div key={file.id} className="flex items-center justify-between p-4 bg-white border border-zinc-200 rounded-xl hover:border-black transition-colors group">
                                                 <div className="flex items-center gap-3">
@@ -525,7 +517,16 @@ export default function AdminDashboardPage() {
                         </button>
                     </div>
                 </nav>
-                <div className="mt-auto flex flex-col items-center pt-6 border-t border-zinc-100"><LogoutButton /></div>
+                <div className="mt-auto flex flex-col pt-6 border-t border-zinc-100">
+                    <button 
+                        onClick={handleLogout} 
+                        disabled={loading}
+                        className="w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 transition-all shadow-sm"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        {loading ? 'Terminating...' : 'Terminate Session'}
+                    </button>
+                </div>
             </aside>
 
             {/* MAIN SCROLLABLE CONTENT */}
@@ -684,7 +685,7 @@ export default function AdminDashboardPage() {
                     <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
                         <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
                             <button onClick={() => setActiveTab('overview')} className="p-2 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                             </button>
                             <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Authorize Entity</h1>
                         </div>
