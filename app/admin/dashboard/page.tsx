@@ -19,48 +19,91 @@ export default function AdminDashboardPage() {
     const [clientInvoices, setClientInvoices] = useState<any[]>([]);
     const [supportTicketsCount, setSupportTicketsCount] = useState(0);
     const [quickNotes, setQuickNotes] = useState<any[]>([]);
-    
+
     // FORM STATES
     const [newQuickNote, setNewQuickNote] = useState('');
     const [clientForm, setClientForm] = useState({ email: '', fullName: '', companyName: '', phone: '', address: '' });
     const [projectForm, setProjectForm] = useState({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
-    
+
     // PROJECT UPDATE STATES
     const [updateMessage, setUpdateMessage] = useState('');
     const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
     const [localProgress, setLocalProgress] = useState<{ [key: string]: number }>({});
     const [timers, setTimers] = useState<{ [key: string]: { active: boolean; sessionStart: number | null; totalElapsed: number; displayTime?: number } }>({});
-    
+
     // NOTIFICATION STATES
     const [newDiscoveryCount, setNewDiscoveryCount] = useState(0);
     const [hasAnyUnread, setHasAnyUnread] = useState(false);
 
-    // YENİ: MODAL (PANEL) STATES
+    // MODAL (PANEL) STATES
     const [selectedProjectDetails, setSelectedProjectDetails] = useState<any>(null);
     const [projectDiscoveryData, setProjectDiscoveryData] = useState<any>(null);
     const [projectFilesData, setProjectFilesData] = useState<any[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
-    // AUTH & DATA FETCH
+    // AUTO-LOGOFF SİSTEMİ (15 Dakika İşlemsizlik)
+    useEffect(() => {
+        const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 dakika
+        let timeoutId: NodeJS.Timeout;
+
+        const logoutUser = async () => {
+            await supabase.auth.signOut();
+            router.push('/admin/login');
+        };
+
+        const resetTimer = () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(logoutUser, INACTIVITY_LIMIT);
+        };
+
+        // Kullanıcı hareketlerini dinle
+        const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
+        
+        events.forEach(event => window.addEventListener(event, resetTimer));
+        resetTimer(); // İlk sayfa yüklendiğinde sayacı başlat
+
+        return () => {
+            events.forEach(event => window.removeEventListener(event, resetTimer));
+            clearTimeout(timeoutId);
+        };
+    }, [router]);
+
+    // AUTH & DATA FETCH (KATI GÜVENLİK)
     useEffect(() => {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) { router.push('/admin/login'); return; }
-
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: member } = await supabase.from('members').select('role').eq('id', user?.id).single();
-
-            if (member?.role !== 'admin') {
-                router.push('/client/login');
-            } else {
-                setIsAdmin(true);
+            
+            // 1. Session yoksa anında şutla
+            if (!session) { 
+                router.push('/admin/login'); 
+                return; 
             }
 
+            // 2. Rol kontrolü
+            const { data: { user } } = await supabase.auth.getUser();
+            const { data: member } = await supabase
+                .from('members')
+                .select('role')
+                .eq('id', user?.id)
+                .single();
+
+            // 3. Admin değilse şutla
+            if (member?.role !== 'admin') {
+                await supabase.auth.signOut(); // Zorla çıkış yaptır
+                router.push('/client/login');
+                return;
+            } 
+            
+            // Her şey tamamsa sistemi aç
+            setIsAdmin(true);
+            
+            // Verileri çekmeye başla
             fetchData();
             fetchQuickNotes();
             fetchDiscoveryCount();
             checkUnreadTickets();
         };
+        
         checkAdmin();
 
         const channel = supabase.channel('admin-dashboard-realtime')
@@ -107,14 +150,12 @@ export default function AdminDashboardPage() {
         ]);
 
         if (clientsRes.data) setClients(clientsRes.data);
-        
         if (projectsRes.data) {
             const activeProjectsList = projectsRes.data.filter(p => p.clients && !p.clients.archived_at);
             setProjects(activeProjectsList);
             
             const progressMap: { [key: string]: number } = {};
             const newTimers: any = {};
-
             activeProjectsList.forEach(p => { 
                 progressMap[p.id] = p.progress_percent; 
                 const dbActive = p.last_timer_start !== null;
@@ -122,13 +163,11 @@ export default function AdminDashboardPage() {
                 const displayTime = dbActive ? (p.total_time_spent || 0) + (Math.floor(Date.now() / 1000) - sessionStart!) : p.total_time_spent || 0;
                 newTimers[p.id] = { active: dbActive, sessionStart, totalElapsed: p.total_time_spent || 0, displayTime };
             });
-
             setLocalProgress(progressMap);
             setTimers(newTimers);
         }
         
         if (statusRes.data) setSystemStatuses(statusRes.data);
-        
         if (invRes.data && clientsRes.data) {
             const activeClientIds = clientsRes.data.map(c => c.id);
             const activeInvoices = invRes.data.filter(inv => activeClientIds.includes(inv.client_id));
@@ -156,7 +195,7 @@ export default function AdminDashboardPage() {
         }
     };
 
-    // YENİ: MODAL AÇMA VE DETAYLARI ÇEKME
+    // MODAL AÇMA VE DETAYLARI ÇEKME
     const handleOpenProjectDetails = async (project: any) => {
         setSelectedProjectDetails(project);
         setLoadingDetails(true);
@@ -172,7 +211,6 @@ export default function AdminDashboardPage() {
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .single();
-                
                 if (discData) setProjectDiscoveryData(discData);
             }
 
@@ -181,7 +219,6 @@ export default function AdminDashboardPage() {
                 .select('*')
                 .eq('client_id', project.client_id)
                 .order('created_at', { ascending: false });
-            
             if (filesData) setProjectFilesData(filesData);
 
         } catch (error) {
@@ -201,7 +238,6 @@ export default function AdminDashboardPage() {
             fetchQuickNotes();
         } catch (err) { console.error(err); }
     };
-
     const deleteQuickNote = async (id: string) => {
         await supabase.from('admin_quick_notes').delete().eq('id', id);
         fetchQuickNotes();
@@ -214,7 +250,6 @@ export default function AdminDashboardPage() {
 
         const timerState = timers[projectId];
         const isCurrentlyActive = timerState?.active;
-
         try {
             if (isCurrentlyActive) {
                 const sessionDuration = (Math.floor(Date.now() / 1000)) - timerState.sessionStart!;
@@ -230,14 +265,14 @@ export default function AdminDashboardPage() {
             fetchData();
         } catch (err: any) { alert("Timer error: " + err.message); }
     };
-
+    
     const handleUpdateProjectStatus = async (projectId: string, newStatus: string) => {
         try {
             await supabase.from('projects').update({ status: newStatus }).eq('id', projectId);
             fetchData();
         } catch (error) { console.error("Failed to update status", error); }
     };
-
+    
     const handleSyncProject = async (projectId: string) => {
         setLoading(true);
         try {
@@ -270,7 +305,6 @@ export default function AdminDashboardPage() {
             }
 
             const code = `NVTR-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-            
             const insertData: any = {
                 email: clientForm.email,
                 full_name: clientForm.fullName,
@@ -279,7 +313,6 @@ export default function AdminDashboardPage() {
                 address: clientForm.address || null,
                 access_code: code
             };
-
             const { error } = await supabase.from('clients').insert(insertData);
             if (error) throw error;
             
@@ -318,7 +351,7 @@ export default function AdminDashboardPage() {
             setLoading(false);
         }
     };
-
+    
     const formatTime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
@@ -334,13 +367,11 @@ export default function AdminDashboardPage() {
     return (
         <div className="flex h-screen w-full bg-zinc-50 text-black font-sans overflow-hidden selection:bg-black selection:text-white relative">
 
-            {/* YENİ: PROJE DETAY MODALI (PANEL) */}
+            {/* PROJE DETAY MODALI (PANEL) */}
             {selectedProjectDetails && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-                    {/* Blurred Background */}
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity" onClick={() => setSelectedProjectDetails(null)}></div>
                     
-                    {/* Modal Box */}
                     <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 p-6 sm:p-10 custom-scrollbar border border-zinc-200">
                         <button 
                             onClick={() => setSelectedProjectDetails(null)} 
@@ -374,7 +405,7 @@ export default function AdminDashboardPage() {
                                     {projectDiscoveryData ? (
                                         <div className="bg-zinc-50 p-6 rounded-2xl border border-zinc-200 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                             {projectDiscoveryData.details && Object.entries(projectDiscoveryData.details).map(([key, value]) => {
-                                                if (key === 'Assets') return null; // Dosyaları aşağıda ayrı göstereceğiz
+                                                if (key === 'Assets') return null;
                                                 return (
                                                     <div key={key} className="py-2 border-b border-zinc-200/60 last:border-0">
                                                         <span className="block text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">{key}</span>
@@ -428,14 +459,13 @@ export default function AdminDashboardPage() {
                                         )}
                                     </div>
                                 </div>
-
                             </div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* MOBILE HEADER (BEYAZ TEMA) */}
+            {/* MOBILE HEADER */}
             <div className="md:hidden fixed top-0 w-full bg-white border-b border-zinc-200 z-40 p-4 flex justify-between items-center text-black">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 flex items-center justify-center shrink-0">
@@ -451,7 +481,7 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* SIDEBAR NAVIGATION (BEYAZ TEMA) */}
+            {/* SIDEBAR NAVIGATION */}
             <aside className={`fixed inset-y-0 left-0 z-50 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 w-64 bg-white border-r border-zinc-200 p-6 flex flex-col h-full shadow-2xl`}>
                 <div className="mb-10 flex flex-col items-center text-center">
                     <div className="w-16 h-16 mb-4 flex items-center justify-center bg-white border border-zinc-100 p-2 rounded-full shadow-sm">
@@ -498,13 +528,12 @@ export default function AdminDashboardPage() {
                 <div className="mt-auto flex flex-col items-center pt-6 border-t border-zinc-100"><LogoutButton /></div>
             </aside>
 
-            {/* MAIN SCROLLABLE CONTENT AREA */}
+            {/* MAIN SCROLLABLE CONTENT */}
             <main className="flex-1 h-full overflow-y-auto md:pl-64 p-6 md:p-10 lg:p-14 relative z-0 mt-16 md:mt-0">
 
                 {/* OVERVIEW TAB */}
                 {activeTab === 'overview' && (
                     <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
-                        
                         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-6 border-b border-zinc-200">
                             <div className="flex items-center gap-4">
                                 <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Workspace</h1>
@@ -697,7 +726,7 @@ export default function AdminDashboardPage() {
                     <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
                         <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
                             <button onClick={() => setActiveTab('overview')} className="p-2 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                             </button>
                             <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Push Deployment</h1>
                         </div>
@@ -711,7 +740,7 @@ export default function AdminDashboardPage() {
                             </div>
                             <div>
                                 <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Architecture Nomenclature *</label>
-                                <input type="text" required className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
+                                 <input type="text" required className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
                             </div>
                             <div className="space-y-3 pt-2">
                                 <div className="flex justify-between font-black uppercase text-[9px] text-zinc-500 tracking-widest"><span>Initial Load</span><span>%{projectForm.progress}</span></div>
