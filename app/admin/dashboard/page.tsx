@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -10,6 +10,10 @@ export default function AdminDashboardPage() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+
+    // TOAST NOTIFICATION STATE
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // DATA STATES
     const [clients, setClients] = useState<any[]>([]);
@@ -40,6 +44,13 @@ export default function AdminDashboardPage() {
     const [projectFilesData, setProjectFilesData] = useState<any[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
+    // TOAST GÖSTERİM FONKSİYONU
+    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+        setToast({ message, type });
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+    };
+
     // GÜVENLİ ÇIKIŞ FONKSİYONU
     const handleLogout = async () => {
         setLoading(true);
@@ -47,7 +58,7 @@ export default function AdminDashboardPage() {
         router.push('/admin/login');
     };
 
-    // AUTO-LOGOFF SİSTEMİ (15 Dakika İşlemsizlik)
+    // AUTO-LOGOFF SİSTEMİ
     useEffect(() => {
         const INACTIVITY_LIMIT = 15 * 60 * 1000; 
         let timeoutId: NodeJS.Timeout;
@@ -59,15 +70,16 @@ export default function AdminDashboardPage() {
 
         const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
         events.forEach(event => window.addEventListener(event, resetTimer));
-        resetTimer();
+        resetTimer(); 
 
         return () => {
             events.forEach(event => window.removeEventListener(event, resetTimer));
             clearTimeout(timeoutId);
+            if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
         };
     }, [router]);
 
-    // AUTH & DATA FETCH (KATI GÜVENLİK)
+    // AUTH & DATA FETCH & KUSURSUZ REALTIME
     useEffect(() => {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -100,11 +112,33 @@ export default function AdminDashboardPage() {
         
         checkAdmin();
 
+        // GÜNCELLENMİŞ REALTIME YAKALAYICI (ANINDA TEPKİ VERİR)
         const channel = supabase.channel('admin-dashboard-realtime')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => fetchData())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchData())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, () => fetchData())
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => fetchData())
+            
+            // YENİ BİLET GELDİĞİNDE ANINDA KIRMIZI YAP
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_tickets' }, () => { 
+                setHasAnyUnread(true);
+                fetchData(); 
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'support_tickets' }, () => { 
+                checkUnreadTickets();
+                fetchData(); 
+            })
+            
+            // YENİ MESAJ GELDİĞİNDE (MÜŞTERİYSE) ANINDA KIRMIZI YAP
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_replies' }, (payload) => {
+                if (payload.new && payload.new.sender_type === 'client') {
+                    setHasAnyUnread(true); // Saniye bile beklemeden menüyü kırmızı yapar
+                }
+            })
+            // MESAJ OKUNDUYSA (UPDATE OLDUYSA) TEKRAR KONTROL ET
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'support_replies' }, () => {
+                checkUnreadTickets();
+            })
+            
             .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_quick_notes' }, () => fetchQuickNotes())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'project_discovery' }, () => fetchDiscoveryCount())
             .subscribe();
@@ -144,12 +178,14 @@ export default function AdminDashboardPage() {
         ]);
 
         if (clientsRes.data) setClients(clientsRes.data);
+        
         if (projectsRes.data) {
             const activeProjectsList = projectsRes.data.filter(p => p.clients && !p.clients.archived_at);
             setProjects(activeProjectsList);
             
             const progressMap: { [key: string]: number } = {};
             const newTimers: any = {};
+            
             activeProjectsList.forEach(p => { 
                 progressMap[p.id] = p.progress_percent; 
                 const dbActive = p.last_timer_start !== null;
@@ -157,18 +193,22 @@ export default function AdminDashboardPage() {
                 const displayTime = dbActive ? (p.total_time_spent || 0) + (Math.floor(Date.now() / 1000) - sessionStart!) : p.total_time_spent || 0;
                 newTimers[p.id] = { active: dbActive, sessionStart, totalElapsed: p.total_time_spent || 0, displayTime };
             });
+            
             setLocalProgress(progressMap);
             setTimers(newTimers);
         }
         
         if (statusRes.data) setSystemStatuses(statusRes.data);
+        
         if (invRes.data && clientsRes.data) {
             const activeClientIds = clientsRes.data.map(c => c.id);
             const activeInvoices = invRes.data.filter(inv => activeClientIds.includes(inv.client_id));
             setClientInvoices(activeInvoices);
         }
         
-        if (ticketsRes.data) setSupportTicketsCount(ticketsRes.data.filter(t => t.status === 'open' || t.status === 'new').length);
+        if (ticketsRes.data) {
+            setSupportTicketsCount(ticketsRes.data.filter(t => t.status === 'open' || t.status === 'new').length);
+        }
     };
 
     const fetchQuickNotes = async () => {
@@ -181,12 +221,19 @@ export default function AdminDashboardPage() {
         if (count !== null) setNewDiscoveryCount(count);
     };
 
-    const checkUnreadTickets = () => {
-        const storedUnreads = localStorage.getItem('novatrum_admin_unreads');
-        if (storedUnreads) {
-            const parsed = JSON.parse(storedUnreads);
-            setHasAnyUnread(Object.keys(parsed).length > 0);
-        }
+    const checkUnreadTickets = async () => {
+        const { count: ticketsCount } = await supabase
+            .from('support_tickets')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'new');
+
+        const { count: repliesCount } = await supabase
+            .from('support_replies')
+            .select('*', { count: 'exact', head: true })
+            .eq('sender_type', 'client')
+            .neq('is_read', true);
+
+        setHasAnyUnread((ticketsCount || 0) > 0 || (repliesCount || 0) > 0);
     };
 
     // MODAL AÇMA VE DETAYLARI ÇEKME
@@ -205,6 +252,7 @@ export default function AdminDashboardPage() {
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .single();
+                
                 if (discData) setProjectDiscoveryData(discData);
             }
 
@@ -213,6 +261,7 @@ export default function AdminDashboardPage() {
                 .select('*')
                 .eq('client_id', project.client_id)
                 .order('created_at', { ascending: false });
+            
             if (filesData) setProjectFilesData(filesData);
 
         } catch (error) {
@@ -230,8 +279,11 @@ export default function AdminDashboardPage() {
             await supabase.from('admin_quick_notes').insert({ note: newQuickNote });
             setNewQuickNote('');
             fetchQuickNotes();
-        } catch (err) { console.error(err); }
+        } catch (err) { 
+            console.error(err); 
+        }
     };
+
     const deleteQuickNote = async (id: string) => {
         await supabase.from('admin_quick_notes').delete().eq('id', id);
         fetchQuickNotes();
@@ -244,6 +296,7 @@ export default function AdminDashboardPage() {
 
         const timerState = timers[projectId];
         const isCurrentlyActive = timerState?.active;
+        
         try {
             if (isCurrentlyActive) {
                 const sessionDuration = (Math.floor(Date.now() / 1000)) - timerState.sessionStart!;
@@ -257,14 +310,18 @@ export default function AdminDashboardPage() {
                 setTimers(prev => ({ ...prev, [projectId]: { active: true, sessionStart: nowSec, totalElapsed: timerState.totalElapsed, displayTime: timerState.totalElapsed } }));
             }
             fetchData();
-        } catch (err: any) { alert("Timer error: " + err.message); }
+        } catch (err: any) { 
+            showToast("Timer error: " + err.message, 'error'); 
+        }
     };
     
     const handleUpdateProjectStatus = async (projectId: string, newStatus: string) => {
         try {
             await supabase.from('projects').update({ status: newStatus }).eq('id', projectId);
             fetchData();
-        } catch (error) { console.error("Failed to update status", error); }
+        } catch (error) { 
+            showToast("Failed to update status", 'error'); 
+        }
     };
     
     const handleSyncProject = async (projectId: string) => {
@@ -278,8 +335,12 @@ export default function AdminDashboardPage() {
                 setUpdateMessage('');
                 setSelectedProjectId(null);
             }
-            alert("Deployment synced with main ledger.");
-        } catch (err: any) { alert(err.message); } finally { setLoading(false); }
+            showToast("Deployment synced with main ledger.", 'success');
+        } catch (err: any) { 
+            showToast(err.message, 'error'); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     // --- ENTITY (CLIENT) MANUEL OLUŞTURMA ---
@@ -288,11 +349,12 @@ export default function AdminDashboardPage() {
         setLoading(true);
         try {
             const { data: existingClient } = await supabase.from('clients').select('id, archived_at').eq('email', clientForm.email).maybeSingle();
+            
             if (existingClient) {
                 if (existingClient.archived_at) {
-                    alert("This email belongs to an ARCHIVED entity. Please use the Archives page to Restore.");
+                    showToast("This email belongs to an ARCHIVED entity. Please use the Archives page to Restore.", 'error');
                 } else {
-                    alert("An active entity with this email already exists.");
+                    showToast("An active entity with this email already exists.", 'error');
                 }
                 setLoading(false);
                 return;
@@ -307,14 +369,15 @@ export default function AdminDashboardPage() {
                 address: clientForm.address || null,
                 access_code: code
             };
+            
             const { error } = await supabase.from('clients').insert(insertData);
             if (error) throw error;
             
             setClientForm({ email: '', fullName: '', companyName: '', phone: '', address: '' });
-            alert(`Entity authorized successfully. \n\nDeployment Key: ${code}\n\n(This key can be copied from the Active Database page)`);
+            showToast(`Entity authorized successfully. Deployment Key: ${code}`, 'success');
             router.push('/admin/clients');
         } catch (err: any) {
-            alert(err.message);
+            showToast(err.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -333,14 +396,15 @@ export default function AdminDashboardPage() {
                 status: projectForm.status, 
                 progress_percent: projectForm.progress 
             });
+            
             if (error) throw error;
 
             setProjectForm({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
-            alert("Project deployment initiated.");
+            showToast("Project deployment initiated.", 'success');
             setActiveTab('overview');
             fetchData();
         } catch (err: any) {
-            alert(err.message);
+            showToast(err.message, 'error');
         } finally {
             setLoading(false);
         }
@@ -356,10 +420,29 @@ export default function AdminDashboardPage() {
     const activeProjects = projects.filter((p: any) => timers[p.id]?.active);
     const idleProjects = projects.filter((p: any) => !timers[p.id]?.active);
 
-    if (!isAdmin) return <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">Authenticating...</div>;
+    if (!isAdmin) {
+        return (
+            <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">
+                Authenticating...
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-screen w-full bg-zinc-50 text-black font-sans overflow-hidden selection:bg-black selection:text-white relative">
+
+            {/* TOAST NOTIFICATION */}
+            {toast && (
+                <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl z-[9999] animate-in slide-in-from-bottom-5 duration-300 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 border ${
+                    toast.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' :
+                    toast.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                    'bg-zinc-900 text-white border-zinc-800'
+                }`}>
+                    {toast.type === 'success' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
+                    {toast.type === 'error' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                    {toast.message}
+                </div>
+            )}
 
             {/* PROJE DETAY MODALI (PANEL) */}
             {selectedProjectDetails && (
@@ -379,7 +462,9 @@ export default function AdminDashboardPage() {
                                 <h2 className="text-3xl font-black uppercase tracking-tighter text-zinc-900">{selectedProjectDetails.name}</h2>
                                 <span className="bg-zinc-100 border border-zinc-200 text-zinc-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase">{selectedProjectDetails.status}</span>
                             </div>
-                            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{selectedProjectDetails.clients?.full_name} • {selectedProjectDetails.clients?.email}</p>
+                            <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                                {selectedProjectDetails.clients?.full_name} • {selectedProjectDetails.clients?.email}
+                            </p>
                         </div>
 
                         {loadingDetails ? (
@@ -409,7 +494,9 @@ export default function AdminDashboardPage() {
                                             })}
                                         </div>
                                     ) : (
-                                        <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest p-6 text-center border border-zinc-200 border-dashed rounded-2xl">No discovery blueprint found for this client.</p>
+                                        <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest p-6 text-center border border-zinc-200 border-dashed rounded-2xl">
+                                            No discovery blueprint found for this client.
+                                        </p>
                                     )}
                                 </div>
 
@@ -423,31 +510,41 @@ export default function AdminDashboardPage() {
                                         {projectDiscoveryData?.details?.Assets && projectDiscoveryData.details.Assets.split(' | ').filter(Boolean).map((url: string, i: number) => (
                                             <div key={`disc-${i}`} className="flex items-center justify-between p-4 bg-white border border-zinc-200 rounded-xl hover:border-black transition-colors group">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center"><svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg></div>
+                                                    <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                                    </div>
                                                     <div>
                                                         <p className="text-xs font-bold text-zinc-900">Discovery Upload {i + 1}</p>
                                                         <p className="text-[9px] font-black uppercase text-zinc-400 tracking-widest mt-0.5">Initial Form Asset</p>
                                                     </div>
                                                 </div>
-                                                <a href={url} target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">Download</a>
+                                                <a href={url} target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">
+                                                    Download
+                                                </a>
                                             </div>
                                         ))}
 
                                         {projectFilesData.map((file) => (
                                             <div key={file.id} className="flex items-center justify-between p-4 bg-white border border-zinc-200 rounded-xl hover:border-black transition-colors group">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center"><svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                                                    <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                                        <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                                    </div>
                                                     <div>
                                                         <p className="text-xs font-bold text-zinc-900 truncate max-w-[200px] sm:max-w-xs">{file.file_name}</p>
                                                         <p className="text-[9px] font-black uppercase text-zinc-400 tracking-widest mt-0.5">Client Vault Asset</p>
                                                     </div>
                                                 </div>
-                                                <a href={file.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">Download</a>
+                                                <a href={file.file_url} target="_blank" rel="noreferrer" className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">
+                                                    Download
+                                                </a>
                                             </div>
                                         ))}
 
                                         {(!projectDiscoveryData?.details?.Assets && projectFilesData.length === 0) && (
-                                            <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest p-6 text-center border border-zinc-200 border-dashed rounded-2xl">No assets or files uploaded by this client.</p>
+                                            <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest p-6 text-center border border-zinc-200 border-dashed rounded-2xl">
+                                                No assets or files uploaded by this client.
+                                            </p>
                                         )}
                                     </div>
                                 </div>
@@ -466,7 +563,9 @@ export default function AdminDashboardPage() {
                     <h2 className="text-xl font-black tracking-tighter uppercase">Novatrum</h2>
                 </div>
                 <div className="flex items-center gap-4">
-                    {(hasAnyUnread || newDiscoveryCount > 0) && <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />}
+                    {(hasAnyUnread || newDiscoveryCount > 0) && (
+                        <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+                    )}
                     <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-lg">
                         <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                     </button>
@@ -482,11 +581,12 @@ export default function AdminDashboardPage() {
                     <h2 className="text-2xl font-black tracking-tighter text-zinc-900">NOVATRUM</h2>
                     <div className="h-0.5 w-8 bg-zinc-200 mx-auto mt-3 rounded-full" />
                 </div>
+                
                 <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
                     {[
                         { id: 'overview', label: 'Command Center', action: null },
-                        { id: 'discoveries', label: 'Discovery Logs', notification: newDiscoveryCount > 0, badgeCount: newDiscoveryCount, action: () => router.push('/admin/discoveries') },
-                        { id: 'tickets', label: 'Support Queue', notification: hasAnyUnread, action: () => router.push('/admin/support') },
+                        { id: 'discoveries', label: 'Discovery Logs', badgeText: newDiscoveryCount > 0 ? `${newDiscoveryCount} NEW` : null, action: () => router.push('/admin/discoveries') },
+                        { id: 'tickets', label: 'Support Queue', badgeText: hasAnyUnread ? 'NEW' : null, action: () => router.push('/admin/support') },
                         { id: 'status', label: 'Infrastructure', action: () => router.push('/admin/status') },
                         { id: 'clients', label: 'Active Database', action: () => router.push('/admin/clients') },
                         { id: 'archive', label: 'Entity Archive', action: () => router.push('/admin/archive') }
@@ -494,17 +594,23 @@ export default function AdminDashboardPage() {
                         <button
                             key={item.id}
                             onClick={() => {
-                                if (item.action) { item.action(); }
-                                else { setActiveTab(item.id); setIsMobileMenuOpen(false); }
+                                if (item.action) { 
+                                    item.action(); 
+                                } else { 
+                                    setActiveTab(item.id); 
+                                    setIsMobileMenuOpen(false); 
+                                }
                             }}
-                            className={`relative w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeTab === item.id && !item.action ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}
+                            className={`relative w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-200 ${
+                                activeTab === item.id && !item.action ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'
+                            }`}
                         >
                             <span>{item.label}</span>
-                            {item.badgeCount ? (
-                                <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[8px] font-bold tracking-widest shadow-sm">{item.badgeCount} NEW</span>
-                            ) : item.notification ? (
-                                <span className="w-2 h-2 bg-red-500 rounded-full shadow-[0_0_8px_red] animate-pulse" />
-                            ) : null}
+                            {item.badgeText && (
+                                <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[8px] font-bold tracking-widest shadow-sm">
+                                    {item.badgeText}
+                                </span>
+                            )}
                         </button>
                     ))}
 
@@ -517,6 +623,7 @@ export default function AdminDashboardPage() {
                         </button>
                     </div>
                 </nav>
+                
                 <div className="mt-auto flex flex-col pt-6 border-t border-zinc-100">
                     <button 
                         onClick={handleLogout} 
@@ -530,15 +637,18 @@ export default function AdminDashboardPage() {
             </aside>
 
             {/* MAIN SCROLLABLE CONTENT */}
-            <main className="flex-1 h-full overflow-y-auto md:pl-64 p-6 md:p-10 lg:p-14 relative z-0 mt-16 md:mt-0">
+            <main className="flex-1 h-full overflow-y-auto md:pl-64 p-6 lg:p-10 relative z-0 mt-16 md:mt-0">
 
                 {/* OVERVIEW TAB */}
                 {activeTab === 'overview' && (
                     <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
+                        
                         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-6 border-b border-zinc-200">
                             <div className="flex items-center gap-4">
                                 <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Workspace</h1>
-                                <button onClick={fetchData} className="p-2 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></button>
+                                <button onClick={fetchData} className="p-2 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                </button>
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -559,7 +669,7 @@ export default function AdminDashboardPage() {
                         </div>
 
                         {/* GLOBAL METRICS */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
                             {[
                                 { l: "Active Entities", v: clients.length, highlight: false },
                                 { l: "Pending Approvals", v: newDiscoveryCount, highlight: newDiscoveryCount > 0 },
@@ -581,7 +691,7 @@ export default function AdminDashboardPage() {
                                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">No active sessions. Initiate 'Resume Engineering' from deployment list.</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
                                     {activeProjects.map((p: any) => {
                                         const timer = timers[p.id];
                                         return (
@@ -597,7 +707,10 @@ export default function AdminDashboardPage() {
                                                         <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-1 break-words">{p.clients?.full_name}</p>
                                                     </div>
                                                     <select onClick={(e) => e.stopPropagation()} className="bg-zinc-100 border border-zinc-200 text-zinc-800 px-3 py-2 rounded-xl text-[9px] font-black uppercase outline-none cursor-pointer shrink-0" value={p.status || 'Planning'} onChange={(e) => handleUpdateProjectStatus(p.id, e.target.value)}>
-                                                        <option value="Planning">Planning</option><option value="Development">Development</option><option value="Testing">Testing</option><option value="Live">Live</option>
+                                                        <option value="Planning">Planning</option>
+                                                        <option value="Development">Development</option>
+                                                        <option value="Testing">Testing</option>
+                                                        <option value="Live">Live</option>
                                                     </select>
                                                 </div>
 
@@ -614,13 +727,30 @@ export default function AdminDashboardPage() {
                                                 </div>
 
                                                 <div className="mt-auto space-y-4 pt-4 border-t border-zinc-100">
-                                                    <input onClick={(e) => e.stopPropagation()} type="text" placeholder="Update development log..." className="w-full bg-white border border-zinc-200 p-4 rounded-xl text-xs outline-none focus:border-zinc-400 font-bold" value={selectedProjectId === p.id ? updateMessage : ''} onChange={(e) => { setSelectedProjectId(p.id); setUpdateMessage(e.target.value); }} />
+                                                    <input 
+                                                        onClick={(e) => e.stopPropagation()} 
+                                                        type="text" 
+                                                        placeholder="Update development log..." 
+                                                        className="w-full bg-white border border-zinc-200 p-4 rounded-xl text-xs outline-none focus:border-zinc-400 font-bold" 
+                                                        value={selectedProjectId === p.id ? updateMessage : ''} 
+                                                        onChange={(e) => { setSelectedProjectId(p.id); setUpdateMessage(e.target.value); }} 
+                                                    />
                                                     <div className="flex gap-3 items-center">
                                                         <div className="flex items-center gap-3 flex-1 bg-zinc-50 border border-zinc-200 p-2 pl-4 rounded-xl">
                                                             <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest shrink-0">Load:</span>
-                                                            <input onClick={(e) => e.stopPropagation()} type="number" min="0" max="100" className="flex-1 bg-transparent text-xs font-bold outline-none" value={localProgress[p.id] ?? p.progress_percent} onFocus={(e) => e.target.select()} onChange={(e) => setLocalProgress({ ...localProgress, [p.id]: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })} />
+                                                            <input 
+                                                                onClick={(e) => e.stopPropagation()} 
+                                                                type="number" 
+                                                                min="0" max="100" 
+                                                                className="flex-1 bg-transparent text-xs font-bold outline-none" 
+                                                                value={localProgress[p.id] ?? p.progress_percent} 
+                                                                onFocus={(e) => e.target.select()} 
+                                                                onChange={(e) => setLocalProgress({ ...localProgress, [p.id]: Math.min(100, Math.max(0, parseInt(e.target.value) || 0)) })} 
+                                                            />
                                                         </div>
-                                                        <button onClick={(e) => { e.stopPropagation(); handleSyncProject(p.id); }} disabled={loading} className="bg-zinc-900 text-white px-6 py-4 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black disabled:opacity-50 shadow-sm active:scale-95">Sync</button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleSyncProject(p.id); }} disabled={loading} className="bg-zinc-900 text-white px-6 py-4 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black disabled:opacity-50 shadow-sm active:scale-95">
+                                                            Sync
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -634,14 +764,24 @@ export default function AdminDashboardPage() {
                                             Internal Memos
                                         </p>
                                         <form onSubmit={addQuickNote} className="mb-6 flex gap-2">
-                                            <input type="text" value={newQuickNote} onChange={(e) => setNewQuickNote(e.target.value)} placeholder="Draft note..." className="flex-1 bg-zinc-50 border border-zinc-200 px-4 py-3.5 rounded-xl text-xs font-bold outline-none focus:border-zinc-400" />
-                                            <button type="submit" disabled={!newQuickNote.trim()} className="bg-zinc-900 text-white px-5 rounded-xl hover:bg-black disabled:opacity-50 transition-colors shadow-sm"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg></button>
+                                            <input 
+                                                type="text" 
+                                                value={newQuickNote} 
+                                                onChange={(e) => setNewQuickNote(e.target.value)} 
+                                                placeholder="Draft note..." 
+                                                className="flex-1 bg-zinc-50 border border-zinc-200 px-4 py-3.5 rounded-xl text-xs font-bold outline-none focus:border-zinc-400" 
+                                            />
+                                            <button type="submit" disabled={!newQuickNote.trim()} className="bg-zinc-900 text-white px-5 rounded-xl hover:bg-black disabled:opacity-50 transition-colors shadow-sm">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                            </button>
                                         </form>
                                         <div className="flex-1 overflow-y-auto space-y-2.5 max-h-[180px] pr-1 custom-scrollbar">
                                             {quickNotes.map(note => (
                                                 <div key={note.id} className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 flex justify-between items-start group">
                                                     <p className="text-xs font-bold text-zinc-700 leading-relaxed pr-3">{note.note}</p>
-                                                    <button onClick={() => deleteQuickNote(note.id)} className="text-zinc-400 hover:text-red-500 transition-opacity p-1 bg-white hover:bg-red-50 rounded-lg"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                                                    <button onClick={() => deleteQuickNote(note.id)} className="text-zinc-400 hover:text-red-500 transition-opacity p-1 bg-white hover:bg-red-50 rounded-lg">
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -669,6 +809,7 @@ export default function AdminDashboardPage() {
                                                 </div>
                                                 <span className="bg-zinc-100 border border-zinc-200 text-zinc-700 px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">{p.status}</span>
                                             </div>
+                                            
                                             <button onClick={(e) => { e.stopPropagation(); toggleTimer(p.id); }} className="mt-auto w-full py-4 rounded-xl flex items-center justify-center gap-2 font-black text-[9px] uppercase tracking-widest bg-zinc-900 text-white hover:bg-black transition-colors shadow-sm active:scale-95">
                                                 Resume Engineering
                                             </button>
@@ -689,11 +830,13 @@ export default function AdminDashboardPage() {
                             </button>
                             <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Authorize Entity</h1>
                         </div>
+                        
                         <div className="bg-blue-50 border border-blue-200 p-6 rounded-[24px] mb-6">
                             <p className="text-xs font-bold text-blue-800 leading-relaxed">
                                 <strong>Note:</strong> We recommend using the "Discovery Logs" page to automatically onboard clients via email. Use this form only if you need to manually register a client and share their Deployment Key yourself.
                             </p>
                         </div>
+                        
                         <form onSubmit={handleCreateClient} className="bg-white p-8 md:p-10 rounded-[32px] border border-zinc-200 shadow-sm space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
@@ -731,6 +874,7 @@ export default function AdminDashboardPage() {
                             </button>
                             <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Push Deployment</h1>
                         </div>
+                        
                         <form onSubmit={handleDeployProject} className="bg-white p-8 md:p-10 rounded-[32px] border border-zinc-200 shadow-sm space-y-6">
                             <div>
                                 <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Select Entity *</label>
@@ -753,7 +897,6 @@ export default function AdminDashboardPage() {
                 )}
             </main>
             
-            {/* INJECT CUSTOM SCROLLBAR STYLE FOR MODAL */}
             <style dangerouslySetInnerHTML={{ __html: `
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

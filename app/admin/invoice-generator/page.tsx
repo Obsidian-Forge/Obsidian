@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
@@ -23,10 +23,17 @@ const formatDateToDDMMYYYY = (isoDate: string) => {
     return `${day}/${month}/${year}`;
 };
 
+// PARA BİRİMİ FORMATLAYICI (1000.5 -> 1,000.50)
+const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+};
+
 // KUSURSUZ TARİH KUTUSU
 const SmartDateInput = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => {
     const displayValue = formatDateToDDMMYYYY(value);
-    
     return (
         <div>
             <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-2">{label}</label>
@@ -52,6 +59,10 @@ export default function InvoiceGeneratorPage() {
     const [sending, setSending] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
     
+    // YENİ: TOAST (POPUP) BİLDİRİM STATE'İ
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+    const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+
     const [clients, setClients] = useState<any[]>([]);
     const [discoveries, setDiscoveries] = useState<any[]>([]);
     const [bankAccounts, setBankAccounts] = useState<any[]>([]);
@@ -88,12 +99,20 @@ export default function InvoiceGeneratorPage() {
     const [activePreviewIndex, setActivePreviewIndex] = useState(0);
     const [generationState, setGenerationState] = useState<'form' | 'preview'>('form');
 
+    // YENİ: TOAST GÖSTERİM FONKSİYONU
+    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+        setToast({ message, type });
+        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = setTimeout(() => setToast(null), 4000);
+    };
+
     useEffect(() => {
         const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return router.push('/admin/login');
             const { data: member } = await supabase.from('members').select('role').eq('id', user.id).single();
-            if (member?.role !== 'admin') return router.push('/client/login');
+            if (member?.role !== 'admin') return router.push('/admin/login');
+    
             setIsAdmin(true);
             
             const [clientsRes, discRes, banksRes] = await Promise.all([
@@ -120,6 +139,10 @@ export default function InvoiceGeneratorPage() {
             setLoading(false);
         };
         init();
+        
+        return () => {
+            if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+        };
     }, [router]);
 
     const filteredDiscoveries = discoveries.filter(d => {
@@ -138,7 +161,7 @@ export default function InvoiceGeneratorPage() {
 
     const handleSaveNewBank = async () => {
         if (!newBankForm.bankName || !newBankForm.iban || !newBankForm.accountName) {
-            return alert("Bank Name, Account Name and IBAN are required.");
+            return showToast("Bank Name, Account Name and IBAN are required.", 'error');
         }
         
         try {
@@ -155,16 +178,16 @@ export default function InvoiceGeneratorPage() {
             setSelectedBankId(data.id);
             setIsAddingNewBank(false);
             setNewBankForm({ bankName: '', accountName: '', iban: '', swift: '' });
-            alert("New bank account saved to database!");
+            showToast("New bank account saved to database!", 'success');
         } catch (err: any) {
-            alert("Error saving bank: " + err.message);
+            showToast("Error saving bank: " + err.message, 'error');
         }
     };
 
     const handleDeleteBank = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (!confirm("Are you sure you want to permanently delete this bank account?")) return;
-        
+
         try {
             const { error } = await supabase.from('admin_bank_accounts').delete().eq('id', id);
             if (error) throw error;
@@ -172,7 +195,10 @@ export default function InvoiceGeneratorPage() {
             const updatedBanks = bankAccounts.filter(b => b.id !== id);
             setBankAccounts(updatedBanks);
             if (selectedBankId === id) setSelectedBankId(updatedBanks.length > 0 ? updatedBanks[0].id : '');
-        } catch (err: any) { alert("Error deleting bank: " + err.message); }
+            showToast("Bank account deleted.", 'success');
+        } catch (err: any) { 
+            showToast("Error deleting bank: " + err.message, 'error'); 
+        }
     };
 
     const handleLoadDiscovery = () => {
@@ -199,7 +225,7 @@ export default function InvoiceGeneratorPage() {
             }
 
             if (maintPrice === 0) {
-                alert("This client does not have a Monthly Maintenance plan in their blueprint.");
+                showToast("This client does not have a Monthly Maintenance plan in their blueprint.", 'error');
                 return;
             }
 
@@ -210,7 +236,7 @@ export default function InvoiceGeneratorPage() {
             const futureDateString = futureDate.toISOString().split('T')[0];
             
             const futureDueDate = new Date(futureDate);
-            futureDueDate.setDate(futureDueDate.getDate() + 14); 
+            futureDueDate.setDate(futureDueDate.getDate() + 14);
             const futureDueDateString = futureDueDate.toISOString().split('T')[0];
 
             setInvoiceData(prev => ({ 
@@ -228,6 +254,7 @@ export default function InvoiceGeneratorPage() {
             clientEmail: disc.client_email || '',
             clientAddress: disc.details?.Company || 'N/A'
         }));
+
         setItems(newItems);
 
         const matchedClient = clients.find(c => c.email?.toLowerCase() === disc.client_email?.toLowerCase());
@@ -248,12 +275,13 @@ export default function InvoiceGeneratorPage() {
 
     const addItem = () => setItems([...items, { id: Math.random().toString(), description: '', quantity: 1, rate: 0 }]);
     const removeItem = (id: string) => setItems(items.filter(i => i.id !== id));
+
     const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
         setItems(items.map(i => i.id === id ? { ...i, [field]: value } : i));
     };
 
     const calculateSubTotal = () => items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.rate || 0)), 0);
-    
+
     const createInvoicePDF = async (partNumber: number, totalParts: number): Promise<Blob> => {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
@@ -275,6 +303,7 @@ export default function InvoiceGeneratorPage() {
         };
 
         const logoData = await loadImage("/logo.png");
+        
         if (logoData) {
             doc.addImage(logoData, 'PNG', 20, y, 16, 16);
             doc.setFont("helvetica", "bold");
@@ -289,7 +318,6 @@ export default function InvoiceGeneratorPage() {
         const isInstallment = totalParts > 1;
         const currentInvoiceNumber = isInstallment ? `${invoiceData.invoiceNumber}-P${partNumber}` : invoiceData.invoiceNumber;
         
-        // GÜNCELLENDİ: Tarihleri "Ay + 1" mantığıyla hatasız atar
         const baseDueDate = new Date(invoiceData.dueDate);
         baseDueDate.setMonth(baseDueDate.getMonth() + (partNumber - 1));
         const currentDueDate = baseDueDate.toISOString().split('T')[0];
@@ -310,7 +338,7 @@ export default function InvoiceGeneratorPage() {
         doc.text(`Ref Number: ${currentInvoiceNumber}`, pageWidth - 20, y + 15, { align: "right" });
         doc.text(`Issue Date: ${displayIssueDate}`, pageWidth - 20, y + 20, { align: "right" });
         doc.text(`Due Date: ${displayDueDate}`, pageWidth - 20, y + 25, { align: "right" });
-
+        
         if (isInstallment) {
             doc.setFont("helvetica", "bold");
             doc.setTextColor(16, 185, 129);
@@ -328,19 +356,18 @@ export default function InvoiceGeneratorPage() {
         y += 6;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(9);
-        
         doc.text(invoiceData.clientName || 'Unknown Client', 20, y);
         doc.text(invoiceData.clientEmail || 'No email provided', 20, y + 5);
         const address = invoiceData.clientAddress || "Address not provided";
         const splitClientAddress = doc.splitTextToSize(address, (pageWidth / 2) - 30);
         doc.text(splitClientAddress, 20, y + 10);
-
+        
         doc.text("Novatrum Systems", pageWidth / 2 + 10, y);
         doc.text("info@novatrum.eu", pageWidth / 2 + 10, y + 5);
         doc.text("Flanders, Belgium", pageWidth / 2 + 10, y + 10);
 
         y += Math.max(splitClientAddress.length * 5, 20) + 15;
-
+        
         doc.setFillColor(24, 24, 27);
         doc.rect(20, y, pageWidth - 40, 10, "F");
         doc.setTextColor(255, 255, 255);
@@ -353,7 +380,7 @@ export default function InvoiceGeneratorPage() {
         y += 10;
         doc.setTextColor(24, 24, 27);
         doc.setFont("helvetica", "normal");
-
+        
         items.forEach((item) => {
             const amount = (item.quantity || 0) * (item.rate || 0);
             const desc = item.description || 'No description';
@@ -364,8 +391,8 @@ export default function InvoiceGeneratorPage() {
 
             doc.text(splitDesc, 25, y + 6);
             doc.text((item.quantity || 0).toString(), pageWidth - 80, y + 6, { align: "center" });
-            doc.text(`€${(item.rate || 0).toLocaleString()}`, pageWidth - 50, y + 6, { align: "center" });
-            doc.text(`€${amount.toLocaleString()}`, pageWidth - 25, y + 6, { align: "right" });
+            doc.text(`€${formatCurrency(item.rate || 0)}`, pageWidth - 50, y + 6, { align: "center" });
+            doc.text(`€${formatCurrency(amount)}`, pageWidth - 25, y + 6, { align: "right" });
 
             y += rowHeight;
             doc.setDrawColor(228, 228, 231);
@@ -377,7 +404,7 @@ export default function InvoiceGeneratorPage() {
         doc.setFontSize(10);
         doc.text("Project Total:", pageWidth - 60, y);
         doc.setFont("helvetica", "bold");
-        doc.text(`€${subTotal.toLocaleString()}`, pageWidth - 25, y, { align: "right" });
+        doc.text(`€${formatCurrency(subTotal)}`, pageWidth - 25, y, { align: "right" });
 
         y += 10;
         doc.setFillColor(244, 244, 245);
@@ -385,9 +412,8 @@ export default function InvoiceGeneratorPage() {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(16, 185, 129);
-        
         doc.text(isInstallment ? `AMOUNT DUE (PART ${partNumber}):` : "AMOUNT DUE NOW:", pageWidth - 105, y + 10);
-        doc.text(`€${amountDue.toLocaleString()}`, pageWidth - 25, y + 10, { align: "right" });
+        doc.text(`€${formatCurrency(amountDue)}`, pageWidth - 25, y + 10, { align: "right" });
 
         y += 30;
 
@@ -423,8 +449,9 @@ export default function InvoiceGeneratorPage() {
     };
 
     const previewPDF = async () => {
-        if (items.length === 0 || !invoiceData.clientName) return alert("Missing client or items.");
-        if (!selectedBankId) return alert("Please select a bank account.");
+        if (items.length === 0 || !invoiceData.clientName) return showToast("Missing client or items.", 'error');
+        if (!selectedBankId) return showToast("Please select a bank account.", 'error');
+        
         setGenerating(true);
         try {
             const urls: string[] = [];
@@ -436,16 +463,16 @@ export default function InvoiceGeneratorPage() {
             setActivePreviewIndex(0);
             setGenerationState('preview');
         } catch (error: any) {
-            alert("Error generating preview: " + error.message);
+            showToast("Error generating preview: " + error.message, 'error');
         } finally {
             setGenerating(false);
         }
     };
 
     const sendToClient = async () => {
-        if (!selectedClientId) return alert("Please select an Active Entity to link this invoice.");
-
+        if (!selectedClientId) return showToast("Please select an Active Entity to link this invoice.", 'error');
         setSending(true);
+        
         try {
             for (let i = 1; i <= invoiceData.installments; i++) {
                 const blob = await createInvoicePDF(i, invoiceData.installments);
@@ -455,24 +482,23 @@ export default function InvoiceGeneratorPage() {
                 const file = new File([blob], `${invName}.pdf`, { type: 'application/pdf' });
                 const filePath = `invoices/${selectedClientId}/${invName}.pdf`;
                 
-                // Supabase Storage'a Yükle [cite: 429]
+                // Supabase Storage'a Yükle
                 const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
                 if (uploadError) throw uploadError;
 
                 const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filePath);
                 const dbDesc = isInstallment ? `${invName} (Part ${i} of ${invoiceData.installments})` : invName;
 
-                // Müşteri Ledger'ına kaydet [cite: 431, 432]
+                // Müşteri Ledger'ına kaydet
                 const { error: dbError } = await supabase.from('client_invoices').insert({
                     client_id: selectedClientId,
                     file_name: dbDesc,
                     file_url: publicUrl,
                     status: 'unpaid'
                 });
-
                 if (dbError) throw dbError;
 
-                // --- YENİ: RESEND API İLE E-POSTA GÖNDERİMİ ---
+                // RESEND API İLE E-POSTA GÖNDERİMİ
                 await fetch('/api/send-invoice', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -485,7 +511,7 @@ export default function InvoiceGeneratorPage() {
                 });
             }
 
-            // Admin profiline not düş [cite: 433, 438]
+            // Admin profiline not düş
             const { data: clientData } = await supabase.from('clients').select('internal_notes').eq('id', selectedClientId).single();
             let existingNotes = clientData?.internal_notes || '';
             
@@ -493,7 +519,7 @@ export default function InvoiceGeneratorPage() {
             let newNote = '';
             
             if (invoiceData.installments > 1) {
-                const perInstallment = (calculateSubTotal() / invoiceData.installments).toLocaleString();
+                const perInstallment = formatCurrency(calculateSubTotal() / invoiceData.installments);
                 newNote = `\n[${today}] Financial Update: Project split into ${invoiceData.installments} installments of €${perInstallment}.`;
             } else if (importType === 'maintenance') {
                 newNote = `\n[${today}] Financial Update: Monthly maintenance retainer invoice generated.`;
@@ -503,11 +529,11 @@ export default function InvoiceGeneratorPage() {
                 await supabase.from('clients').update({ internal_notes: existingNotes + newNote }).eq('id', selectedClientId);
             }
 
-            alert(`Successfully generated, uploaded, and emailed ${invoiceData.installments} invoice(s) to the client.`);
-            router.push('/admin/dashboard');
+            showToast(`Successfully processed ${invoiceData.installments} invoice(s). Returning to Workspace...`, 'success');
+            setTimeout(() => router.push('/admin/dashboard'), 2000);
 
         } catch (error: any) {
-            alert("Failed to process: " + error.message);
+            showToast("Failed to process: " + error.message, 'error');
         } finally {
             setSending(false);
         }
@@ -516,7 +542,7 @@ export default function InvoiceGeneratorPage() {
     if (!isAdmin) return <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">Authenticating...</div>;
 
     return (
-        <div className="min-h-screen bg-zinc-50 text-black font-sans selection:bg-black selection:text-white p-6 md:p-10">
+        <div className="min-h-screen bg-zinc-50 text-black font-sans selection:bg-black selection:text-white p-6 md:p-10 relative">
             <div className="max-w-6xl mx-auto">
                 
                 <button onClick={() => router.push('/admin/dashboard')} className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors w-fit">
@@ -545,16 +571,15 @@ export default function InvoiceGeneratorPage() {
                                         <button onClick={() => setImportType('maintenance')} className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md transition-colors ${importType === 'maintenance' ? 'bg-emerald-500 text-white' : 'bg-zinc-100 text-zinc-400'}`}>Maintenance</button>
                                     </div>
                                 </div>
+                            
                                 <div className="flex gap-3">
                                     <div className="relative flex-1">
                                         <div onClick={() => setIsDiscDropdownOpen(!isDiscDropdownOpen)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-xs font-bold outline-none flex justify-between items-center cursor-pointer transition-colors hover:border-black">
                                             <span className="truncate text-zinc-700">
-                                                {selectedDiscoveryId ? 
-                                                    (() => {
+                                                {selectedDiscoveryId ? (() => {
                                                         const d = discoveries.find(x => x.id === selectedDiscoveryId);
-                                                        return d ? `${d.client_name} - €${d.estimated_price} (${d.discovery_number})` : 'Select Blueprint...';
-                                                    })() 
-                                                    : 'Select Blueprint...'}
+                                                        return d ? `${d.client_name} - €${formatCurrency(d.estimated_price)} (${d.discovery_number})` : 'Select Blueprint...';
+                                                    })() : 'Select Blueprint...'}
                                             </span>
                                             <svg className="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </div>
@@ -572,7 +597,7 @@ export default function InvoiceGeneratorPage() {
                                                         ) : (
                                                             filteredDiscoveries.map(d => (
                                                                 <div key={d.id} onClick={() => { setSelectedDiscoveryId(d.id); setIsDiscDropdownOpen(false); setDiscSearch(''); }} className="px-4 py-3 hover:bg-zinc-50 cursor-pointer border-b border-zinc-50 last:border-0 transition-colors">
-                                                                    <p className="text-xs font-bold text-zinc-900">{d.client_name} - €{d.estimated_price}</p>
+                                                                    <p className="text-xs font-bold text-zinc-900">{d.client_name} - €{formatCurrency(d.estimated_price)}</p>
                                                                     <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-0.5">{d.discovery_number}</p>
                                                                 </div>
                                                             ))
@@ -593,12 +618,10 @@ export default function InvoiceGeneratorPage() {
                                     <div className="relative flex-1">
                                         <div onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 text-xs font-bold outline-none flex justify-between items-center cursor-pointer transition-colors hover:border-black">
                                             <span className="truncate text-zinc-700">
-                                                {selectedClientId ? 
-                                                    (() => {
+                                                {selectedClientId ? (() => {
                                                         const c = clients.find(x => x.id === selectedClientId);
                                                         return c ? `${c.full_name} (${c.discovery_number || c.access_code})` : 'Choose Manual...';
-                                                    })() 
-                                                    : 'Choose Manual...'}
+                                                    })() : 'Choose Manual...'}
                                             </span>
                                             <svg className="w-4 h-4 text-zinc-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </div>
@@ -640,16 +663,8 @@ export default function InvoiceGeneratorPage() {
                                     <input type="text" value={invoiceData.invoiceNumber} onChange={(e) => setInvoiceData({...invoiceData, invoiceNumber: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl text-xs font-mono font-bold outline-none focus:border-black" />
                                 </div>
                                 
-                                <SmartDateInput 
-                                    label="Issue Date" 
-                                    value={invoiceData.date} 
-                                    onChange={(val) => setInvoiceData({...invoiceData, date: val})} 
-                                />
-                                <SmartDateInput 
-                                    label="First Due Date" 
-                                    value={invoiceData.dueDate} 
-                                    onChange={(val) => setInvoiceData({...invoiceData, dueDate: val})} 
-                                />
+                                <SmartDateInput label="Issue Date" value={invoiceData.date} onChange={(val) => setInvoiceData({...invoiceData, date: val})} />
+                                <SmartDateInput label="First Due Date" value={invoiceData.dueDate} onChange={(val) => setInvoiceData({...invoiceData, dueDate: val})} />
                                 
                                 <div>
                                     <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500 block mb-2">Split Installments</label>
@@ -661,7 +676,7 @@ export default function InvoiceGeneratorPage() {
                                         <option value={6}>6 Installments</option>
                                     </select>
                                 </div>
-                            </div>
+                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-100">
                                 <div><label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Client Name</label><input type="text" value={invoiceData.clientName} onChange={(e) => setInvoiceData({...invoiceData, clientName: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl text-xs font-bold outline-none focus:border-black" /></div>
@@ -685,7 +700,7 @@ export default function InvoiceGeneratorPage() {
                                         <div className="flex gap-3 w-full md:w-auto">
                                             <input type="number" placeholder="Qty" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)} className="w-24 bg-white border border-zinc-200 p-3 rounded-xl text-xs font-bold outline-none focus:border-black text-center" />
                                             <input type="number" placeholder="Rate (€)" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', parseFloat(e.target.value) || 0)} className="w-32 bg-white border border-zinc-200 p-3 rounded-xl text-xs font-bold outline-none focus:border-black text-center" />
-                                            <div className="w-32 bg-zinc-100 p-3 rounded-xl text-xs font-black font-mono text-center flex items-center justify-center border border-zinc-200">€{((item.quantity || 0) * (item.rate || 0)).toLocaleString()}</div>
+                                            <div className="w-32 bg-zinc-100 p-3 rounded-xl text-xs font-black font-mono text-center flex items-center justify-center border border-zinc-200">€{formatCurrency((item.quantity || 0) * (item.rate || 0))}</div>
                                             <button onClick={() => removeItem(item.id)} className="p-3 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
                                         </div>
                                     </div>
@@ -697,11 +712,11 @@ export default function InvoiceGeneratorPage() {
                                 <div className="mt-8 pt-6 border-t border-zinc-200 flex flex-col items-end gap-2">
                                     <div className="flex justify-between w-full max-w-xs items-center px-4 py-2">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Project Total</span>
-                                        <span className="text-lg font-black font-mono text-zinc-900">€{calculateSubTotal().toLocaleString()}</span>
+                                        <span className="text-lg font-black font-mono text-zinc-900">€{formatCurrency(calculateSubTotal())}</span>
                                     </div>
                                     <div className="flex justify-between w-full max-w-xs items-center px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Per Installment ({invoiceData.installments}x)</span>
-                                        <span className="text-2xl font-black font-mono text-emerald-600">€{(calculateSubTotal() / invoiceData.installments).toLocaleString()}</span>
+                                        <span className="text-2xl font-black font-mono text-emerald-600">€{formatCurrency(calculateSubTotal() / invoiceData.installments)}</span>
                                     </div>
                                 </div>
                             )}
@@ -799,6 +814,19 @@ export default function InvoiceGeneratorPage() {
                 )}
             </div>
             
+            {/* YENİ: TOAST (POPUP) BİLDİRİM BİLEŞENİ */}
+            {toast && (
+                <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl z-[9999] animate-in slide-in-from-bottom-5 duration-300 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 border ${
+                    toast.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' :
+                    toast.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                    'bg-zinc-900 text-white border-zinc-800'
+                }`}>
+                    {toast.type === 'success' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
+                    {toast.type === 'error' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                    {toast.message}
+                </div>
+            )}
+
             <style dangerouslySetInnerHTML={{ __html: `
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
