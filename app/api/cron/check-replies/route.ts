@@ -10,70 +10,63 @@ export async function GET(request: Request) {
   try {
     const birSaatOnce = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    // HATA ÇÖZÜMÜ: İlişki isimlerini (Foreign Key) ünlem işareti ile belirttik
-    const { data: replies, error } = await supabaseAdmin
+    // 1. ADIM: Sadece okunmamış yanıtları ve bağlı oldukları bilet ID'lerini çekiyoruz
+    const { data: replies, error: repliesError } = await supabaseAdmin
       .from('support_replies')
-      .select(`
-        *,
-        support_tickets!support_replies_ticket_id_fkey (
-          subject,
-          client_id,
-          clients!support_tickets_client_id_fkey (
-            email,
-            name
-          )
-        )
-      `)
+      .select('*, support_tickets(subject, client_id)')
       .lt('created_at', birSaatOnce)
       .eq('sender_type', 'admin')
       .eq('is_read', false)
       .eq('email_sent', false);
 
-    if (error) {
-      console.error("Supabase Query Error:", error);
-      throw error;
-    }
-
-    if (!replies || replies.length === 0) {
-      return NextResponse.json({ success: true, message: "No unread replies." });
-    }
+    if (repliesError) throw repliesError;
+    if (!replies || replies.length === 0) return NextResponse.json({ success: true, message: "No unread replies." });
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://novatrum.eu';
+    let processedCount = 0;
 
     for (const reply of replies) {
-      // support_tickets ve clients verilerinin gelip gelmediğini kontrol ediyoruz
       const ticket = reply.support_tickets;
-      const client = ticket?.clients;
+      
+      if (ticket && ticket.client_id) {
+        // 2. ADIM: Her bilet için müşteri bilgisini ayrı bir sorgu ile güvenle çekiyoruz
+        const { data: client, error: clientError } = await supabaseAdmin
+          .from('clients')
+          .select('email, name')
+          .eq('id', ticket.client_id)
+          .single();
 
-      if (client?.email) {
-        try {
-          await fetch(`${siteUrl}/api/email`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'support_reminder',
-              email: client.email,
-              clientName: client.name,
-              ticketSubject: ticket.subject,
-              messagePreview: reply.message.substring(0, 100) + '...'
-            }),
-          });
+        if (!clientError && client?.email) {
+          try {
+            // 3. ADIM: Email API'sini tetikle
+            await fetch(`${siteUrl}/api/email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'support_reminder',
+                email: client.email,
+                clientName: client.name,
+                ticketSubject: ticket.subject,
+                messagePreview: reply.message.substring(0, 100) + '...'
+              }),
+            });
 
-          // Mail gönderildikten sonra veritabanını güncelle
-          await supabaseAdmin
-            .from('support_replies')
-            .update({ email_sent: true })
-            .eq('id', reply.id);
+            // Başarılıysa veritabanını işaretle
+            await supabaseAdmin
+              .from('support_replies')
+              .update({ email_sent: true })
+              .eq('id', reply.id);
             
-        } catch (fetchError) {
-          console.error(`Email send failed for reply ${reply.id}:`, fetchError);
+            processedCount++;
+          } catch (fetchError) {
+            console.error("Fetch error:", fetchError);
+          }
         }
       }
     }
 
-    return NextResponse.json({ success: true, processed: replies.length });
+    return NextResponse.json({ success: true, processed: processedCount });
   } catch (error: any) {
-    console.error("Cron Job Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
