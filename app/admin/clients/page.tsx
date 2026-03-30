@@ -22,7 +22,7 @@ export default function AdminClientsPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadingInvoice, setUploadingInvoice] = useState(false);
 
-    // YENİ: EDİT PROFİL STATES
+    // EDİT PROFİL STATES
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [editForm, setEditForm] = useState({
@@ -88,7 +88,7 @@ export default function AdminClientsPage() {
         if (data) setClientInvoices(data);
     };
 
-    // --- YENİ: PROFİL GÜNCELLEME ---
+    // PROFİL GÜNCELLEME 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSavingProfile(true);
@@ -134,16 +134,17 @@ export default function AdminClientsPage() {
         setTimeout(() => setCopiedKeyId(null), 2000); 
     };
 
+    // --- MÜŞTERİYE MAİL İLE KOD GÖNDERME FONKSİYONU ---
     const handleSendCode = async (email: string, code: string, clientName: string) => {
-        if (!confirm(`Send key to ${email}?`)) return;
+        if (!confirm(`Send access key to ${email}?`)) return;
         try {
             const response = await fetch('/api/email', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'access_code', email: email, code: code, clientName: clientName, loginLink: `${window.location.origin}/client/login` })
             });
             if (!response.ok) throw new Error("Backend failed");
-            alert("Sent successfully.");
-        } catch (err) { alert("Failed to send."); }
+            alert("Access key sent successfully to the client.");
+        } catch (err) { alert("Failed to send the email."); }
     };
 
     const handleSaveNote = async () => {
@@ -301,7 +302,21 @@ export default function AdminClientsPage() {
                                         <p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Project Started</p>
                                         <p className="text-xs font-bold text-zinc-700 mt-1">{formatDate(selectedClient.created_at)}</p>
                                     </div>
-                                    <button onClick={(e) => { e.stopPropagation(); archiveClient(selectedClient.id, selectedClient.access_code); }} className="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-red-100 transition-colors">Terminate</button>
+                                    <div className="flex items-center gap-3">
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleSendCode(selectedClient.email, selectedClient.access_code, selectedClient.full_name); }} 
+                                            className="text-[9px] font-black text-zinc-700 bg-zinc-100 border border-zinc-200 uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors flex items-center gap-2"
+                                        >
+                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                            Email Key
+                                        </button>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); archiveClient(selectedClient.id, selectedClient.access_code); }} 
+                                            className="text-[9px] font-black text-red-500 bg-red-50 border border-red-100 uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-red-100 transition-colors"
+                                        >
+                                            Terminate
+                                        </button>
+                                    </div>
                                 </div>
                             </section>
 
@@ -419,6 +434,15 @@ export default function AdminClientsPage() {
                                     <div className="bg-zinc-50 rounded-xl p-4 flex items-center justify-between border border-zinc-200 mt-auto">
                                         <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Key</p>
                                         <div className="flex items-center gap-2">
+                                            {/* YENİ: KART ÜZERİNDEKİ MAİL GÖNDERME BUTONU */}
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); handleSendCode(c.email, c.access_code, c.full_name); }} 
+                                                className="p-1.5 text-zinc-400 hover:text-black hover:bg-zinc-200 rounded-md transition-all" 
+                                                title="Send Access Key via Email"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                            </button>
+
                                             <span onClick={(e) => handleCopyKey(e, c.access_code, c.id)} className="bg-white border border-zinc-200 px-3 py-1.5 rounded-lg text-[9px] font-mono font-bold cursor-pointer hover:bg-zinc-100 transition-colors text-zinc-800 shadow-sm">
                                                 {copiedKeyId === c.id ? "COPIED" : c.access_code}
                                             </span>

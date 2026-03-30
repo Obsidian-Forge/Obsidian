@@ -8,11 +8,11 @@ export default function AdminArchivePage() {
     const router = useRouter();
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
-    
+
     // CLIENT STATES
     const [archivedClients, setArchivedClients] = useState<any[]>([]);
     const [archiveSearch, setArchiveSearch] = useState('');
-    
+
     // SLIDE-OVER (ENTITY PROFILE) STATES
     const [selectedClient, setSelectedClient] = useState<any>(null);
     const [clientFiles, setClientFiles] = useState<any[]>([]);
@@ -51,11 +51,9 @@ export default function AdminArchivePage() {
         }
     }, [selectedClient]);
 
-    // --- DATA FETCHING (DÜZELTİLDİ) ---
+    // --- DATA FETCHING ---
     const fetchData = async () => {
         setLoading(true);
-        
-        // Supabase 'not.is.null' hatasını engellemek için tüm müşterileri çekip JS ile filtreliyoruz
         const { data, error } = await supabase
             .from('clients')
             .select('*')
@@ -66,12 +64,8 @@ export default function AdminArchivePage() {
         }
 
         if (data) {
-            // Sadece archived_at sütunu dolu olanları (arşivlenmişleri) filtrele
             const archived = data.filter(c => c.archived_at !== null && c.archived_at !== '');
-            
-            // Arşivlenme tarihine göre en yeniden eskiye sırala
             archived.sort((a, b) => new Date(b.archived_at).getTime() - new Date(a.archived_at).getTime());
-            
             setArchivedClients(archived);
         }
         setLoading(false);
@@ -126,10 +120,14 @@ export default function AdminArchivePage() {
         return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     };
 
-    const filteredArchivedClients = archivedClients.filter(c => 
-        c.full_name.toLowerCase().includes(archiveSearch.toLowerCase()) || 
-        c.email.toLowerCase().includes(archiveSearch.toLowerCase())
-    );
+    // YENİ: GÜVENLİ ARAMA FİLTRESİ (NULL HATASI ÇÖZÜLDÜ)
+    const filteredArchivedClients = archivedClients.filter(c => {
+        const searchTerm = archiveSearch.toLowerCase();
+        const safeName = (c.full_name || '').toLowerCase();
+        const safeEmail = (c.email || '').toLowerCase();
+        
+        return safeName.includes(searchTerm) || safeEmail.includes(searchTerm);
+    });
 
     if (!isAdmin) return <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">Authenticating...</div>;
 
@@ -154,8 +152,8 @@ export default function AdminArchivePage() {
                             <section className="bg-white p-6 rounded-2xl border border-zinc-200 shadow-sm">
                                 <p className="text-[10px] font-black uppercase text-zinc-400 tracking-[0.2em] mb-6">Identity Details</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Full Name</p><p className="text-sm font-black uppercase text-zinc-800 mt-1">{selectedClient.full_name}</p></div>
-                                    <div><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Email Address</p><p className="text-xs font-bold text-zinc-600 break-all mt-1">{selectedClient.email}</p></div>
+                                    <div><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Full Name</p><p className="text-sm font-black uppercase text-zinc-800 mt-1">{selectedClient.full_name || 'N/A'}</p></div>
+                                    <div><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Email Address</p><p className="text-xs font-bold text-zinc-600 break-all mt-1">{selectedClient.email || 'N/A'}</p></div>
                                     <div><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Company</p><p className="text-xs font-bold text-zinc-600 mt-1">{selectedClient.company_name || 'N/A'}</p></div>
                                     <div><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Phone</p><p className="text-xs font-bold text-zinc-600 mt-1">{selectedClient.phone_number || 'N/A'}</p></div>
                                     <div className="sm:col-span-2"><p className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest">Address</p><p className="text-xs font-bold text-zinc-600 mt-1">{selectedClient.address || 'N/A'}</p></div>
@@ -256,8 +254,8 @@ export default function AdminArchivePage() {
                                     {filteredArchivedClients.map((c) => (
                                         <tr key={c.id} onClick={() => { setSelectedClient(c); fetchClientFiles(c.id); }} className="hover:bg-zinc-50 cursor-pointer group transition-colors">
                                             <td className="px-8 py-6">
-                                                <p className="font-black text-sm uppercase text-zinc-400 line-through decoration-zinc-300">{c.full_name}</p>
-                                                <p className="text-[10px] text-zinc-400 mt-1 font-bold">{c.email}</p>
+                                                <p className="font-black text-sm uppercase text-zinc-400 line-through decoration-zinc-300">{c.full_name || 'Unknown'}</p>
+                                                <p className="text-[10px] text-zinc-400 mt-1 font-bold">{c.email || 'No email'}</p>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <p className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest">Started: {formatDate(c.created_at)}</p>

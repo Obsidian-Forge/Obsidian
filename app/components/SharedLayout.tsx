@@ -175,10 +175,12 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         {children}
       </main>
 
-      {/* FOOTER - DOKUNULMADI */}
+      {/* FOOTER - GÜNCELLENDİ */}
       <footer className="w-full bg-white py-16 px-6 md:px-16 mt-12 border-t border-zinc-100/50">
-        <div className="w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-          <div className="flex flex-col gap-4">
+        <div className="w-full flex flex-col md:flex-row items-start justify-between gap-12">
+          
+          {/* Şirket Bilgileri */}
+          <div className="flex flex-col gap-4 max-w-sm">
              <div className="flex items-center gap-3">
               <div className="w-7 h-7 flex items-center justify-center">
                 <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
@@ -200,26 +202,59 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                  {t.nav.privacy}
                </Link>
              </div>
-
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-x-12 gap-y-4 items-center">
-             <div className="relative inline-block text-left mb-4 sm:mb-0">
+          {/* Link Sütunları */}
+          <div className="flex flex-col sm:flex-row gap-12 md:gap-24 w-full md:w-auto">
+            
+            {/* Navigasyon (Company) */}
+            <div className="flex flex-col gap-5">
+              <span className="text-[10px] font-black text-black uppercase tracking-[0.2em]">Company</span>
+              <div className="flex flex-col gap-3">
+                {navLinks.map((link) => (
+                  <Link key={link.name} href={link.href} className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Dökümantasyonlar (Resources) */}
+            <div className="flex flex-col gap-5">
+              <span className="text-[10px] font-black text-black uppercase tracking-[0.2em]">Resources</span>
+              <div className="flex flex-col gap-3">
+                <Link href="/docs" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                  Documentation Center
+                </Link>
+                <Link href="/client/login" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                  Client Portal
+                </Link>
+              </div>
+            </div>
+
+            {/* Ayarlar ve Sosyal (Connect) */}
+            <div className="flex flex-col gap-5">
+              <span className="text-[10px] font-black text-black uppercase tracking-[0.2em]">Connect</span>
+              <div className="flex flex-col gap-3">
+                <a href="https://www.linkedin.com/company/novatrum/about/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                  LinkedIn
+                </a>
+              </div>
+              
+              <div className="relative inline-block text-left mt-2">
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value as any)}
-                  className="appearance-none bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2 text-[9px] font-bold uppercase tracking-widest outline-none cursor-pointer hover:border-black transition-colors"
+                  className="appearance-none bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2 text-[9px] font-bold uppercase tracking-widest outline-none cursor-pointer hover:border-black transition-colors w-full"
                 >
                   <option value="en">English</option>
                   <option value="nl">Nederlands</option>
                   <option value="fr">Français</option>
                   <option value="tr">Türkçe</option>
                 </select>
-             </div>
+              </div>
+            </div>
 
-             <div className="flex gap-8">
-                <a href="https://www.linkedin.com/company/novatrum/about/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">LinkedIn</a>
-             </div>
           </div>
         </div>
       </footer>

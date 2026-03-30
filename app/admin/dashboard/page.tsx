@@ -44,21 +44,18 @@ export default function AdminDashboardPage() {
     const [projectFilesData, setProjectFilesData] = useState<any[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
-    // TOAST GÖSTERİM FONKSİYONU
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToast({ message, type });
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
         toastTimerRef.current = setTimeout(() => setToast(null), 4000);
     };
 
-    // GÜVENLİ ÇIKIŞ FONKSİYONU
     const handleLogout = async () => {
         setLoading(true);
         await supabase.auth.signOut();
         router.push('/admin/login');
     };
 
-    // AUTO-LOGOFF SİSTEMİ
     useEffect(() => {
         const INACTIVITY_LIMIT = 15 * 60 * 1000; 
         let timeoutId: NodeJS.Timeout;
@@ -79,7 +76,6 @@ export default function AdminDashboardPage() {
         };
     }, [router]);
 
-    // AUTH & DATA FETCH & KUSURSUZ REALTIME
     useEffect(() => {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -112,33 +108,24 @@ export default function AdminDashboardPage() {
         
         checkAdmin();
 
-        // GÜNCELLENMİŞ REALTIME YAKALAYICI (ANINDA TEPKİ VERİR)
         const channel = supabase.channel('admin-dashboard-realtime')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => fetchData())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchData())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, () => fetchData())
-            
-            // YENİ BİLET GELDİĞİNDE ANINDA KIRMIZI YAP
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_tickets' }, () => { 
-                setHasAnyUnread(true);
+                checkUnreadTickets();
                 fetchData(); 
             })
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'support_tickets' }, () => { 
                 checkUnreadTickets();
                 fetchData(); 
             })
-            
-            // YENİ MESAJ GELDİĞİNDE (MÜŞTERİYSE) ANINDA KIRMIZI YAP
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_replies' }, (payload) => {
-                if (payload.new && payload.new.sender_type === 'client') {
-                    setHasAnyUnread(true); // Saniye bile beklemeden menüyü kırmızı yapar
-                }
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'support_replies' }, () => {
+                checkUnreadTickets();
             })
-            // MESAJ OKUNDUYSA (UPDATE OLDUYSA) TEKRAR KONTROL ET
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'support_replies' }, () => {
                 checkUnreadTickets();
             })
-            
             .on('postgres_changes', { event: '*', schema: 'public', table: 'admin_quick_notes' }, () => fetchQuickNotes())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'project_discovery' }, () => fetchDiscoveryCount())
             .subscribe();
@@ -146,7 +133,6 @@ export default function AdminDashboardPage() {
         return () => { supabase.removeChannel(channel); };
     }, [router]);
 
-    // SESSION TIMER LOGIC
     useEffect(() => {
         const interval = setInterval(() => {
             setTimers(prev => {
@@ -167,7 +153,6 @@ export default function AdminDashboardPage() {
         return () => clearInterval(interval);
     }, []);
 
-    // --- DATA FETCHING ---
     const fetchData = async () => {
         const [clientsRes, projectsRes, statusRes, invRes, ticketsRes] = await Promise.all([
             supabase.from('clients').select('*').is('archived_at', null).order('created_at', { ascending: false }),
@@ -178,7 +163,6 @@ export default function AdminDashboardPage() {
         ]);
 
         if (clientsRes.data) setClients(clientsRes.data);
-        
         if (projectsRes.data) {
             const activeProjectsList = projectsRes.data.filter(p => p.clients && !p.clients.archived_at);
             setProjects(activeProjectsList);
@@ -193,13 +177,12 @@ export default function AdminDashboardPage() {
                 const displayTime = dbActive ? (p.total_time_spent || 0) + (Math.floor(Date.now() / 1000) - sessionStart!) : p.total_time_spent || 0;
                 newTimers[p.id] = { active: dbActive, sessionStart, totalElapsed: p.total_time_spent || 0, displayTime };
             });
-            
+
             setLocalProgress(progressMap);
             setTimers(newTimers);
         }
         
         if (statusRes.data) setSystemStatuses(statusRes.data);
-        
         if (invRes.data && clientsRes.data) {
             const activeClientIds = clientsRes.data.map(c => c.id);
             const activeInvoices = invRes.data.filter(inv => activeClientIds.includes(inv.client_id));
@@ -221,6 +204,7 @@ export default function AdminDashboardPage() {
         if (count !== null) setNewDiscoveryCount(count);
     };
 
+    // YENİ VE OKUNMAMIŞ MESAJ KONTROLÜ (DÜZELTİLDİ)
     const checkUnreadTickets = async () => {
         const { count: ticketsCount } = await supabase
             .from('support_tickets')
@@ -231,12 +215,11 @@ export default function AdminDashboardPage() {
             .from('support_replies')
             .select('*', { count: 'exact', head: true })
             .eq('sender_type', 'client')
-            .neq('is_read', true);
+            .eq('is_read', false);
 
         setHasAnyUnread((ticketsCount || 0) > 0 || (repliesCount || 0) > 0);
     };
 
-    // MODAL AÇMA VE DETAYLARI ÇEKME
     const handleOpenProjectDetails = async (project: any) => {
         setSelectedProjectDetails(project);
         setLoadingDetails(true);
@@ -252,7 +235,6 @@ export default function AdminDashboardPage() {
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .single();
-                
                 if (discData) setProjectDiscoveryData(discData);
             }
 
@@ -261,7 +243,6 @@ export default function AdminDashboardPage() {
                 .select('*')
                 .eq('client_id', project.client_id)
                 .order('created_at', { ascending: false });
-            
             if (filesData) setProjectFilesData(filesData);
 
         } catch (error) {
@@ -271,7 +252,25 @@ export default function AdminDashboardPage() {
         }
     };
 
-    // --- QUICK NOTES ---
+    const handleDeleteProject = async (projectId: string) => {
+        const confirmDelete = window.confirm("Are you sure you want to permanently delete this project? This will remove it from the dashboard, the client portal, and the database. This action cannot be undone.");
+        if (!confirmDelete) return;
+
+        setLoadingDetails(true);
+        try {
+            const { error } = await supabase.from('projects').delete().eq('id', projectId);
+            if (error) throw error;
+
+            showToast("Project successfully deleted from the system.", 'success');
+            setSelectedProjectDetails(null);
+            fetchData();
+        } catch (err: any) {
+            showToast("Failed to delete project: " + err.message, 'error');
+        } finally {
+            setLoadingDetails(false);
+        }
+    };
+
     const addQuickNote = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newQuickNote.trim()) return;
@@ -280,7 +279,7 @@ export default function AdminDashboardPage() {
             setNewQuickNote('');
             fetchQuickNotes();
         } catch (err) { 
-            console.error(err); 
+            console.error(err);
         }
     };
 
@@ -289,14 +288,13 @@ export default function AdminDashboardPage() {
         fetchQuickNotes();
     };
 
-    // --- TIMER & PROGRESS SYNC ---
     const toggleTimer = async (projectId: string) => {
         const project = projects.find(p => p.id === projectId);
         if (!project) return;
 
         const timerState = timers[projectId];
         const isCurrentlyActive = timerState?.active;
-        
+
         try {
             if (isCurrentlyActive) {
                 const sessionDuration = (Math.floor(Date.now() / 1000)) - timerState.sessionStart!;
@@ -311,7 +309,7 @@ export default function AdminDashboardPage() {
             }
             fetchData();
         } catch (err: any) { 
-            showToast("Timer error: " + err.message, 'error'); 
+            showToast("Timer error: " + err.message, 'error');
         }
     };
     
@@ -320,7 +318,7 @@ export default function AdminDashboardPage() {
             await supabase.from('projects').update({ status: newStatus }).eq('id', projectId);
             fetchData();
         } catch (error) { 
-            showToast("Failed to update status", 'error'); 
+            showToast("Failed to update status", 'error');
         }
     };
     
@@ -337,13 +335,12 @@ export default function AdminDashboardPage() {
             }
             showToast("Deployment synced with main ledger.", 'success');
         } catch (err: any) { 
-            showToast(err.message, 'error'); 
+            showToast(err.message, 'error');
         } finally { 
-            setLoading(false); 
+            setLoading(false);
         }
     };
 
-    // --- ENTITY (CLIENT) MANUEL OLUŞTURMA ---
     const handleCreateClient = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -361,6 +358,7 @@ export default function AdminDashboardPage() {
             }
 
             const code = `NVTR-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+            
             const insertData: any = {
                 email: clientForm.email,
                 full_name: clientForm.fullName,
@@ -369,7 +367,7 @@ export default function AdminDashboardPage() {
                 address: clientForm.address || null,
                 access_code: code
             };
-            
+
             const { error } = await supabase.from('clients').insert(insertData);
             if (error) throw error;
             
@@ -383,7 +381,6 @@ export default function AdminDashboardPage() {
         }
     };
 
-    // --- DEPLOY PROJECT ---
     const handleDeployProject = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -396,7 +393,7 @@ export default function AdminDashboardPage() {
                 status: projectForm.status, 
                 progress_percent: projectForm.progress 
             });
-            
+
             if (error) throw error;
 
             setProjectForm({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
@@ -409,7 +406,7 @@ export default function AdminDashboardPage() {
             setLoading(false);
         }
     };
-    
+
     const formatTime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
@@ -431,7 +428,6 @@ export default function AdminDashboardPage() {
     return (
         <div className="flex h-screen w-full bg-zinc-50 text-black font-sans overflow-hidden selection:bg-black selection:text-white relative">
 
-            {/* TOAST NOTIFICATION */}
             {toast && (
                 <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl z-[9999] animate-in slide-in-from-bottom-5 duration-300 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 border ${
                     toast.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' :
@@ -444,7 +440,6 @@ export default function AdminDashboardPage() {
                 </div>
             )}
 
-            {/* PROJE DETAY MODALI (PANEL) */}
             {selectedProjectDetails && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-md transition-opacity" onClick={() => setSelectedProjectDetails(null)}></div>
@@ -452,7 +447,7 @@ export default function AdminDashboardPage() {
                     <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 p-6 sm:p-10 custom-scrollbar border border-zinc-200">
                         <button 
                             onClick={() => setSelectedProjectDetails(null)} 
-                            className="absolute top-6 right-6 p-2 bg-zinc-100 hover:bg-red-50 hover:text-red-500 text-zinc-500 rounded-full transition-colors"
+                            className="absolute top-6 right-6 p-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded-full transition-colors"
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
@@ -465,6 +460,17 @@ export default function AdminDashboardPage() {
                             <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
                                 {selectedProjectDetails.clients?.full_name} • {selectedProjectDetails.clients?.email}
                             </p>
+                            
+                            <div className="mt-6 pt-6 border-t border-red-50">
+                                <button
+                                    onClick={() => handleDeleteProject(selectedProjectDetails.id)}
+                                    disabled={loadingDetails}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Permanently Delete Project
+                                </button>
+                            </div>
                         </div>
 
                         {loadingDetails ? (
@@ -474,8 +480,6 @@ export default function AdminDashboardPage() {
                             </div>
                         ) : (
                             <div className="space-y-10">
-                                
-                                {/* 1. Client Discovery Requirements */}
                                 <div>
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 flex items-center gap-2">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -485,6 +489,7 @@ export default function AdminDashboardPage() {
                                         <div className="bg-zinc-50 p-6 rounded-2xl border border-zinc-200 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                                             {projectDiscoveryData.details && Object.entries(projectDiscoveryData.details).map(([key, value]) => {
                                                 if (key === 'Assets') return null;
+                                                
                                                 return (
                                                     <div key={key} className="py-2 border-b border-zinc-200/60 last:border-0">
                                                         <span className="block text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">{key}</span>
@@ -500,7 +505,6 @@ export default function AdminDashboardPage() {
                                     )}
                                 </div>
 
-                                {/* 2. Uploaded Assets & Files */}
                                 <div>
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-4 flex items-center gap-2">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
@@ -554,7 +558,6 @@ export default function AdminDashboardPage() {
                 </div>
             )}
 
-            {/* MOBILE HEADER */}
             <div className="md:hidden fixed top-0 w-full bg-white border-b border-zinc-200 z-40 p-4 flex justify-between items-center text-black">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 flex items-center justify-center shrink-0">
@@ -572,7 +575,6 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* SIDEBAR NAVIGATION */}
             <aside className={`fixed inset-y-0 left-0 z-50 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 w-64 bg-white border-r border-zinc-200 p-6 flex flex-col h-full shadow-2xl`}>
                 <div className="mb-10 flex flex-col items-center text-center">
                     <div className="w-16 h-16 mb-4 flex items-center justify-center bg-white border border-zinc-100 p-2 rounded-full shadow-sm">
@@ -636,10 +638,8 @@ export default function AdminDashboardPage() {
                 </div>
             </aside>
 
-            {/* MAIN SCROLLABLE CONTENT */}
             <main className="flex-1 h-full overflow-y-auto md:pl-64 p-6 lg:p-10 relative z-0 mt-16 md:mt-0">
 
-                {/* OVERVIEW TAB */}
                 {activeTab === 'overview' && (
                     <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
                         
@@ -656,7 +656,6 @@ export default function AdminDashboardPage() {
                             </div>
                         </div>
 
-                        {/* QUICK ACTIONS BUTTONS */}
                         <div className="flex flex-wrap gap-4">
                             <button onClick={() => setActiveTab('add_client')} className="bg-black text-white px-6 py-4 rounded-2xl font-black uppercase tracking-[0.15em] text-[10px] shadow-lg hover:bg-zinc-800 active:scale-95 transition-all flex items-center gap-2 border border-black">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
@@ -668,7 +667,6 @@ export default function AdminDashboardPage() {
                             </button>
                         </div>
 
-                        {/* GLOBAL METRICS */}
                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
                             {[
                                 { l: "Active Entities", v: clients.length, highlight: false },
@@ -683,7 +681,6 @@ export default function AdminDashboardPage() {
                             ))}
                         </div>
 
-                        {/* LIVE SESSIONS */}
                         <div>
                             <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-6">Active Engineering Sessions</h2>
                             {activeProjects.length === 0 ? (
@@ -757,7 +754,6 @@ export default function AdminDashboardPage() {
                                         );
                                     })}
 
-                                    {/* QUICK NOTES */}
                                     <div className="flex flex-col bg-white border border-zinc-200 rounded-[32px] p-6 md:p-8 shadow-sm">
                                         <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-6 flex items-center gap-2">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -790,7 +786,6 @@ export default function AdminDashboardPage() {
                             )}
                         </div>
 
-                        {/* IDLE DEPLOYMENTS */}
                         {idleProjects.length > 0 && (
                             <div className="pt-8 border-t border-zinc-200">
                                 <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-6">Queue Status</h2>
@@ -821,7 +816,6 @@ export default function AdminDashboardPage() {
                     </div>
                 )}
 
-                {/* REGISTER CLIENT MANUALLY TAB */}
                 {activeTab === 'add_client' && (
                     <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
                         <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
@@ -865,7 +859,6 @@ export default function AdminDashboardPage() {
                     </div>
                 )}
 
-                {/* DEPLOY PROJECT TAB */}
                 {activeTab === 'add_project' && (
                     <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
                         <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">

@@ -27,7 +27,7 @@ export default function PrivacyPage() {
             </h1>
             <div className="flex items-center gap-4">
                <p className="text-black font-black text-[10px] tracking-[0.2em] uppercase bg-zinc-100 px-4 py-2 rounded-full">
-                 {t.privacy.tag}
+                {t.privacy.tag}
                </p>
                <span className="w-1 h-1 bg-zinc-300 rounded-full" />
                <p className="text-zinc-400 font-bold text-[10px] tracking-[0.2em] uppercase">
@@ -54,10 +54,26 @@ export default function PrivacyPage() {
             </section>
           </FadeUp>
 
-          {/* 02. Communication */}
+          {/* 02. Technical Authentication (ARTIK DİNAMİK) */}
+          <FadeUp delay={125}>
+            <section className="p-10 md:p-14 bg-white border border-zinc-200 hover:bg-zinc-950 hover:border-zinc-950 rounded-[32px] transition-all duration-500 ease-out group">
+              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">
+                {t.privacy.techAuthTitle}
+              </h2>
+              <div className="space-y-6">
+                <p className="text-lg text-zinc-600 group-hover:text-zinc-400 font-medium leading-relaxed transition-colors duration-500">
+                  {t.privacy.techAuthDesc}
+                </p>
+              </div>
+            </section>
+          </FadeUp>
+
+          {/* 03. Communication (REPLACE KODLARI KALDIRILDI) */}
           <FadeUp delay={150}>
             <section className="p-10 md:p-14 bg-white border border-zinc-200 hover:bg-zinc-950 hover:border-zinc-950 rounded-[32px] transition-all duration-500 ease-out group">
-              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">{t.privacy.sec2Title}</h2>
+              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">
+                {t.privacy.sec2Title}
+              </h2>
               <p className="text-lg text-zinc-600 group-hover:text-zinc-400 font-medium leading-relaxed mb-8 transition-colors duration-500">
                 {t.privacy.sec2Desc}
               </p>
@@ -79,10 +95,12 @@ export default function PrivacyPage() {
             </section>
           </FadeUp>
 
-          {/* 03. Security */}
+          {/* 04. Security (REPLACE KODLARI KALDIRILDI) */}
           <FadeUp delay={200}>
             <section className="p-10 md:p-14 bg-white border border-zinc-200 hover:bg-zinc-950 hover:border-zinc-950 rounded-[32px] transition-all duration-500 ease-out group">
-              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">{t.privacy.sec3Title}</h2>
+              <h2 className="text-xl font-black text-black group-hover:text-white uppercase tracking-widest mb-6 transition-colors duration-500">
+                {t.privacy.sec3Title}
+              </h2>
               <p className="text-lg text-zinc-600 group-hover:text-zinc-400 font-medium leading-relaxed transition-colors duration-500">
                 {t.privacy.sec3Desc}
               </p>

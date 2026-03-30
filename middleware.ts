@@ -19,18 +19,14 @@ export async function middleware(request: NextRequest) {
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options })
           response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
+            request: { headers: request.headers },
           })
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({ name, value: '', ...options })
           response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
+            request: { headers: request.headers },
           })
           response.cookies.set({ name, value: '', ...options })
         },
@@ -39,10 +35,29 @@ export async function middleware(request: NextRequest) {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
+  const clientKey = request.cookies.get('novatrum_client_key')?.value
 
+  // --- ADMIN KORUMASI ---
   if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
     if (!user) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+
+    const { data: member } = await supabase
+      .from('members')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (member?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+  }
+
+  // --- CLIENT KORUMASI ---
+  if (request.nextUrl.pathname.startsWith('/client/dashboard')) {
+    if (!clientKey) {
+      return NextResponse.redirect(new URL('/client/login', request.url))
     }
   }
 
@@ -50,5 +65,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/client/dashboard/:path*'],
 }

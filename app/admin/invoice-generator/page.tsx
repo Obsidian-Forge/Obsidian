@@ -14,7 +14,6 @@ interface InvoiceItem {
 
 const DEFAULT_NOTES = "Work commences upon receipt of the initial deposit. Final handover and source code transfer upon full payment.\n\nEXCLUSIONS: Third-party costs including domain registration, premium hosting, and external software subscriptions are explicitly excluded from this estimate and are to be maintained directly by the client.";
 
-// Tarih formatlayıcı (YYYY-MM-DD -> DD/MM/YYYY)
 const formatDateToDDMMYYYY = (isoDate: string) => {
     if (!isoDate) return '';
     const parts = isoDate.split('T')[0].split('-');
@@ -23,7 +22,6 @@ const formatDateToDDMMYYYY = (isoDate: string) => {
     return `${day}/${month}/${year}`;
 };
 
-// PARA BİRİMİ FORMATLAYICI (1000.5 -> 1,000.50)
 const formatCurrency = (amount: number) => {
     return amount.toLocaleString('en-US', {
         minimumFractionDigits: 2,
@@ -31,7 +29,6 @@ const formatCurrency = (amount: number) => {
     });
 };
 
-// KUSURSUZ TARİH KUTUSU
 const SmartDateInput = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => {
     const displayValue = formatDateToDDMMYYYY(value);
     return (
@@ -40,13 +37,7 @@ const SmartDateInput = ({ label, value, onChange }: { label: string, value: stri
             <div className="relative w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl focus-within:border-black transition-colors flex justify-between items-center group">
                 <span className="text-xs font-bold text-zinc-900 select-none">{displayValue || 'DD/MM/YYYY'}</span>
                 <svg className="w-4 h-4 text-zinc-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                {/* Görünmez gerçek tarih seçici */}
-                <input
-                    type="date"
-                    value={value}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                />
+                <input type="date" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
             </div>
         </div>
     );
@@ -58,8 +49,6 @@ export default function InvoiceGeneratorPage() {
     const [generating, setGenerating] = useState(false);
     const [sending, setSending] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
-    
-    // YENİ: TOAST (POPUP) BİLDİRİM STATE'İ
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -71,14 +60,11 @@ export default function InvoiceGeneratorPage() {
     const [selectedClientId, setSelectedClientId] = useState('');
     const [importType, setImportType] = useState<'project' | 'maintenance'>('project');
     
-    // Custom Dropdown States
     const [isDiscDropdownOpen, setIsDiscDropdownOpen] = useState(false);
     const [discSearch, setDiscSearch] = useState('');
-    
     const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
     const [clientSearch, setClientSearch] = useState('');
-
-    // BANKA SEÇİMİ VE YENİ BANKA EKLEME
+    
     const [selectedBankId, setSelectedBankId] = useState<string>('');
     const [isAddingNewBank, setIsAddingNewBank] = useState(false);
     const [newBankForm, setNewBankForm] = useState({ bankName: '', accountName: '', iban: '', swift: '' });
@@ -91,7 +77,9 @@ export default function InvoiceGeneratorPage() {
         clientEmail: '',
         clientAddress: '',
         notes: DEFAULT_NOTES,
-        installments: 1
+        installments: 1,
+        discountAmount: 0,
+        discountType: 'amount' as 'amount' | 'percent'
     });
 
     const [items, setItems] = useState<InvoiceItem[]>([]);
@@ -99,7 +87,6 @@ export default function InvoiceGeneratorPage() {
     const [activePreviewIndex, setActivePreviewIndex] = useState(0);
     const [generationState, setGenerationState] = useState<'form' | 'preview'>('form');
 
-    // YENİ: TOAST GÖSTERİM FONKSİYONU
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToast({ message, type });
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -112,7 +99,7 @@ export default function InvoiceGeneratorPage() {
             if (!user) return router.push('/admin/login');
             const { data: member } = await supabase.from('members').select('role').eq('id', user.id).single();
             if (member?.role !== 'admin') return router.push('/admin/login');
-    
+            
             setIsAdmin(true);
             
             const [clientsRes, discRes, banksRes] = await Promise.all([
@@ -124,6 +111,7 @@ export default function InvoiceGeneratorPage() {
             let loadedDisc = discRes.data || [];
             let loadedClients = clientsRes.data || [];
 
+            // İstemcilere Blueprint kodlarını bağla (E-posta ile eşleştirerek)
             const clientsWithDiscInfo = loadedClients.map(c => {
                 const match = loadedDisc.find(d => d.client_email?.toLowerCase() === c.email?.toLowerCase());
                 return { ...c, discovery_number: match?.discovery_number || '' };
@@ -139,16 +127,12 @@ export default function InvoiceGeneratorPage() {
             setLoading(false);
         };
         init();
-        
-        return () => {
-            if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-        };
+        return () => { if (toastTimerRef.current) clearTimeout(toastTimerRef.current); };
     }, [router]);
 
     const filteredDiscoveries = discoveries.filter(d => {
         const term = discSearch.toLowerCase();
-        return (d.client_name?.toLowerCase() || '').includes(term) || 
-               (d.discovery_number?.toLowerCase() || '').includes(term);
+        return (d.client_name?.toLowerCase() || '').includes(term) || (d.discovery_number?.toLowerCase() || '').includes(term);
     });
 
     const filteredClients = clients.filter(c => {
@@ -160,60 +144,43 @@ export default function InvoiceGeneratorPage() {
     });
 
     const handleSaveNewBank = async () => {
-        if (!newBankForm.bankName || !newBankForm.iban || !newBankForm.accountName) {
-            return showToast("Bank Name, Account Name and IBAN are required.", 'error');
-        }
-        
+        if (!newBankForm.bankName || !newBankForm.iban || !newBankForm.accountName) return showToast("Bank Name, Account Name and IBAN are required.", 'error');
         try {
             const { data, error } = await supabase.from('admin_bank_accounts').insert({
-                bank_name: newBankForm.bankName,
-                account_name: newBankForm.accountName,
-                iban: newBankForm.iban,
-                swift: newBankForm.swift
+                bank_name: newBankForm.bankName, account_name: newBankForm.accountName, iban: newBankForm.iban, swift: newBankForm.swift
             }).select().single();
-
             if (error) throw error;
-
             setBankAccounts([...bankAccounts, data]);
             setSelectedBankId(data.id);
             setIsAddingNewBank(false);
             setNewBankForm({ bankName: '', accountName: '', iban: '', swift: '' });
-            showToast("New bank account saved to database!", 'success');
-        } catch (err: any) {
-            showToast("Error saving bank: " + err.message, 'error');
-        }
+            showToast("New bank account saved!", 'success');
+        } catch (err: any) { showToast("Error saving bank: " + err.message, 'error'); }
     };
 
     const handleDeleteBank = async (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         if (!confirm("Are you sure you want to permanently delete this bank account?")) return;
-
         try {
             const { error } = await supabase.from('admin_bank_accounts').delete().eq('id', id);
             if (error) throw error;
-            
             const updatedBanks = bankAccounts.filter(b => b.id !== id);
             setBankAccounts(updatedBanks);
             if (selectedBankId === id) setSelectedBankId(updatedBanks.length > 0 ? updatedBanks[0].id : '');
             showToast("Bank account deleted.", 'success');
-        } catch (err: any) { 
-            showToast("Error deleting bank: " + err.message, 'error'); 
-        }
+        } catch (err: any) { showToast("Error deleting bank: " + err.message, 'error'); }
     };
 
     const handleLoadDiscovery = () => {
         const disc = discoveries.find(d => d.id === selectedDiscoveryId);
         if (!disc) return;
-
         let newItems: InvoiceItem[] = [];
 
+        // Hangi modda veriyi çektiğimizi ayarlıyoruz
         if (importType === 'project') {
             newItems = [{ id: '1', description: `Core Architecture: ${disc.project_type || 'Custom Software'}`, quantity: 1, rate: disc.estimated_price || 0 }];
             setInvoiceData(prev => ({ 
-                ...prev, 
-                notes: DEFAULT_NOTES, 
-                installments: 1,
-                date: new Date().toISOString().split('T')[0],
+                ...prev, notes: DEFAULT_NOTES, installments: 1, date: new Date().toISOString().split('T')[0],
                 dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
             }));
         } else {
@@ -223,64 +190,64 @@ export default function InvoiceGeneratorPage() {
                 const match = maintString.match(/€(\d+)/);
                 if (match) maintPrice = parseInt(match[1]);
             }
-
-            if (maintPrice === 0) {
-                showToast("This client does not have a Monthly Maintenance plan in their blueprint.", 'error');
-                return;
-            }
+            if (maintPrice === 0) return showToast("This client does not have a Monthly Maintenance plan.", 'error');
 
             newItems = [{ id: '1', description: `Continuous Engineering & Maintenance Retainer`, quantity: 1, rate: maintPrice }];
-            
-            const futureDate = new Date();
-            futureDate.setDate(futureDate.getDate() + 30);
-            const futureDateString = futureDate.toISOString().split('T')[0];
-            
-            const futureDueDate = new Date(futureDate);
-            futureDueDate.setDate(futureDueDate.getDate() + 14);
-            const futureDueDateString = futureDueDate.toISOString().split('T')[0];
+            const futureDate = new Date(); futureDate.setDate(futureDate.getDate() + 30);
+            const futureDueDate = new Date(futureDate); futureDueDate.setDate(futureDueDate.getDate() + 14);
 
             setInvoiceData(prev => ({ 
-                ...prev, 
-                notes: "This is a recurring monthly retainer invoice for ongoing engineering, server monitoring, and platform maintenance.", 
-                installments: 1,
-                date: futureDateString,
-                dueDate: futureDueDateString
+                ...prev, notes: "This is a recurring monthly retainer invoice for ongoing engineering.", installments: 1,
+                date: futureDate.toISOString().split('T')[0], dueDate: futureDueDate.toISOString().split('T')[0]
             }));
         }
         
-        setInvoiceData(prev => ({
-            ...prev,
-            clientName: disc.client_name || '',
-            clientEmail: disc.client_email || '',
-            clientAddress: disc.details?.Company || 'N/A'
-        }));
+        // E-Posta ile Active Entity Otomatik Eşleştirme Sistemi
+        const matchedClient = clients.find(c => c.email?.toLowerCase() === disc.client_email?.toLowerCase());
+        
+        if (matchedClient) {
+            setSelectedClientId(matchedClient.id);
+            setInvoiceData(prev => ({
+                ...prev,
+                clientName: matchedClient.full_name || disc.client_name || '',
+                clientEmail: matchedClient.email || disc.client_email || '',
+                clientAddress: matchedClient.address || disc.details?.Company || 'N/A'
+            }));
+            showToast("Entity auto-linked successfully based on email match.", 'success');
+        } else {
+            setSelectedClientId(''); // Eşleşme yoksa manuel bağlantıyı temizle
+            setInvoiceData(prev => ({
+                ...prev,
+                clientName: disc.client_name || '',
+                clientEmail: disc.client_email || '',
+                clientAddress: disc.details?.Company || 'N/A'
+            }));
+            showToast("Blueprint pulled. No active entity matched this email.", 'info');
+        }
 
         setItems(newItems);
-
-        const matchedClient = clients.find(c => c.email?.toLowerCase() === disc.client_email?.toLowerCase());
-        if (matchedClient) setSelectedClientId(matchedClient.id);
-        else setSelectedClientId('');
     };
 
     const handleLoadClient = () => {
         const client = clients.find(c => c.id === selectedClientId);
         if (!client) return;
         setInvoiceData(prev => ({
-            ...prev,
-            clientName: client.full_name || '',
-            clientEmail: client.email || '',
-            clientAddress: client.address || ''
+            ...prev, clientName: client.full_name || '', clientEmail: client.email || '', clientAddress: client.address || ''
         }));
+        showToast("Client details loaded manually.", "success");
     };
 
     const addItem = () => setItems([...items, { id: Math.random().toString(), description: '', quantity: 1, rate: 0 }]);
     const removeItem = (id: string) => setItems(items.filter(i => i.id !== id));
+    const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => setItems(items.map(i => i.id === id ? { ...i, [field]: value } : i));
 
-    const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
-        setItems(items.map(i => i.id === id ? { ...i, [field]: value } : i));
+    // FİNANSAL HESAPLAMALAR (İNDİRİM DAHİL)
+    const calculateRawSubTotal = () => items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.rate || 0)), 0);
+    const calculateDiscountValue = () => {
+        const raw = calculateRawSubTotal();
+        return invoiceData.discountType === 'percent' ? raw * ((invoiceData.discountAmount || 0) / 100) : (invoiceData.discountAmount || 0);
     };
-
-    const calculateSubTotal = () => items.reduce((sum, item) => sum + ((item.quantity || 0) * (item.rate || 0)), 0);
+    const calculateFinalTotal = () => Math.max(0, calculateRawSubTotal() - calculateDiscountValue());
 
     const createInvoicePDF = async (partNumber: number, totalParts: number): Promise<Blob> => {
         const doc = new jsPDF();
@@ -288,31 +255,26 @@ export default function InvoiceGeneratorPage() {
         let y = 20;
 
         const activeBank = bankAccounts.find(b => b.id === selectedBankId);
-
+        
+        // Logoyu Asenkron Yükle
         const loadImage = (url: string): Promise<string> => {
             return new Promise((resolve) => {
                 const img = new Image(); img.src = url;
                 img.onload = () => {
                     const canvas = document.createElement("canvas");
                     canvas.width = img.width; canvas.height = img.height;
-                    const ctx = canvas.getContext("2d");
-                    ctx?.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png"));
+                    const ctx = canvas.getContext("2d"); ctx?.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png"));
                 };
                 img.onerror = () => resolve("");
             });
         };
 
         const logoData = await loadImage("/logo.png");
-        
         if (logoData) {
             doc.addImage(logoData, 'PNG', 20, y, 16, 16);
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(22);
-            doc.text("NOVATRUM", 42, y + 12);
+            doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("NOVATRUM", 42, y + 12);
         } else {
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(24);
-            doc.text("NOVATRUM", 20, y + 12);
+            doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.text("NOVATRUM", 20, y + 12);
         }
 
         const isInstallment = totalParts > 1;
@@ -322,40 +284,30 @@ export default function InvoiceGeneratorPage() {
         baseDueDate.setMonth(baseDueDate.getMonth() + (partNumber - 1));
         const currentDueDate = baseDueDate.toISOString().split('T')[0];
 
-        const displayIssueDate = formatDateToDDMMYYYY(invoiceData.date);
-        const displayDueDate = formatDateToDDMMYYYY(currentDueDate);
+        const rawTotal = calculateRawSubTotal();
+        const discountVal = calculateDiscountValue();
+        const finalTotal = calculateFinalTotal();
+        const amountDue = finalTotal / totalParts;
 
-        const subTotal = calculateSubTotal();
-        const amountDue = subTotal / totalParts;
-
-        doc.setFontSize(20);
-        doc.setTextColor(24, 24, 27);
+        doc.setFontSize(20); doc.setTextColor(24, 24, 27);
         doc.text("INVOICE", pageWidth - 20, y + 8, { align: "right" });
         
-        doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(113, 113, 122);
+        doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(113, 113, 122);
         doc.text(`Ref Number: ${currentInvoiceNumber}`, pageWidth - 20, y + 15, { align: "right" });
-        doc.text(`Issue Date: ${displayIssueDate}`, pageWidth - 20, y + 20, { align: "right" });
-        doc.text(`Due Date: ${displayDueDate}`, pageWidth - 20, y + 25, { align: "right" });
+        doc.text(`Issue Date: ${formatDateToDDMMYYYY(invoiceData.date)}`, pageWidth - 20, y + 20, { align: "right" });
+        doc.text(`Due Date: ${formatDateToDDMMYYYY(currentDueDate)}`, pageWidth - 20, y + 25, { align: "right" });
         
         if (isInstallment) {
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(16, 185, 129);
+            doc.setFont("helvetica", "bold"); doc.setTextColor(16, 185, 129);
             doc.text(`PART ${partNumber} OF ${totalParts}`, pageWidth - 20, y + 32, { align: "right" });
         }
 
         y += 45;
-
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(24, 24, 27);
-        doc.text("BILLED TO:", 20, y);
-        doc.text("PAYABLE TO:", pageWidth / 2 + 10, y);
+        doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.setTextColor(24, 24, 27);
+        doc.text("BILLED TO:", 20, y); doc.text("PAYABLE TO:", pageWidth / 2 + 10, y);
 
         y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9);
         doc.text(invoiceData.clientName || 'Unknown Client', 20, y);
         doc.text(invoiceData.clientEmail || 'No email provided', 20, y + 5);
         const address = invoiceData.clientAddress || "Address not provided";
@@ -368,25 +320,24 @@ export default function InvoiceGeneratorPage() {
 
         y += Math.max(splitClientAddress.length * 5, 20) + 15;
         
-        doc.setFillColor(24, 24, 27);
-        doc.rect(20, y, pageWidth - 40, 10, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFont("helvetica", "bold");
+        // Tablo Başlıkları
+        doc.setFillColor(24, 24, 27); doc.rect(20, y, pageWidth - 40, 10, "F");
+        doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold");
         doc.text("DESCRIPTION", 25, y + 7);
         doc.text("QTY", pageWidth - 80, y + 7, { align: "center" });
         doc.text("RATE", pageWidth - 50, y + 7, { align: "center" });
         doc.text("AMOUNT", pageWidth - 25, y + 7, { align: "right" });
 
         y += 10;
-        doc.setTextColor(24, 24, 27);
-        doc.setFont("helvetica", "normal");
+        doc.setTextColor(24, 24, 27); doc.setFont("helvetica", "normal");
         
+        // Ürünler (Items)
         items.forEach((item) => {
             const amount = (item.quantity || 0) * (item.rate || 0);
-            const desc = item.description || 'No description';
-            const splitDesc = doc.splitTextToSize(desc, pageWidth - 110);
+            const splitDesc = doc.splitTextToSize(item.description || 'No description', pageWidth - 110);
             const rowHeight = splitDesc.length * 5 + 5;
-
+            
+            // Sayfa sonuna gelindiyse yeni sayfa ekle
             if (y + rowHeight > 270) { doc.addPage(); y = 20; }
 
             doc.text(splitDesc, 25, y + 6);
@@ -395,34 +346,44 @@ export default function InvoiceGeneratorPage() {
             doc.text(`€${formatCurrency(amount)}`, pageWidth - 25, y + 6, { align: "right" });
 
             y += rowHeight;
-            doc.setDrawColor(228, 228, 231);
-            doc.line(20, y, pageWidth - 20, y);
+            doc.setDrawColor(228, 228, 231); doc.line(20, y, pageWidth - 20, y);
         });
 
         y += 10;
-
         doc.setFontSize(10);
-        doc.text("Project Total:", pageWidth - 60, y);
+        
+        // --- İNDİRİM (DISCOUNT) VE TOPLAM GÖSTERİMİ ---
+        // Yazıların X pozisyonu pageWidth - 75 olarak sola kaydırıldı, rakamlar pageWidth - 25'te kaldı.
+        if (discountVal > 0) {
+            doc.text("Subtotal:", pageWidth - 75, y);
+            doc.text(`€${formatCurrency(rawTotal)}`, pageWidth - 25, y, { align: "right" });
+            y += 6;
+            
+            doc.setTextColor(239, 68, 68); // Kırmızı Text
+            const discountLabel = invoiceData.discountType === 'percent' ? `Discount (${invoiceData.discountAmount}%):` : `Discount:`;
+            doc.text(discountLabel, pageWidth - 75, y);
+            doc.text(`-€${formatCurrency(discountVal)}`, pageWidth - 25, y, { align: "right" });
+            doc.setTextColor(24, 24, 27); // Siyaha dön
+            y += 8;
+        }
+
         doc.setFont("helvetica", "bold");
-        doc.text(`€${formatCurrency(subTotal)}`, pageWidth - 25, y, { align: "right" });
+        doc.text("Project Total:", pageWidth - 75, y);
+        doc.text(`€${formatCurrency(finalTotal)}`, pageWidth - 25, y, { align: "right" });
 
         y += 10;
-        doc.setFillColor(244, 244, 245);
-        doc.rect(pageWidth - 110, y, 90, 15, "F");
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(16, 185, 129);
+        
+        // ÖDENECEK TUTAR (AMOUNT DUE)
+        doc.setFillColor(244, 244, 245); doc.rect(pageWidth - 110, y, 90, 15, "F");
+        doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(16, 185, 129);
         doc.text(isInstallment ? `AMOUNT DUE (PART ${partNumber}):` : "AMOUNT DUE NOW:", pageWidth - 105, y + 10);
         doc.text(`€${formatCurrency(amountDue)}`, pageWidth - 25, y + 10, { align: "right" });
 
         y += 30;
-
-        doc.setTextColor(24, 24, 27);
-        doc.setFontSize(10);
-        doc.text("PAYMENT DETAILS", 20, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
+        
+        // BANKA BİLGİLERİ
+        doc.setTextColor(24, 24, 27); doc.setFontSize(10); doc.text("PAYMENT DETAILS", 20, y);
+        y += 6; doc.setFont("helvetica", "normal"); doc.setFontSize(9);
         
         if (activeBank) {
             doc.text(`Bank: ${activeBank.bank_name || 'N/A'}`, 20, y);
@@ -433,17 +394,15 @@ export default function InvoiceGeneratorPage() {
         }
 
         y += 30;
-        doc.setFont("helvetica", "bold");
-        doc.text("TERMS & CONDITIONS", 20, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(113, 113, 122);
-        const notes = invoiceData.notes || '';
-        const splitNotes = doc.splitTextToSize(notes, pageWidth - 40);
+        
+        // NOTLAR VE ŞARTLAR
+        doc.setFont("helvetica", "bold"); doc.text("TERMS & CONDITIONS", 20, y);
+        y += 6; doc.setFont("helvetica", "normal"); doc.setTextColor(113, 113, 122);
+        const splitNotes = doc.splitTextToSize(invoiceData.notes || '', pageWidth - 40);
         doc.text(splitNotes, 20, y);
 
-        doc.setFontSize(8);
-        doc.text("Generated securely via Novatrum Core Infrastructure.", pageWidth / 2, 285, { align: "center" });
+        // FOOTER
+        doc.setFontSize(8); doc.text("Generated securely via Novatrum Core Infrastructure.", pageWidth / 2, 285, { align: "center" });
 
         return doc.output('blob');
     };
@@ -451,7 +410,6 @@ export default function InvoiceGeneratorPage() {
     const previewPDF = async () => {
         if (items.length === 0 || !invoiceData.clientName) return showToast("Missing client or items.", 'error');
         if (!selectedBankId) return showToast("Please select a bank account.", 'error');
-        
         setGenerating(true);
         try {
             const urls: string[] = [];
@@ -459,20 +417,14 @@ export default function InvoiceGeneratorPage() {
                 const blob = await createInvoicePDF(i, invoiceData.installments);
                 urls.push(URL.createObjectURL(blob));
             }
-            setPdfUrls(urls);
-            setActivePreviewIndex(0);
-            setGenerationState('preview');
-        } catch (error: any) {
-            showToast("Error generating preview: " + error.message, 'error');
-        } finally {
-            setGenerating(false);
-        }
+            setPdfUrls(urls); setActivePreviewIndex(0); setGenerationState('preview');
+        } catch (error: any) { showToast("Error generating preview: " + error.message, 'error'); } 
+        finally { setGenerating(false); }
     };
 
     const sendToClient = async () => {
         if (!selectedClientId) return showToast("Please select an Active Entity to link this invoice.", 'error');
         setSending(true);
-        
         try {
             for (let i = 1; i <= invoiceData.installments; i++) {
                 const blob = await createInvoicePDF(i, invoiceData.installments);
@@ -482,61 +434,39 @@ export default function InvoiceGeneratorPage() {
                 const file = new File([blob], `${invName}.pdf`, { type: 'application/pdf' });
                 const filePath = `invoices/${selectedClientId}/${invName}.pdf`;
                 
-                // Supabase Storage'a Yükle
                 const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
                 if (uploadError) throw uploadError;
 
                 const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filePath);
                 const dbDesc = isInstallment ? `${invName} (Part ${i} of ${invoiceData.installments})` : invName;
 
-                // Müşteri Ledger'ına kaydet
                 const { error: dbError } = await supabase.from('client_invoices').insert({
-                    client_id: selectedClientId,
-                    file_name: dbDesc,
-                    file_url: publicUrl,
-                    status: 'unpaid'
+                    client_id: selectedClientId, file_name: dbDesc, file_url: publicUrl, status: 'unpaid'
                 });
                 if (dbError) throw dbError;
 
-                // RESEND API İLE E-POSTA GÖNDERİMİ
                 await fetch('/api/send-invoice', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        clientEmail: invoiceData.clientEmail,
-                        clientName: invoiceData.clientName,
-                        invoiceNumber: invName,
-                        pdfUrl: publicUrl
-                    }),
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ clientEmail: invoiceData.clientEmail, clientName: invoiceData.clientName, invoiceNumber: invName, pdfUrl: publicUrl }),
                 });
             }
 
-            // Admin profiline not düş
             const { data: clientData } = await supabase.from('clients').select('internal_notes').eq('id', selectedClientId).single();
-            let existingNotes = clientData?.internal_notes || '';
-            
-            const today = new Date().toLocaleDateString();
             let newNote = '';
-            
             if (invoiceData.installments > 1) {
-                const perInstallment = formatCurrency(calculateSubTotal() / invoiceData.installments);
-                newNote = `\n[${today}] Financial Update: Project split into ${invoiceData.installments} installments of €${perInstallment}.`;
+                const perInstallment = formatCurrency(calculateFinalTotal() / invoiceData.installments);
+                newNote = `\n[${new Date().toLocaleDateString()}] Financial Update: Project split into ${invoiceData.installments} installments of €${perInstallment}.`;
             } else if (importType === 'maintenance') {
-                newNote = `\n[${today}] Financial Update: Monthly maintenance retainer invoice generated.`;
+                newNote = `\n[${new Date().toLocaleDateString()}] Financial Update: Monthly maintenance retainer invoice generated.`;
             }
 
-            if (newNote) {
-                await supabase.from('clients').update({ internal_notes: existingNotes + newNote }).eq('id', selectedClientId);
-            }
+            if (newNote) await supabase.from('clients').update({ internal_notes: (clientData?.internal_notes || '') + newNote }).eq('id', selectedClientId);
 
             showToast(`Successfully processed ${invoiceData.installments} invoice(s). Returning to Workspace...`, 'success');
             setTimeout(() => router.push('/admin/dashboard'), 2000);
 
-        } catch (error: any) {
-            showToast("Failed to process: " + error.message, 'error');
-        } finally {
-            setSending(false);
-        }
+        } catch (error: any) { showToast("Failed to process: " + error.message, 'error'); } 
+        finally { setSending(false); }
     };
 
     if (!isAdmin) return <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">Authenticating...</div>;
@@ -545,6 +475,7 @@ export default function InvoiceGeneratorPage() {
         <div className="min-h-screen bg-zinc-50 text-black font-sans selection:bg-black selection:text-white p-6 md:p-10 relative">
             <div className="max-w-6xl mx-auto">
                 
+                {/* HEAD NAVIGATION */}
                 <button onClick={() => router.push('/admin/dashboard')} className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors w-fit">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     Back to Workspace
@@ -562,7 +493,7 @@ export default function InvoiceGeneratorPage() {
                         {/* DATA IMPORT ACTIONS */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
-                            {/* Blueprint Combobox */}
+                            {/* PULL FROM BLUEPRINT */}
                             <div className="bg-white p-6 rounded-[24px] border border-zinc-200 shadow-sm">
                                 <div className="flex justify-between items-center mb-3">
                                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500">Load from Blueprint</label>
@@ -611,7 +542,7 @@ export default function InvoiceGeneratorPage() {
                                 </div>
                             </div>
                             
-                            {/* Client Combobox (Choose Manual) */}
+                            {/* MANUAL LINK TO ENTITY */}
                             <div className="bg-white p-6 rounded-[24px] border border-zinc-200 shadow-sm">
                                 <label className="text-[9px] font-black uppercase tracking-widest text-zinc-500 block mb-3">Link to Active Entity (Manual Link)</label>
                                 <div className="flex gap-3">
@@ -655,17 +586,15 @@ export default function InvoiceGeneratorPage() {
                             </div>
                         </div>
 
-                        {/* INVOICE DETAILS */}
+                        {/* INVOICE DETAILS (DATE, NUMBERS, INSTALLMENTS) */}
                         <div className="bg-white p-8 md:p-10 rounded-[32px] border border-zinc-200 shadow-sm space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <div>
                                     <label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Base Invoice No</label>
                                     <input type="text" value={invoiceData.invoiceNumber} onChange={(e) => setInvoiceData({...invoiceData, invoiceNumber: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl text-xs font-mono font-bold outline-none focus:border-black" />
                                 </div>
-                                
                                 <SmartDateInput label="Issue Date" value={invoiceData.date} onChange={(val) => setInvoiceData({...invoiceData, date: val})} />
                                 <SmartDateInput label="First Due Date" value={invoiceData.dueDate} onChange={(val) => setInvoiceData({...invoiceData, dueDate: val})} />
-                                
                                 <div>
                                     <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500 block mb-2">Split Installments</label>
                                     <select value={invoiceData.installments} onChange={(e) => setInvoiceData({...invoiceData, installments: parseInt(e.target.value) || 1})} className="w-full bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-[10px] font-black uppercase outline-none focus:border-emerald-500 cursor-pointer">
@@ -676,8 +605,9 @@ export default function InvoiceGeneratorPage() {
                                         <option value={6}>6 Installments</option>
                                     </select>
                                 </div>
-                             </div>
+                            </div>
 
+                            {/* CLIENT INFOS */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-zinc-100">
                                 <div><label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Client Name</label><input type="text" value={invoiceData.clientName} onChange={(e) => setInvoiceData({...invoiceData, clientName: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl text-xs font-bold outline-none focus:border-black" /></div>
                                 <div><label className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Client Email</label><input type="email" value={invoiceData.clientEmail} onChange={(e) => setInvoiceData({...invoiceData, clientEmail: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl text-xs font-bold outline-none focus:border-black" /></div>
@@ -709,15 +639,30 @@ export default function InvoiceGeneratorPage() {
                             </div>
 
                             {items.length > 0 && (
-                                <div className="mt-8 pt-6 border-t border-zinc-200 flex flex-col items-end gap-2">
-                                    <div className="flex justify-between w-full max-w-xs items-center px-4 py-2">
+                                <div className="mt-8 pt-6 border-t border-zinc-200 flex flex-col items-end gap-3">
+                                    
+                                    {/* DISCOUNT ROW */}
+                                    <div className="flex justify-between w-full max-w-sm items-center px-4 gap-4">
+                                        <select value={invoiceData.discountType} onChange={(e) => setInvoiceData({...invoiceData, discountType: e.target.value as 'amount'|'percent'})} className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-zinc-500 outline-none cursor-pointer">
+                                            <option value="amount">Discount (€)</option>
+                                            <option value="percent">Discount (%)</option>
+                                        </select>
+                                        <input type="number" min="0" placeholder="0" value={invoiceData.discountAmount || ''} onChange={(e) => setInvoiceData({...invoiceData, discountAmount: parseFloat(e.target.value) || 0})} className="w-24 bg-zinc-50 border border-zinc-200 p-2 rounded-lg text-xs font-bold outline-none focus:border-red-400 text-right text-red-500" />
+                                    </div>
+
+                                    {/* TOTAL ROW */}
+                                    <div className="flex justify-between w-full max-w-sm items-center px-4 py-2">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Project Total</span>
-                                        <span className="text-lg font-black font-mono text-zinc-900">€{formatCurrency(calculateSubTotal())}</span>
+                                        <span className="text-lg font-black font-mono text-zinc-900">€{formatCurrency(calculateFinalTotal())}</span>
                                     </div>
-                                    <div className="flex justify-between w-full max-w-xs items-center px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Per Installment ({invoiceData.installments}x)</span>
-                                        <span className="text-2xl font-black font-mono text-emerald-600">€{formatCurrency(calculateSubTotal() / invoiceData.installments)}</span>
-                                    </div>
+                                    
+                                    {/* SPLIT ROW */}
+                                    {invoiceData.installments > 1 && (
+                                        <div className="flex justify-between w-full max-w-sm items-center px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl mt-2">
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Per Installment ({invoiceData.installments}x)</span>
+                                            <span className="text-xl font-black font-mono text-emerald-600">€{formatCurrency(calculateFinalTotal() / invoiceData.installments)}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -725,6 +670,7 @@ export default function InvoiceGeneratorPage() {
                         {/* BANK ACCOUNTS & NOTES */}
                         <div className="bg-zinc-50 border border-zinc-200 p-8 rounded-[32px] grid grid-cols-1 lg:grid-cols-2 gap-8">
                             
+                            {/* BANK ACCOUNTS */}
                             <div>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Bank Accounts</h3>
@@ -764,17 +710,21 @@ export default function InvoiceGeneratorPage() {
                                 )}
                             </div>
 
+                            {/* NOTES */}
                             <div>
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-4">Invoice Terms & Notes</h3>
                                 <textarea value={invoiceData.notes} onChange={(e) => setInvoiceData({...invoiceData, notes: e.target.value})} className="w-full bg-white border border-zinc-200 p-5 rounded-2xl text-xs font-bold outline-none focus:border-black h-40 resize-none leading-relaxed" />
                             </div>
                         </div>
 
+                        {/* COMPILE BUTTON */}
                         <button onClick={previewPDF} disabled={generating || items.length === 0} className="w-full bg-black text-white py-6 rounded-[24px] font-black uppercase tracking-[0.2em] text-xs hover:bg-zinc-800 transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
                             {generating ? <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" /> : 'Compile Document'}
                         </button>
                     </div>
                 ) : (
+                    
+                    /* PREVIEW STATE */
                     <div className="flex flex-col h-[calc(100vh-140px)] animate-in zoom-in-95 duration-500">
                         <div className="flex justify-between items-center mb-6">
                             <div>
@@ -787,11 +737,7 @@ export default function InvoiceGeneratorPage() {
                         {invoiceData.installments > 1 && (
                             <div className="flex gap-2 mb-4">
                                 {pdfUrls.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setActivePreviewIndex(idx)}
-                                        className={`w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${activePreviewIndex === idx ? 'bg-black text-white shadow-md' : 'bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50'}`}
-                                    >
+                                    <button key={idx} onClick={() => setActivePreviewIndex(idx)} className={`w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black transition-colors ${activePreviewIndex === idx ? 'bg-black text-white shadow-md' : 'bg-white border border-zinc-200 text-zinc-500 hover:bg-zinc-50'}`}>
                                         {idx + 1}
                                     </button>
                                 ))}
@@ -814,7 +760,7 @@ export default function InvoiceGeneratorPage() {
                 )}
             </div>
             
-            {/* YENİ: TOAST (POPUP) BİLDİRİM BİLEŞENİ */}
+            {/* GLOBAL TOAST */}
             {toast && (
                 <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl z-[9999] animate-in slide-in-from-bottom-5 duration-300 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 border ${
                     toast.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' :
@@ -827,6 +773,7 @@ export default function InvoiceGeneratorPage() {
                 </div>
             )}
 
+            {/* SCROLLBAR STYLES */}
             <style dangerouslySetInnerHTML={{ __html: `
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
