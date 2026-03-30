@@ -9,11 +9,8 @@ export default function AdminInfrastructurePage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
     const [initializing, setInitializing] = useState(false);
-
-    // INFRASTRUCTURE STATES
     const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
 
-    // 1. AUTH AND INITIAL DATA
     useEffect(() => {
         const checkAdmin = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -46,9 +43,8 @@ export default function AdminInfrastructurePage() {
         setInitializing(true);
         try {
             const defaultNodes = [
-                { label: 'Client Portal', status: 'operational' },
-                { label: 'Build Servers', status: 'operational' },
-                { label: 'Database Cluster', status: 'operational' }
+                { id: 'node-api', label: 'Novatrum API', status: 'operational', target_url: 'https://ndpokwlkcatwlwdzexah.supabase.co/rest/v1/' },
+                { id: 'node-db', label: 'Database Cluster', status: 'operational', target_url: 'https://ndpokwlkcatwlwdzexah.supabase.co' }
             ];
             const { error } = await supabase.from('system_status').insert(defaultNodes);
             if (error) throw error;
@@ -81,12 +77,69 @@ export default function AdminInfrastructurePage() {
         }
     };
 
-    const addNewNode = async () => {
-        const nodeName = prompt("Enter new node name:");
+    // GÜNCELLENEN KISIM: İKİ FARKLI EKLEME MANTIĞI
+    const addNewNode = async (isCore: boolean) => {
+        const nodeName = prompt(isCore ? "Enter Core Node Name (e.g., Redis Cache):" : "Enter Client Name (e.g., Acme Corp):");
         if (!nodeName) return;
-        const { error } = await supabase.from('system_status').insert([{ label: nodeName.trim(), status: 'operational' }]);
+        
+        let nodeUrl = prompt("Enter target URL to monitor (e.g., https://...):");
+        
+        if (nodeUrl && !nodeUrl.startsWith('http')) {
+            nodeUrl = 'https://' + nodeUrl;
+        }
+        
+        // Eğer Core ise 'node-' ile başlar (üst listeye gider), Client ise 'client-' ile başlar (alt listeye gider)
+        const nodeId = (isCore ? "node-" : "client-") + Date.now(); 
+
+        const { error } = await supabase.from('system_status').insert([{ 
+            id: nodeId,
+            label: nodeName.trim(), 
+            status: 'operational',
+            target_url: nodeUrl ? nodeUrl.trim() : null
+        }]);
+        
         if (!error) fetchSystemStatus();
+        else alert("Error adding node: " + error.message);
     };
+
+    const coreNodes = systemStatuses.filter(node => !node.id.startsWith('client-'));
+    const clientNodes = systemStatuses.filter(node => node.id.startsWith('client-'));
+
+    const StatusCard = ({ node }: { node: any }) => (
+        <div className="group relative bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm transition-all hover:border-zinc-300 flex flex-col justify-between">
+            <button onClick={() => deleteNode(node.id)} className="absolute top-6 right-6 p-2 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all bg-white hover:bg-red-50 rounded-lg">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+            </button>
+
+            <div className="flex flex-col gap-4 mb-6">
+                <div>
+                    <h3 className="text-xl font-black uppercase tracking-tight text-zinc-900 mb-1">{node.label}</h3>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Protocol: <span className="text-zinc-600 font-mono">STABLE</span></p>
+                </div>
+                
+                <div className="p-3 bg-zinc-50 rounded-xl border border-zinc-100">
+                    <p className="text-[9px] font-bold text-zinc-500 truncate mb-1">TARGET: <a href={node.target_url} target="_blank" className="text-emerald-600 hover:underline">{node.target_url || 'No URL Defined'}</a></p>
+                    <p className="text-[9px] font-bold text-zinc-500">LAST PING: <span className="text-black">{node.updated_at ? new Date(node.updated_at).toLocaleString() : 'Waiting for GitHub Action...'}</span></p>
+                </div>
+            </div>
+
+            <div className="bg-zinc-100 p-1.5 rounded-2xl flex items-center gap-1 mt-auto">
+                {[
+                    { id: 'operational', label: 'Online', activeClass: 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' },
+                    { id: 'degraded', label: 'Warn', activeClass: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' },
+                    { id: 'down', label: 'Down', activeClass: 'bg-red-500 text-white shadow-lg shadow-red-500/30' }
+                ].map(btn => (
+                    <button
+                        key={btn.id}
+                        onClick={() => setNodeStatus(node.id, btn.id)}
+                        className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${node.status === btn.id ? btn.activeClass : 'text-zinc-400 hover:text-zinc-600'}`}
+                    >
+                        {btn.label}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
 
     if (!isAdmin) return <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">Authenticating...</div>;
 
@@ -107,9 +160,18 @@ export default function AdminInfrastructurePage() {
                                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live System Monitor
                             </p>
                         </div>
-                        <button onClick={addNewNode} className="bg-zinc-900 hover:bg-black text-white px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm">
-                            + Register Node
-                        </button>
+                        
+                        {/* GÜNCELLENEN KISIM: İKİ BUTON */}
+                        <div className="flex flex-col sm:flex-row items-center gap-3">
+                            <button onClick={() => addNewNode(true)} className="w-full sm:w-auto bg-white border border-zinc-200 hover:border-black text-zinc-900 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5v14"></path></svg>
+                                Add Core Node
+                            </button>
+                            <button onClick={() => addNewNode(false)} className="w-full sm:w-auto bg-zinc-900 hover:bg-black text-white px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                Register Client Endpoint
+                            </button>
+                        </div>
                     </div>
 
                     {loading ? (
@@ -126,38 +188,34 @@ export default function AdminInfrastructurePage() {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {systemStatuses.map((node) => (
-                                <div key={node.id} className="group relative bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm transition-all hover:border-zinc-300">
-                                    <button onClick={() => deleteNode(node.id)} className="absolute top-6 right-6 p-2 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all bg-white hover:bg-red-50 rounded-lg">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-
-                                    <div className="flex flex-col gap-6">
-                                        <div>
-                                            <h3 className="text-xl font-black uppercase tracking-tight text-zinc-900 mb-1">{node.label}</h3>
-                                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Current Node Protocol: <span className="text-zinc-600 font-mono">STABLE</span></p>
-                                        </div>
-
-                                        {/* MODERN SEGMENTED STATUS SELECTOR */}
-                                        <div className="bg-zinc-100 p-1.5 rounded-2xl flex items-center gap-1">
-                                            {[
-                                                { id: 'operational', label: 'Online', activeClass: 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' },
-                                                { id: 'degraded', label: 'Warn', activeClass: 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' },
-                                                { id: 'down', label: 'Down', activeClass: 'bg-red-500 text-white shadow-lg shadow-red-500/30' }
-                                            ].map(btn => (
-                                                <button
-                                                    key={btn.id}
-                                                    onClick={() => setNodeStatus(node.id, btn.id)}
-                                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${node.status === btn.id ? btn.activeClass : 'text-zinc-400 hover:text-zinc-600'}`}
-                                                >
-                                                    {btn.label}
-                                                </button>
-                                            ))}
-                                        </div>
+                        <div className="space-y-16">
+                            
+                            {/* BÖLÜM 1: CORE INFRASTRUCTURE */}
+                            {coreNodes.length > 0 && (
+                                <section>
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400">Core Infrastructure</h2>
+                                        <div className="h-px bg-zinc-200 flex-1"></div>
                                     </div>
-                                </div>
-                            ))}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {coreNodes.map(node => <StatusCard key={node.id} node={node} />)}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* BÖLÜM 2: CLIENT ENDPOINTS */}
+                            {clientNodes.length > 0 && (
+                                <section>
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400">Client Endpoints</h2>
+                                        <div className="h-px bg-zinc-200 flex-1"></div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {clientNodes.map(node => <StatusCard key={node.id} node={node} />)}
+                                    </div>
+                                </section>
+                            )}
+
                         </div>
                     )}
 
