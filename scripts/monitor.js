@@ -14,27 +14,51 @@ async function checkSystems() {
   }
 
   for (const system of systems) {
-    let status = 'operational'; // Tablonda küçük harf kullandığın için böyle kalsın
-    
+    let status = 'operational';
+    let details = null;
+    let latency = 0;
+    const startTime = Date.now(); // Hız ölçümüne başlıyoruz
+
     try {
       const response = await fetch(system.target_url, { method: 'GET' });
-      // Supabase URL'lerine auth'suz gidince 401/400 dönebilir, 
-      // bu sunucunun ayakta olduğunu kanıtlar.
-      if (response.status >= 500) throw new Error('Down');
+      latency = Date.now() - startTime; // Ne kadar sürdüğünü hesapladık
+
+      if (response.status >= 500) throw new Error(`HTTP Error ${response.status}`);
       
-      console.log(`✅ ${system.label} is UP`);
+      // Eğer müşteri sitesi detaylı JSON (/api/health) döndürüyorsa onu oku
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        const data = await response.json();
+        if (data.status) status = data.status; // operational, degraded, down
+        if (data.details) details = data.details; // db: ok vb.
+      }
+      
+      console.log(`✅ ${system.label} is UP (${latency}ms)`);
     } catch (err) {
-      status = 'degraded';
+      latency = Date.now() - startTime;
+      status = 'down';
+      details = { error: err.message };
       console.log(`❌ ${system.label} is DOWN`);
     }
 
+    // 1. Durumu Ana Tabloda Güncelle
     await supabase
       .from('system_status')
       .update({ 
         status: status,
-        updated_at: new Date().toISOString() // Tablondaki kolon adı updated_at
+        updated_at: new Date().toISOString()
       })
       .eq('id', system.id);
+
+    // 2. YENİ: Detayları Log Tablosuna Yaz!
+    await supabase
+      .from('incident_logs')
+      .insert([{
+        node_id: system.id,
+        status: status,
+        latency: latency,
+        details: details
+      }]);
   }
 }
 

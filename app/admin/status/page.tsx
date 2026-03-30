@@ -10,6 +10,11 @@ export default function AdminInfrastructurePage() {
     const [loading, setLoading] = useState(true);
     const [initializing, setInitializing] = useState(false);
     const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
+    
+    // MODAL İÇİN YENİ STATELER
+    const [selectedNode, setSelectedNode] = useState<any | null>(null);
+    const [nodeLogs, setNodeLogs] = useState<any[]>([]);
+    const [loadingLogs, setLoadingLogs] = useState(false);
 
     useEffect(() => {
         const checkAdmin = async () => {
@@ -37,6 +42,21 @@ export default function AdminInfrastructurePage() {
         const { data, error } = await supabase.from('system_status').select('*').order('label', { ascending: true });
         if (data) setSystemStatuses(data);
         setLoading(false);
+    };
+
+    // YENİ: LOGLARI GETİRME FONKSİYONU
+    const openHealthReport = async (node: any) => {
+        setSelectedNode(node);
+        setLoadingLogs(true);
+        const { data, error } = await supabase
+            .from('incident_logs')
+            .select('*')
+            .eq('node_id', node.id)
+            .order('created_at', { ascending: false })
+            .limit(10); // Son 10 olayı getir
+            
+        if (data) setNodeLogs(data);
+        setLoadingLogs(false);
     };
 
     const initializeDefaultNodes = async () => {
@@ -77,25 +97,16 @@ export default function AdminInfrastructurePage() {
         }
     };
 
-    // GÜNCELLENEN KISIM: İKİ FARKLI EKLEME MANTIĞI
     const addNewNode = async (isCore: boolean) => {
         const nodeName = prompt(isCore ? "Enter Core Node Name (e.g., Redis Cache):" : "Enter Client Name (e.g., Acme Corp):");
         if (!nodeName) return;
         
         let nodeUrl = prompt("Enter target URL to monitor (e.g., https://...):");
+        if (nodeUrl && !nodeUrl.startsWith('http')) nodeUrl = 'https://' + nodeUrl;
         
-        if (nodeUrl && !nodeUrl.startsWith('http')) {
-            nodeUrl = 'https://' + nodeUrl;
-        }
-        
-        // Eğer Core ise 'node-' ile başlar (üst listeye gider), Client ise 'client-' ile başlar (alt listeye gider)
         const nodeId = (isCore ? "node-" : "client-") + Date.now(); 
-
         const { error } = await supabase.from('system_status').insert([{ 
-            id: nodeId,
-            label: nodeName.trim(), 
-            status: 'operational',
-            target_url: nodeUrl ? nodeUrl.trim() : null
+            id: nodeId, label: nodeName.trim(), status: 'operational', target_url: nodeUrl ? nodeUrl.trim() : null
         }]);
         
         if (!error) fetchSystemStatus();
@@ -107,9 +118,18 @@ export default function AdminInfrastructurePage() {
 
     const StatusCard = ({ node }: { node: any }) => (
         <div className="group relative bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm transition-all hover:border-zinc-300 flex flex-col justify-between">
-            <button onClick={() => deleteNode(node.id)} className="absolute top-6 right-6 p-2 text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all bg-white hover:bg-red-50 rounded-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
-            </button>
+            
+            {/* SAĞ ÜST İKONLAR */}
+            <div className="absolute top-6 right-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                {/* YENİ: LOG RAPOR BUTONU */}
+                <button onClick={() => openHealthReport(node)} className="p-2 text-zinc-400 hover:text-indigo-600 bg-white hover:bg-indigo-50 rounded-lg transition-colors" title="View Health Report">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </button>
+                {/* SİLME BUTONU */}
+                <button onClick={() => deleteNode(node.id)} className="p-2 text-zinc-300 hover:text-red-500 bg-white hover:bg-red-50 rounded-lg transition-colors" title="Delete Node">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                </button>
+            </div>
 
             <div className="flex flex-col gap-4 mb-6">
                 <div>
@@ -161,7 +181,6 @@ export default function AdminInfrastructurePage() {
                             </p>
                         </div>
                         
-                        {/* GÜNCELLENEN KISIM: İKİ BUTON */}
                         <div className="flex flex-col sm:flex-row items-center gap-3">
                             <button onClick={() => addNewNode(true)} className="w-full sm:w-auto bg-white border border-zinc-200 hover:border-black text-zinc-900 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5v14"></path></svg>
@@ -190,7 +209,6 @@ export default function AdminInfrastructurePage() {
                     ) : (
                         <div className="space-y-16">
                             
-                            {/* BÖLÜM 1: CORE INFRASTRUCTURE */}
                             {coreNodes.length > 0 && (
                                 <section>
                                     <div className="flex items-center gap-4 mb-6">
@@ -203,7 +221,6 @@ export default function AdminInfrastructurePage() {
                                 </section>
                             )}
 
-                            {/* BÖLÜM 2: CLIENT ENDPOINTS */}
                             {clientNodes.length > 0 && (
                                 <section>
                                     <div className="flex items-center gap-4 mb-6">
@@ -218,24 +235,65 @@ export default function AdminInfrastructurePage() {
 
                         </div>
                     )}
-
-                    <div className="mt-12 bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm relative overflow-hidden flex flex-col md:flex-row items-start gap-4 md:gap-6">
-                        <div className="p-3 md:p-4 bg-zinc-50 rounded-2xl border border-zinc-100 shrink-0">
-                            <svg className="w-6 h-6 md:w-8 md:h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <h3 className="text-sm md:text-base font-black uppercase tracking-widest text-zinc-900 mt-1">Global Node Override</h3>
-                            <p className="text-zinc-500 text-xs md:text-sm font-bold mt-2 leading-relaxed max-w-3xl">
-                                Changes made here bypass standard health checks. ONLINE indicates full service availability. WARN indicates increased latency or scheduled maintenance. DOWN triggers high-priority alerts across the client network.
-                            </p>
-                        </div>
-                    </div>
                 </div>
 
                 <footer className="mt-20 pb-10 text-center">
                     <p className="text-[9px] font-black uppercase tracking-[0.5em] text-zinc-300">Novatrum // Infrastructure Systems</p>
                 </footer>
             </main>
+
+            {/* YENİ: HEALTH REPORT MODAL (AÇILIR PENCERE) */}
+            {selectedNode && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+                    <div className="absolute inset-0 bg-zinc-900/40 backdrop-blur-sm" onClick={() => setSelectedNode(null)}></div>
+                    <div className="relative bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                        <div className="p-6 md:p-8 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                            <div>
+                                <h2 className="text-2xl font-black uppercase tracking-tight text-zinc-900">{selectedNode.label}</h2>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-1">Diagnostic Report & Logs</p>
+                            </div>
+                            <button onClick={() => setSelectedNode(null)} className="p-2 bg-white border border-zinc-200 rounded-full hover:bg-zinc-100 transition-colors">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white">
+                            {loadingLogs ? (
+                                <div className="py-12 flex justify-center"><span className="w-8 h-8 border-2 border-zinc-200 border-t-zinc-900 rounded-full animate-spin" /></div>
+                            ) : nodeLogs.length === 0 ? (
+                                <div className="text-center py-12 text-zinc-400 text-xs font-bold uppercase tracking-widest">No incident logs recorded yet. Action may still be running.</div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {nodeLogs.map((log) => (
+                                        <div key={log.id} className="p-4 rounded-2xl border border-zinc-100 bg-zinc-50/50 hover:bg-zinc-50 transition-colors">
+                                            <div className="flex justify-between items-start mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`w-2 h-2 rounded-full ${log.status === 'operational' ? 'bg-emerald-500' : log.status === 'degraded' ? 'bg-amber-500' : 'bg-red-500'}`}></span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-900">{log.status}</span>
+                                                </div>
+                                                <span className="text-[10px] font-bold text-zinc-400">{new Date(log.created_at).toLocaleString()}</span>
+                                            </div>
+                                            
+                                            <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                                                <div className="p-3 bg-white border border-zinc-100 rounded-xl">
+                                                    <span className="text-zinc-400 block mb-1 text-[9px] font-sans font-bold uppercase tracking-widest">Latency</span>
+                                                    {log.latency ? `${log.latency}ms` : 'N/A'}
+                                                </div>
+                                                <div className="p-3 bg-white border border-zinc-100 rounded-xl">
+                                                    <span className="text-zinc-400 block mb-1 text-[9px] font-sans font-bold uppercase tracking-widest">Details</span>
+                                                    <span className={log.details?.error ? 'text-red-500' : 'text-zinc-700'}>
+                                                        {log.details ? JSON.stringify(log.details) : 'Clean Ping'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
