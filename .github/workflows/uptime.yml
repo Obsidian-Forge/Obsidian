@@ -2,17 +2,17 @@ name: Novatrum Uptime Monitor
 
 on:
   schedule:
-    - cron: '*/10 * * * *' # Her 10 dakikada bir çalışır
-  workflow_dispatch: # Manuel çalıştırma tuşu
+    - cron: '*/10 * * * *' 
+  workflow_dispatch: 
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4 
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20' 
+          node-version: '22' # En güncel sürüm
       - run: npm install @supabase/supabase-js
       - run: node scripts/monitor.js
         env:
