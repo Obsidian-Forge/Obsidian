@@ -117,115 +117,118 @@ export const translations = {
     },
 
     discoveryPage: {
-  title: "Definitive",
-  subtitle: "Discovery.",
-  desc: "Provide the detailed parameters of your project. We will engineer a precise blueprint and contract-ready proposal.",
-  liveEstimate: "Live Estimate",
-  phase: "Phase",
-  of: "of",
-  fileUploading: "Encrypting Upload...",
-  fileClick: "Click or Drag files here",
-  integrations: {
-    stripe: "Stripe Payment Gateway",
-    auth: "User Authentication & Authorization",
-    crm: "CRM / Hubspot Sync",
-    mail: "Newsletter & Email Sync",
-    analytics: "Advanced Event Analytics",
-    ai: "Bespoke AI / ML Integration",
-    sockets: "Real-time Data / Sockets",
-    cms: "Custom Content Management (CMS)",
-    multilang: "Multi-language Alphas"
-  },
-  designStyles: {
-    minimal: "Minimal & Focus on Typography",
-    bold: "Bold, Premium & Brand Driven",
-    corporate: "Professional & Corporate Structure",
-    interactive: "Highly Interactive & Complex UI"
-  },
-  fontPrefs: {
-    sans: "Modern Sans-Serif",
-    serif: "Classic Serif",
-    mono: "Industrial Monospace"
-  },
-  seoLevels: {
-    standard: "Standard SEO Structure",
-    advanced: "Advanced / Technical SEO"
-  },
-  timelines: {
-    standard: "Standard (4-6 Weeks)",
-    relaxed: "Relaxed (8-10 Weeks)",
-    expedited: "Expedited (1-2 Weeks)"
-  },
-  constraint: {
-    title: "Architectural Constraint",
-    desc: "A complex platform cannot be expedited. Please prioritize standard or relaxed timelines for proper engineering."
-  },
-  form: {
-    credentials: "Credentials",
-    entity: "Entity Name *",
-    website: "Current URL",
-    goals: "Primary Objective & Goals *",
-    goalsPlace: "Describe the ultimate purpose of this platform...",
-    competitors: "Competitors or Inspirations",
-    architecture: "Architecture",
-    archDesc: "Select the engineering framework for your application.",
-    pages: "Estimated Number of Pages/Screens",
-    design: "Aesthetics",
-    designDesc: "How should the platform feel? Select your direction.",
-    color: "Primary Color",
-    accent: "Accent Color",
-    hasAccent: "Has Accent Color?",
-    fonts: "Typography Preference",
-    content: "Content & Copy",
-    copy: "Include Professional Copywriting",
-    assets: "Attach Brand Assets / Brief (Max 100MB)",
-    integrations: "Integrations & Functionality",
-    intDesc: "Select the complex features and third-party API syncs.",
-    seo: "Visibility",
-    seoDesc: "Select content engineering and indexing strategy.",
-    timeline: "Logistics",
-    timelineDesc: "Let's define the required deployment timeline.",
-    maintenance: "Continuous Support",
-    maintenanceDesc: "Include post-launch maintenance & security retainer.",
-    maintenanceCheck: "Include priority maintenance",
-    client: "Identify Client",
-    clientSub: "Provide billing details to securely log this discovery into our systems.",
-    name: "Full Name / Point of Contact *",
-    email: "Corporate Email Address *",
-    phone: "Corporate Phone Number *",
-    address: "Billing Address (City, Country) *",
-    vat: "VAT Number (Optional)",
-    notes: "Design Notes",
-    notesPlace: "Share any specific visual directions or technical notes..."
-  },
-  summary: {
-    title: "Intelligence Summary",
-    desc: "A baseline algorithmic blueprint of your defined parameters.",
-    notBinding: "NOT BINDING",
-    platform: "Platform Architecture",
-    logistics: "Deployment Timeline",
-    copywriting: "Copywriting",
-    maintenance: "Maintenance",
-    design: "Design Direction",
-    integrations: "Integrations",
-    total: "Live Calculation (€)"
-  },
-  btn: {
-    prev: "Previous Phase",
-    next: "Next Phase",
-    submit: "Lock Discovery & Blueprint",
-    encrypting: "Encrypting...",
-    finish: "Start Discovery",
-    pdf: "Generate & Download PDF",
-    hub: "Return to Hub"
-  },
-  success: {
-    title: "Blueprint Locked.",
-    sub: "Definitive Discovery",
-    desc: "Your secure reference ID is logged. We will review your blueprint and email you within 24-48 hours with a Definitive Proposal.",
-    dsNumber: "DS Number"
-  }
-},
+      title: "Definitive",
+      subtitle: "Discovery.",
+      desc: "Provide the detailed parameters of your project. We will engineer a precise blueprint and contract-ready proposal.",
+      liveEstimate: "Live Estimate",
+      phase: "Phase",
+      of: "of",
+      fileUploading: "Encrypting Upload...",
+      fileClick: "Click or Drag files here",
+      termsAgree: "I acknowledge that I have read and agree to the ",
+      termsLink: "Novatrum Master Service Agreement",
+      termsDesc: ". I understand that this definitive blueprint forms the technical scope and billing terms of our collaboration.",
+      integrations: {
+        stripe: "Stripe Payment Gateway",
+        auth: "User Authentication & Authorization",
+        crm: "CRM / Hubspot Sync",
+        mail: "Newsletter & Email Sync",
+        analytics: "Advanced Event Analytics",
+        ai: "Bespoke AI / ML Integration",
+        sockets: "Real-time Data / Sockets",
+        cms: "Custom Content Management (CMS)",
+        multilang: "Multi-language Alphas"
+      },
+      designStyles: {
+        minimal: "Minimal & Focus on Typography",
+        bold: "Bold, Premium & Brand Driven",
+        corporate: "Professional & Corporate Structure",
+        interactive: "Highly Interactive & Complex UI"
+      },
+      fontPrefs: {
+        sans: "Modern Sans-Serif",
+        serif: "Classic Serif",
+        mono: "Industrial Monospace"
+      },
+      seoLevels: {
+        standard: "Standard SEO Structure",
+        advanced: "Advanced / Technical SEO"
+      },
+      timelines: {
+        standard: "Standard (4-6 Weeks)",
+        relaxed: "Relaxed (8-10 Weeks)",
+        expedited: "Expedited (1-2 Weeks)"
+      },
+      constraint: {
+        title: "Architectural Constraint",
+        desc: "A complex platform cannot be expedited. Please prioritize standard or relaxed timelines for proper engineering."
+      },
+      form: {
+        credentials: "Credentials",
+        entity: "Entity Name *",
+        website: "Current URL",
+        goals: "Primary Objective & Goals *",
+        goalsPlace: "Describe the ultimate purpose of this platform...",
+        competitors: "Competitors or Inspirations",
+        architecture: "Architecture",
+        archDesc: "Select the engineering framework for your application.",
+        pages: "Estimated Number of Pages/Screens",
+        design: "Aesthetics",
+        designDesc: "How should the platform feel? Select your direction.",
+        color: "Primary Color",
+        accent: "Accent Color",
+        hasAccent: "Has Accent Color?",
+        fonts: "Typography Preference",
+        content: "Content & Copy",
+        copy: "Include Professional Copywriting",
+        assets: "Attach Brand Assets / Brief (Max 100MB)",
+        integrations: "Integrations & Functionality",
+        intDesc: "Select the complex features and third-party API syncs.",
+        seo: "Visibility",
+        seoDesc: "Select content engineering and indexing strategy.",
+        timeline: "Logistics",
+        timelineDesc: "Let's define the required deployment timeline.",
+        maintenance: "Continuous Support",
+        maintenanceDesc: "Include post-launch maintenance & security retainer.",
+        maintenanceCheck: "Include priority maintenance",
+        client: "Identify Client",
+        clientSub: "Provide billing details to securely log this discovery into our systems.",
+        name: "Full Name / Point of Contact *",
+        email: "Corporate Email Address *",
+        phone: "Corporate Phone Number *",
+        address: "Billing Address (City, Country) *",
+        vat: "VAT Number (Optional)",
+        notes: "Design Notes",
+        notesPlace: "Share any specific visual directions or technical notes..."
+      },
+      summary: {
+        title: "Intelligence Summary",
+        desc: "A baseline algorithmic blueprint of your defined parameters.",
+        notBinding: "NOT BINDING",
+        platform: "Platform Architecture",
+        logistics: "Deployment Timeline",
+        copywriting: "Copywriting",
+        maintenance: "Maintenance",
+        design: "Design Direction",
+        integrations: "Integrations",
+        total: "Live Calculation (€)"
+      },
+      btn: {
+        prev: "Previous Phase",
+        next: "Next Phase",
+        submit: "Lock Discovery & Blueprint",
+        encrypting: "Encrypting...",
+        finish: "Start Discovery",
+        pdf: "Generate & Download PDF",
+        hub: "Return to Hub"
+      },
+      success: {
+        title: "Blueprint Locked.",
+        sub: "Definitive Discovery",
+        desc: "Your secure reference ID is logged. We will review your blueprint and email you within 24-48 hours with a Definitive Proposal.",
+        dsNumber: "DS Number"
+      }
+    },
 
     contactPage: {
       title: "Initiate Contact",
@@ -540,115 +543,118 @@ export const translations = {
     },
 
     discoveryPage: {
-  title: "Definitieve",
-  subtitle: "Discovery.",
-  desc: "Voer de gedetailleerde parameters van uw project in. Wij maken bir exact technisch plan en een contractklaar voorstel.",
-  liveEstimate: "Live Schatting",
-  phase: "Fase",
-  of: "van",
-  fileUploading: "Encrypting Upload...",
-  fileClick: "Klik of sleep bestanden hierheen",
-  integrations: {
-    stripe: "Stripe Betalingsgateway",
-    auth: "Kullanıcı Veri ve Yetkilendirme",
-    crm: "CRM / Hubspot Synchronisatie",
-    mail: "Nieuwsbrief & E-mail Synchronisatie",
-    analytics: "Geavanceerde Gebeurtenisanalyses",
-    ai: "Bespoke AI / ML Integratie",
-    sockets: "Real-time Veri / Sockets",
-    cms: "Custom Content Management (CMS)",
-    multilang: "Meertalige Alfa's"
-  },
-  designStyles: {
-    minimal: "Minimal & Focus op Typografie",
-    bold: "Vet, Premium & Brand Driven",
-    corporate: "Profesyonel & Kurumsal Yapı",
-    interactive: "Hoog Interactief & Complex UI"
-  },
-  fontPrefs: {
-    sans: "Modern Sans-Serif",
-    serif: "Classic Serif",
-    mono: "Industrial Monospace"
-  },
-  seoLevels: {
-    standard: "Standaard SEO Yapısı",
-    advanced: "Geavanceerd / Technisch SEO"
-  },
-  timelines: {
-    standard: "Standaard (4-6 Weken)",
-    relaxed: "Relaxed (8-10 Weken)",
-    expedited: "Versneld (1-2 Weken)"
-  },
-  constraint: {
-    title: "Architecturale Beperking",
-    desc: "Een complex platform kan niet worden versneld. Geef a.u.b. prioriteit aan standaard- of relaxte tijdlijnen voor een goede technische uitvoering."
-  },
-  form: {
-    credentials: "Credentials",
-    entity: "Entiteitsnaam *",
-    website: "Huidige URL",
-    goals: "Primaire Doelstelling & Doelen *",
-    goalsPlace: "Beschrijf het ultieme doel van dit platform...",
-    competitors: "Concurrenten of Inspiraties",
-    architecture: "Architectuur",
-    archDesc: "Selecteer het technische framework voor uw applicatie.",
-    pages: "Geschat aantal Pagina's/Schermen",
-    design: "Esthetiek",
-    designDesc: "Hoe moet het platform aanvoelen? Selecteer uw richting.",
-    color: "Primaire Kleur",
-    accent: "Accentkleur",
-    hasAccent: "Accentkleur?",
-    fonts: "Typografievoorkeur",
-    content: "Inhoud & Copy",
-    copy: "Include Professional Copywriting",
-    assets: "Attach Brand Assets / Brief (Max 100MB)",
-    integrations: "Integraties & Functionaliteit",
-    intDesc: "Selecteer de complexe functies en API-synchronisaties.",
-    seo: "Zichtbaarheid",
-    seoDesc: "Selecteer de strategie voor content engineering en indexering.",
-    timeline: "Logistiek",
-    timelineDesc: "Laten we de vereiste lanceringstermijn bepalen.",
-    maintenance: "Continu Onderhoud",
-    maintenanceDesc: "Include post-launch maintenance & security retainer.",
-    maintenanceCheck: "Include priority maintenance",
-    client: "Identificeer Klant",
-    clientSub: "Voer uw facturatiegegevens in om deze discovery veilig in onze systemen op te slaan.",
-    name: "Volledige Naam / Contactpersoon *",
-    email: "Zakelijk E-mailadres *",
-    phone: "Kurumsal Telefoonnummer *",
-    address: "Billing Adres (Stad, Land) *",
-    vat: "BTW-nummer (Optioneel)",
-    notes: "Ontwerpnotities",
-    notesPlace: "Deel specifieke visuele richtlijnen of technische opmerkingen..."
-  },
-  summary: {
-    title: "Intelligence Samenvatting",
-    desc: "Een basis algoritmisch plan van uw gedefinieerde parameters.",
-    notBinding: "NIET BINDEND",
-    platform: "Platform Architectuur",
-    logistics: "Deployment Tijdlijn",
-    copywriting: "Copywriting",
-    maintenance: "Onderhoud",
-    design: "Ontwerprichting",
-    integrations: "Integraties",
-    total: "Canlı Hesaplama (€)"
-  },
-  btn: {
-    prev: "Vorige Fase",
-    next: "Volgende Fase",
-    submit: "Vergrendel Plan & Blueprint",
-    encrypting: "Versleutelen...",
-    finish: "Start Discovery",
-    pdf: "Genereer & Download PDF",
-    hub: "Terug naar Hub"
-  },
-  success: {
-    title: "Plan Vergrendeld.",
-    sub: "Definitieve Discovery",
-    desc: "Uw beveiligde referentie-ID is vastgelegd. Wij zullen uw blueprint beoordelen en u binnen 24-48 uur e-mailen met bir Definitief Voorstel.",
-    dsNumber: "DS Nummer"
-  }
-},
+      title: "Definitieve",
+      subtitle: "Discovery.",
+      desc: "Voer de gedetailleerde parameters van uw project in. Wij maken bir exact technisch plan en een contractklaar voorstel.",
+      liveEstimate: "Live Schatting",
+      phase: "Fase",
+      of: "van",
+      fileUploading: "Encrypting Upload...",
+      fileClick: "Klik of sleep bestanden hierheen",
+      termsAgree: "Ik bevestig dat ik de ",
+      termsLink: "Novatrum Algemene Voorwaarden",
+      termsDesc: " heb gelezen en hiermee akkoord ga. Ik begrijp dat deze definitieve blauwdruk de technische omvang en factureringsvoorwaarden van onze samenwerking vormt.",
+      integrations: {
+        stripe: "Stripe Betalingsgateway",
+        auth: "Kullanıcı Veri ve Yetkilendirme",
+        crm: "CRM / Hubspot Synchronisatie",
+        mail: "Nieuwsbrief & E-mail Synchronisatie",
+        analytics: "Geavanceerde Gebeurtenisanalyses",
+        ai: "Bespoke AI / ML Integratie",
+        sockets: "Real-time Veri / Sockets",
+        cms: "Custom Content Management (CMS)",
+        multilang: "Meertalige Alfa's"
+      },
+      designStyles: {
+        minimal: "Minimal & Focus op Typografie",
+        bold: "Vet, Premium & Brand Driven",
+        corporate: "Profesyonel & Kurumsal Yapı",
+        interactive: "Hoog Interactief & Complex UI"
+      },
+      fontPrefs: {
+        sans: "Modern Sans-Serif",
+        serif: "Classic Serif",
+        mono: "Industrial Monospace"
+      },
+      seoLevels: {
+        standard: "Standaard SEO Yapısı",
+        advanced: "Geavanceerd / Technisch SEO"
+      },
+      timelines: {
+        standard: "Standaard (4-6 Weken)",
+        relaxed: "Relaxed (8-10 Weken)",
+        expedited: "Versneld (1-2 Weken)"
+      },
+      constraint: {
+        title: "Architecturale Beperking",
+        desc: "Een complex platform kan niet worden versneld. Geef a.u.b. prioriteit aan standaard- of relaxte tijdlijnen voor een goede technische uitvoering."
+      },
+      form: {
+        credentials: "Credentials",
+        entity: "Entiteitsnaam *",
+        website: "Huidige URL",
+        goals: "Primaire Doelstelling & Doelen *",
+        goalsPlace: "Beschrijf het ultieme doel van dit platform...",
+        competitors: "Concurrenten of Inspiraties",
+        architecture: "Architectuur",
+        archDesc: "Selecteer het technische framework voor uw applicatie.",
+        pages: "Geschat aantal Pagina's/Schermen",
+        design: "Esthetiek",
+        designDesc: "Hoe moet het platform aanvoelen? Selecteer uw richting.",
+        color: "Primaire Kleur",
+        accent: "Accentkleur",
+        hasAccent: "Accentkleur?",
+        fonts: "Typografievoorkeur",
+        content: "Inhoud & Copy",
+        copy: "Include Professional Copywriting",
+        assets: "Attach Brand Assets / Brief (Max 100MB)",
+        integrations: "Integraties & Functionaliteit",
+        intDesc: "Selecteer de complexe functies en API-synchronisaties.",
+        seo: "Zichtbaarheid",
+        seoDesc: "Selecteer de strategie voor content engineering en indexering.",
+        timeline: "Logistiek",
+        timelineDesc: "Laten we de vereiste lanceringstermijn bepalen.",
+        maintenance: "Continu Onderhoud",
+        maintenanceDesc: "Include post-launch maintenance & security retainer.",
+        maintenanceCheck: "Include priority maintenance",
+        client: "Identificeer Klant",
+        clientSub: "Voer uw facturatiegegevens in om deze discovery veilig in onze systemen op te slaan.",
+        name: "Volledige Naam / Contactpersoon *",
+        email: "Zakelijk E-mailadres *",
+        phone: "Kurumsal Telefoonnummer *",
+        address: "Billing Adres (Stad, Land) *",
+        vat: "BTW-nummer (Optioneel)",
+        notes: "Ontwerpnotities",
+        notesPlace: "Deel specifieke visuele richtlijnen of technische opmerkingen..."
+      },
+      summary: {
+        title: "Intelligence Samenvatting",
+        desc: "Een basis algoritmisch plan van uw gedefinieerde parameters.",
+        notBinding: "NIET BINDEND",
+        platform: "Platform Architectuur",
+        logistics: "Deployment Tijdlijn",
+        copywriting: "Copywriting",
+        maintenance: "Onderhoud",
+        design: "Ontwerprichting",
+        integrations: "Integraties",
+        total: "Canlı Hesaplama (€)"
+      },
+      btn: {
+        prev: "Vorige Fase",
+        next: "Volgende Fase",
+        submit: "Vergrendel Plan & Blueprint",
+        encrypting: "Versleutelen...",
+        finish: "Start Discovery",
+        pdf: "Genereer & Download PDF",
+        hub: "Terug naar Hub"
+      },
+      success: {
+        title: "Plan Vergrendeld.",
+        sub: "Definitieve Discovery",
+        desc: "Uw beveiligde referentie-ID is vastgelegd. Wij zullen uw blueprint beoordelen en u binnen 24-48 uur e-mailen met bir Definitief Voorstel.",
+        dsNumber: "DS Nummer"
+      }
+    },
 
     contactPage: {
       title: "Contact Opnemen",
@@ -962,115 +968,118 @@ export const translations = {
     },
 
     discoveryPage: {
-  title: "Découverte",
-  subtitle: "Définitive.",
-  desc: "Fournissez les paramètres détaillés de votre projet. Nous concevrons un plan technique précis et une proposition prête pour le contrat.",
-  liveEstimate: "Estimation en Direct",
-  phase: "Phase",
-  of: "de",
-  fileUploading: "Encrypting Upload...",
-  fileClick: "Cliquez ou glissez les fichiers ici",
-  integrations: {
-    stripe: "Passerelle de Paiement Stripe",
-    auth: "Authentification & Autorisation Utilisateur",
-    crm: "Synchronisation CRM / Hubspot",
-    mail: "Synchronisation Newsletter & Email",
-    analytics: "Analyses d'Evénements Avancées",
-    ai: "Intégration AI / ML sur mesure",
-    sockets: "Données en Temps Réel / Sockets",
-    cms: "Gestionnaire de Contenu (CMS)",
-    multilang: "Alphas Multilingues"
-  },
-  designStyles: {
-    minimal: "Minimal & Focus sur la Typographie",
-    bold: "Gras, Premium & Brand Driven",
-    corporate: "Structure Professionnelle & Entreprise",
-    interactive: "Hautement Interactif & Complex UI"
-  },
-  fontPrefs: {
-    sans: "Modern Sans-Serif",
-    serif: "Classic Serif",
-    mono: "Industrial Monospace"
-  },
-  seoLevels: {
-    standard: "Structure SEO Standart",
-    advanced: "SEO Avancé / Technique"
-  },
-  timelines: {
-    standard: "Standart (4-6 Semaines)",
-    relaxed: "Relax (8-10 Semaines)",
-    expedited: "Accéléré (1-2 Semaines)"
-  },
-  constraint: {
-    title: "Contrainte Architecturale",
-    desc: "Une plateforme complexe ne peut pas être accélérée. Veuillez privilégier les calendriers standard ou détendus pour une ingénierie appropriée."
-  },
-  form: {
-    credentials: "Credentials",
-    entity: "Nom de l'Entité *",
-    website: "URL Actuelle",
-    goals: "Objectif Principal & Buts *",
-    goalsPlace: "Décrivez le but ultime de cette plateforme...",
-    competitors: "Concurrents ou Inspirations",
-    architecture: "Architecture",
-    archDesc: "Sélectionnez le cadre d'ingénierie pour votre application.",
-    pages: "Nombre Estimé de Pages/Écrans",
-    design: "Esthétique",
-    designDesc: "Quelle sensation la plateforme doit-elle dégager ? Sélectionnez votre direction.",
-    color: "Couleur Principale",
-    accent: "Couleur d'Accent",
-    hasAccent: "Couleur d'Accent?",
-    fonts: "Préférence de Typographie",
-    content: "Contenu & Copy",
-    copy: "Include Professional Copywriting",
-    assets: "Attach Brand Assets / Brief (Max 100MB)",
-    integrations: "Intégrations & Fonctionnalités",
-    intDesc: "Sélectionnez les fonctionnalités complexes et les synchronisations API.",
-    seo: "Visibilité",
-    seoDesc: "Sélectionnez content engineering et la stratégie d'indexation.",
-    timeline: "Logistique",
-    timelineDesc: "Définissons le calendrier de déploiement requis.",
-    maintenance: "Soutien Continu",
-    maintenanceDesc: "Include post-launch maintenance & security retainer.",
-    maintenanceCheck: "Include priority maintenance",
-    client: "Identifier Client",
-    clientSub: "Fournissez vos coordonnées de facturation pour enregistrer cette découverte en toute sécurité.",
-    name: "Nom Complet / Point de Contact *",
-    email: "Adresse E-mail Professionnelle *",
-    phone: "Téléphone Professionnel *",
-    address: "Adresse de Facturation (Ville, Pays) *",
-    vat: "Numéro de TVA (Optionnel)",
-    notes: "Notes de Conception",
-    notesPlace: "Partagez toute direction visuelle spécifique ou note technique..."
-  },
-  summary: {
-    title: "Résumé d'Intelligence",
-    desc: "Un blueprint algorithmique de base de vos paramètres définis.",
-    notBinding: "NON BINDING",
-    platform: "Architecture de la Plateforme",
-    logistics: "Calendrier de Déploiement",
-    copywriting: "Copywriting",
-    maintenance: "Maintenance",
-    design: "Direction de Conception",
-    integrations: "Intégrations",
-    total: "Calcul en Direct (€)"
-  },
-  btn: {
-    prev: "Phase Précédente",
-    next: "Phase Suivante",
-    submit: "Verrouiller Plan & Blueprint",
-    encrypting: "Chiffrement...",
-    finish: "Démarrer Découverte",
-    pdf: "Générer & Télécharger PDF",
-    hub: "Retour au Hub"
-  },
-  success: {
-    title: "Blueprint Verrouillé.",
-    sub: "Découverte Définitive",
-    desc: "Votre ID de référence sécurisé est enregistré. Nous examinerons votre blueprint et vous enverrons un e-mail dans les 24-48 heures avec une Proposition Définitive.",
-    dsNumber: "Numéro DS"
-  }
-},
+      title: "Découverte",
+      subtitle: "Définitive.",
+      desc: "Fournissez les paramètres détaillés de votre projet. Nous concevrons un plan technique précis et une proposition prête pour le contrat.",
+      liveEstimate: "Estimation en Direct",
+      phase: "Phase",
+      of: "de",
+      fileUploading: "Encrypting Upload...",
+      fileClick: "Cliquez ou glissez les fichiers ici",
+      termsAgree: "Je reconnais avoir lu et accepté les ",
+      termsLink: "Conditions Générales de Service de Novatrum",
+      termsDesc: ". Je comprends que ce plan définitif constitue la portée technique et les conditions de facturation de notre collaboration.",
+      integrations: {
+        stripe: "Passerelle de Paiement Stripe",
+        auth: "Authentification & Autorisation Utilisateur",
+        crm: "Synchronisation CRM / Hubspot",
+        mail: "Synchronisation Newsletter & Email",
+        analytics: "Analyses d'Evénements Avancées",
+        ai: "Intégration AI / ML sur mesure",
+        sockets: "Données en Temps Réel / Sockets",
+        cms: "Gestionnaire de Contenu (CMS)",
+        multilang: "Alphas Multilingues"
+      },
+      designStyles: {
+        minimal: "Minimal & Focus sur la Typographie",
+        bold: "Gras, Premium & Brand Driven",
+        corporate: "Structure Professionnelle & Entreprise",
+        interactive: "Hautement Interactif & Complex UI"
+      },
+      fontPrefs: {
+        sans: "Modern Sans-Serif",
+        serif: "Classic Serif",
+        mono: "Industrial Monospace"
+      },
+      seoLevels: {
+        standard: "Structure SEO Standart",
+        advanced: "SEO Avancé / Technique"
+      },
+      timelines: {
+        standard: "Standart (4-6 Semaines)",
+        relaxed: "Relax (8-10 Semaines)",
+        expedited: "Accéléré (1-2 Semaines)"
+      },
+      constraint: {
+        title: "Contrainte Architecturale",
+        desc: "Une plateforme complexe ne peut pas être accélérée. Veuillez privilégier les calendriers standard ou détendus pour une ingénierie appropriée."
+      },
+      form: {
+        credentials: "Credentials",
+        entity: "Nom de l'Entité *",
+        website: "URL Actuelle",
+        goals: "Objectif Principal & Buts *",
+        goalsPlace: "Décrivez le but ultime de cette plateforme...",
+        competitors: "Concurrents ou Inspirations",
+        architecture: "Architecture",
+        archDesc: "Sélectionnez le cadre d'ingénierie pour votre application.",
+        pages: "Nombre Estimé de Pages/Écrans",
+        design: "Esthétique",
+        designDesc: "Quelle sensation la plateforme doit-elle dégager ? Sélectionnez votre direction.",
+        color: "Couleur Principale",
+        accent: "Couleur d'Accent",
+        hasAccent: "Couleur d'Accent?",
+        fonts: "Préférence de Typographie",
+        content: "Contenu & Copy",
+        copy: "Include Professional Copywriting",
+        assets: "Attach Brand Assets / Brief (Max 100MB)",
+        integrations: "Intégrations & Fonctionnalités",
+        intDesc: "Sélectionnez les fonctionnalités complexes et les synchronisations API.",
+        seo: "Visibilité",
+        seoDesc: "Sélectionnez content engineering et la stratégie d'indexation.",
+        timeline: "Logistique",
+        timelineDesc: "Définissons le calendrier de déploiement requis.",
+        maintenance: "Soutien Continu",
+        maintenanceDesc: "Include post-launch maintenance & security retainer.",
+        maintenanceCheck: "Include priority maintenance",
+        client: "Identifier Client",
+        clientSub: "Fournissez vos coordonnées de facturation pour enregistrer cette découverte en toute sécurité.",
+        name: "Nom Complet / Point de Contact *",
+        email: "Adresse E-mail Professionnelle *",
+        phone: "Téléphone Professionnel *",
+        address: "Adresse de Facturation (Ville, Pays) *",
+        vat: "Numéro de TVA (Optionnel)",
+        notes: "Notes de Conception",
+        notesPlace: "Partagez toute direction visuelle spécifique ou note technique..."
+      },
+      summary: {
+        title: "Résumé d'Intelligence",
+        desc: "Un blueprint algorithmique de base de vos paramètres définis.",
+        notBinding: "NON BINDING",
+        platform: "Architecture de la Plateforme",
+        logistics: "Calendrier de Déploiement",
+        copywriting: "Copywriting",
+        maintenance: "Maintenance",
+        design: "Direction de Conception",
+        integrations: "Intégrations",
+        total: "Calcul en Direct (€)"
+      },
+      btn: {
+        prev: "Phase Précédente",
+        next: "Phase Suivante",
+        submit: "Verrouiller Plan & Blueprint",
+        encrypting: "Chiffrement...",
+        finish: "Démarrer Découverte",
+        pdf: "Générer & Télécharger PDF",
+        hub: "Retour au Hub"
+      },
+      success: {
+        title: "Blueprint Verrouillé.",
+        sub: "Découverte Définitive",
+        desc: "Votre ID de référence sécurisé est enregistré. Nous examinerons votre blueprint et vous enverrons un e-mail dans les 24-48 heures avec une Proposition Définitive.",
+        dsNumber: "Numéro DS"
+      }
+    },
 
     contactPage: {
       title: "Établir le Contact",
@@ -1386,116 +1395,119 @@ export const translations = {
     },
 
     discoveryPage: {
-  title: "Kesin Keşif",
-  subtitle: "Süreci.",
-  desc: "Projenizin detaylı parametrelerini girin. Sizin için hassas bir teknik plan ve sözleşmeye hazır bir teklif hazırlayalım.",
-  liveEstimate: "Canlı Tahmin",
-  phase: "Aşama",
-  of: "/",
-  fileUploading: "Şifrelenmiş Yükleme...",
-  fileClick: "Dosyaları buraya tıklayın veya sürükleyin",
-  integrations: {
-    stripe: "Stripe Ödeme Altyapısı",
-    auth: "Kullanıcı Doğrulama ve Yetkilendirme",
-    crm: "CRM / Hubspot Senkronizasyonu",
-    mail: "Bülten ve E-posta Senkronizasyonu",
-    analytics: "Gelişmiş Olay Analitiği",
-    ai: "Özel AI / ML Entegrasyonu",
-    sockets: "Gerçek Zamanlı Veri / Sockets",
-    cms: "Özel İçerik Yönetimi (CMS)",
-    multilang: "Çok Dilli Altyapı"
-  },
-  designStyles: {
-    minimal: "Minimal & Tipografi Odaklı",
-    bold: "Cesur, Premium & Marka Odaklı",
-    corporate: "Profesyonel & Kurumsal Yapı",
-    interactive: "Yüksek Etkileşimli & Karmaşık UI"
-  },
-  fontPrefs: {
-    sans: "Modern Sans-Serif",
-    serif: "Klasik Serif",
-    mono: "Endüstriyel Monospace"
-  },
-  seoLevels: {
-    standard: "Standart SEO Yapısı",
-    advanced: "Gelişmiş / Teknik SEO"
-  },
-  timelines: {
-    standard: "Standart (4-6 Hafta)",
-    relaxed: "Esnek (8-10 Hafta)",
-    expedited: "Hızlandırılmış (1-2 Hafta)"
-  },
-  constraint: {
-    title: "Mühendislik Kısıtlaması",
-    desc: "Karmaşık bir platform hızlandırılamaz. Lütfen düzgün bir mühendislik süreci için standart veya esnek takvimlere öncelik verin."
-  },
-  form: {
-    credentials: "Kimlik Bilgileri",
-    entity: "Kurum / Marka Adı *",
-    website: "Mevcut URL",
-    goals: "Temel Hedef ve Amaçlar *",
-    goalsPlace: "Bu platformun nihai amacını açıklayın...",
-    competitors: "Rakipler veya İlham Kaynakları",
-    architecture: "Mimari",
-    archDesc: "Uygulamanız için mühendislik çerçevesini seçin.",
-    pages: "Tahmini Sayfa/Ekran Sayısı",
-    design: "Estetik",
-    designDesc: "Platform nasıl hissettirmeli? Markanıza özel tasarım sistemleri geliştiriyoruz.",
-    color: "Ana Renk",
-    accent: "Vurgu Rengi",
-    hasAccent: "Vurgu Rengi mi?",
-    fonts: "Tipografi Tercihi",
-    content: "İçerik ve Copy",
-    copy: "Profesyonel Copywriting Dahil",
-    assets: "Marka Varlıkları / Brief (Maks 100MB)",
-    integrations: "Entegrasyonlar ve İşlevsellik",
-    intDesc: "Karmaşık özellikleri ve üçüncü taraf API senkronizasyonlarını seçin.",
-    seo: "Görünürlük",
-    seoDesc: "İçerik mühendisliği ve indeksleme stratejisini seçin.",
-    timeline: "Lojistik",
-    timelineDesc: "Gerekli lansman takvimini belirleyelim.",
-    maintenance: "Sürekli Destek",
-    maintenanceDesc: "Lansman sonrası bakım ve güvenlik desteği dahil.",
-    maintenanceCheck: "Öncelikli bakım dahil",
-    client: "Kimlik Doğrulama",
-    clientSub: "Bu keşfi sistemlerimize güvenli bir şekilde kaydetmek için fatura bilgilerinizi girin.",
-    name: "Tam Ad / İletişim Kişisi *",
-    email: "Kurumsal E-posta Adresi *",
-    phone: "Kurumsal Telefon Numarası *",
-    address: "Fatura Adresi (Şehir, Ülke) *",
-    vat: "Vergi Numarası (Opsiyonel)",
-    notes: "Tasarım Notları",
-    notesPlace: "Belirli görsel yönlendirmeleri veya teknik notları paylaşın..."
-  },
-  summary: {
-    title: "Zeka Özeti",
-    desc: "Tanımladığınız parametrelerin temel algoritmik bir taslağı.",
-    notBinding: "BAĞLAYICI DEĞİLDİR",
-    platform: "Platform Mimarisi",
-    logistics: "Dağıtım Takvimi",
-    copywriting: "Metin Yazarlığı",
-    maintenance: "Bakım",
-    design: "Tasarım Yönü",
-    integrations: "Entegrasyonlar",
-    total: "Canlı Hesaplama (€)"
-  },
-  btn: {
-    prev: "Önceki Aşama",
-    next: "Sonraki Aşama",
-    submit: "Planı ve Taslağı Kilitle",
-    encrypting: "Şifreleniyor...",
-    finish: "Kesin Keşfi Başlat",
-    pdf: "PDF Üret ve İndir",
-    hub: "Merkeze Dön"
-    
-  },
-  success: {
-    title: "Plan Kilitlendi.",
-    sub: "Kesin Keşif Süreci",
-    desc: "Güvenli referans kimliğiniz kaydedildi. Blueprint'inizi inceleyeceğiz ve 24-48 saat içinde size Kesin Teklif ile e-postayla ulaşacağız.",
-    dsNumber: "DS Numarası"
-  }
-},
+      title: "Kesin Keşif",
+      subtitle: "Süreci.",
+      desc: "Projenizin detaylı parametrelerini girin. Sizin için hassas bir teknik plan ve sözleşmeye hazır bir teklif hazırlayalım.",
+      liveEstimate: "Canlı Tahmin",
+      phase: "Aşama",
+      of: "/",
+      fileUploading: "Şifrelenmiş Yükleme...",
+      fileClick: "Dosyaları buraya tıklayın veya sürükleyin",
+      termsAgree: "Okuduğumu ve kabul ettiğimi onaylıyorum: ",
+      termsLink: "Novatrum Genel Hizmet Sözleşmesi",
+      termsDesc: ". Bu kesin taslağın, işbirliğimizin teknik kapsamını ve faturalandırma şartlarını oluşturduğunu anlıyorum.",
+      integrations: {
+        stripe: "Stripe Ödeme Altyapısı",
+        auth: "Kullanıcı Doğrulama ve Yetkilendirme",
+        crm: "CRM / Hubspot Senkronizasyonu",
+        mail: "Bülten ve E-posta Senkronizasyonu",
+        analytics: "Gelişmiş Olay Analitiği",
+        ai: "Özel AI / ML Entegrasyonu",
+        sockets: "Gerçek Zamanlı Veri / Sockets",
+        cms: "Özel İçerik Yönetimi (CMS)",
+        multilang: "Çok Dilli Altyapı"
+      },
+      designStyles: {
+        minimal: "Minimal & Tipografi Odaklı",
+        bold: "Cesur, Premium & Marka Odaklı",
+        corporate: "Profesyonel & Kurumsal Yapı",
+        interactive: "Yüksek Etkileşimli & Karmaşık UI"
+      },
+      fontPrefs: {
+        sans: "Modern Sans-Serif",
+        serif: "Klasik Serif",
+        mono: "Endüstriyel Monospace"
+      },
+      seoLevels: {
+        standard: "Standart SEO Yapısı",
+        advanced: "Gelişmiş / Teknik SEO"
+      },
+      timelines: {
+        standard: "Standart (4-6 Hafta)",
+        relaxed: "Esnek (8-10 Hafta)",
+        expedited: "Hızlandırılmış (1-2 Hafta)"
+      },
+      constraint: {
+        title: "Mühendislik Kısıtlaması",
+        desc: "Karmaşık bir platform hızlandırılamaz. Lütfen düzgün bir mühendislik süreci için standart veya esnek takvimlere öncelik verin."
+      },
+      form: {
+        credentials: "Kimlik Bilgileri",
+        entity: "Kurum / Marka Adı *",
+        website: "Mevcut URL",
+        goals: "Temel Hedef ve Amaçlar *",
+        goalsPlace: "Bu platformun nihai amacını açıklayın...",
+        competitors: "Rakipler veya İlham Kaynakları",
+        architecture: "Mimari",
+        archDesc: "Uygulamanız için mühendislik çerçevesini seçin.",
+        pages: "Tahmini Sayfa/Ekran Sayısı",
+        design: "Estetik",
+        designDesc: "Platform nasıl hissettirmeli? Markanıza özel tasarım sistemleri geliştiriyoruz.",
+        color: "Ana Renk",
+        accent: "Vurgu Rengi",
+        hasAccent: "Vurgu Rengi mi?",
+        fonts: "Tipografi Tercihi",
+        content: "İçerik ve Copy",
+        copy: "Profesyonel Copywriting Dahil",
+        assets: "Marka Varlıkları / Brief (Maks 100MB)",
+        integrations: "Entegrasyonlar ve İşlevsellik",
+        intDesc: "Karmaşık özellikleri ve üçüncü taraf API senkronizasyonlarını seçin.",
+        seo: "Görünürlük",
+        seoDesc: "İçerik mühendisliği ve indeksleme stratejisini seçin.",
+        timeline: "Lojistik",
+        timelineDesc: "Gerekli lansman takvimini belirleyelim.",
+        maintenance: "Sürekli Destek",
+        maintenanceDesc: "Lansman sonrası bakım ve güvenlik desteği dahil.",
+        maintenanceCheck: "Öncelikli bakım dahil",
+        client: "Kimlik Doğrulama",
+        clientSub: "Bu keşfi sistemlerimize güvenli bir şekilde kaydetmek için fatura bilgilerinizi girin.",
+        name: "Tam Ad / İletişim Kişisi *",
+        email: "Kurumsal E-posta Adresi *",
+        phone: "Kurumsal Telefon Numarası *",
+        address: "Fatura Adresi (Şehir, Ülke) *",
+        vat: "Vergi Numarası (Opsiyonel)",
+        notes: "Tasarım Notları",
+        notesPlace: "Belirli görsel yönlendirmeleri veya teknik notları paylaşın..."
+      },
+      summary: {
+        title: "Zeka Özeti",
+        desc: "Tanımladığınız parametrelerin temel algoritmik bir taslağı.",
+        notBinding: "BAĞLAYICI DEĞİLDİR",
+        platform: "Platform Mimarisi",
+        logistics: "Dağıtım Takvimi",
+        copywriting: "Metin Yazarlığı",
+        maintenance: "Bakım",
+        design: "Tasarım Yönü",
+        integrations: "Entegrasyonlar",
+        total: "Canlı Hesaplama (€)"
+      },
+      btn: {
+        prev: "Önceki Aşama",
+        next: "Sonraki Aşama",
+        submit: "Planı ve Taslağı Kilitle",
+        encrypting: "Şifreleniyor...",
+        finish: "Kesin Keşfi Başlat",
+        pdf: "PDF Üret ve İndir",
+        hub: "Merkeze Dön"
+
+      },
+      success: {
+        title: "Plan Kilitlendi.",
+        sub: "Kesin Keşif Süreci",
+        desc: "Güvenli referans kimliğiniz kaydedildi. Blueprint'inizi inceleyeceğiz ve 24-48 saat içinde size Kesin Teklif ile e-postayla ulaşacağız.",
+        dsNumber: "DS Numarası"
+      }
+    },
 
     contactPage: {
       title: "İletişim Kur",

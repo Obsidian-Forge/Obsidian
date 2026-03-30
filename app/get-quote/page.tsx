@@ -62,7 +62,6 @@ export default function DefinitiveDiscoveryPage() {
 
     const totalSteps = 8;
 
-    // --- DEVASA FORM STATE'İ ---
     const [formData, setFormData] = useState({
         companyName: '',
         currentWebsite: '',
@@ -87,10 +86,10 @@ export default function DefinitiveDiscoveryPage() {
         clientPhone: '',
         vatNumber: '',
         billingAddress: '',
-        designNotes: ''
+        designNotes: '',
+        acceptedTerms: false
     });
 
-    // BÜYÜK PROJELERDE HIZLI TESLİMATI (EXPEDITED) ENGELLEME MANTIĞI
     const isComplexProject = formData.architecture === 'saas' || formData.architecture === 'ecommerce' || formData.estimatedPages > 15;
 
     useEffect(() => {
@@ -101,7 +100,6 @@ export default function DefinitiveDiscoveryPage() {
         }
     }, [formData.architecture, formData.estimatedPages, isComplexProject]);
 
-    // --- DİNAMİK FİYAT HESAPLAYICI (€) ---
     const calculateBaseTotal = () => {
         let total = 0;
         const arch = ARCHITECTURE_OPTIONS.find(a => a.id === formData.architecture);
@@ -126,11 +124,9 @@ export default function DefinitiveDiscoveryPage() {
         return Math.round(total); 
     };
 
-    // Geçerli aylık paketin fiyatını bulma
     const currentMaintenance = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
     const monthlyPrice = currentMaintenance ? currentMaintenance.price : 0;
 
-    // --- DOSYA YÜKLEME (SUPABASE) ---
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         setUploading(true);
@@ -138,6 +134,7 @@ export default function DefinitiveDiscoveryPage() {
         const fileExt = file.name.split('.').pop();
         const fileName = `discovery-asset-${Date.now()}.${fileExt}`;
         const filePath = `discovery_uploads/${fileName}`;
+        
         try {
             const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
             if (uploadError) throw uploadError;
@@ -158,13 +155,12 @@ export default function DefinitiveDiscoveryPage() {
         setFormData(prev => ({ ...prev, uploadedFiles: prev.uploadedFiles.filter((_, i) => i !== indexToRemove) }));
     };
 
-    // --- MÜŞTERİ İÇİN DETAYLI PDF ÜRETME ---
     const downloadClientCopy = async () => {
         setDownloadingPdf(true);
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         let yPos = 90;
-        
+
         const loadImage = (url: string): Promise<string> => {
             return new Promise((resolve) => {
                 const img = new Image(); img.src = url;
@@ -197,14 +193,14 @@ export default function DefinitiveDiscoveryPage() {
         doc.setTextColor(113, 113, 122);
         doc.text(`Ref ID: ${discoveryId}`, pageWidth - 20, 38, { align: "right" });
         doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 20, 44, { align: "right" });
-        
+
         const checkPageBreak = (addedHeight: number) => {
             if (yPos + addedHeight > 280) {
                 doc.addPage();
                 yPos = 20;
             }
         };
-        
+
         const addSectionTitle = (title: string) => {
             checkPageBreak(15);
             doc.setFillColor(244, 244, 245);
@@ -236,7 +232,6 @@ export default function DefinitiveDiscoveryPage() {
             yPos += (splitVal.length * 5) + 3;
         };
 
-        // 1. IDENTITY & VISION
         doc.setTextColor(24, 24, 27);
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
@@ -256,14 +251,14 @@ export default function DefinitiveDiscoveryPage() {
         addRow("Project Goals:", formData.projectGoals);
         if (formData.competitors) addRow("Competitors/Refs:", formData.competitors);
         yPos += 5;
-        
-        // 2. ARCHITECTURE & CONTENT
+
         addSectionTitle("ARCHITECTURE & DESIGN");
         const archLabel = cData.stepsData[0].options.find((o:any) => o.id === formData.architecture)?.label || "Not set";
         const arch = ARCHITECTURE_OPTIONS.find(a => a.id === formData.architecture);
         addRow("Core Platform:", archLabel, arch ? `+€${arch.price.toLocaleString()}` : "");
         const extraPagesCost = formData.estimatedPages > 5 ? (formData.estimatedPages - 5) * 200 : 0;
         addRow("Page Count:", `${formData.estimatedPages} Pages`, extraPagesCost > 0 ? `+€${extraPagesCost.toLocaleString()}` : "Included");
+
         const designLabel = dData.designStyles[formData.designStyle as keyof typeof dData.designStyles] || "Not set";
         const design = DESIGN_STYLES.find(d => d.id === formData.designStyle);
         addRow("Design Style:", designLabel, design && design.price > 0 ? `+€${design.price.toLocaleString()}` : "Included");
@@ -272,11 +267,11 @@ export default function DefinitiveDiscoveryPage() {
         addRow("Brand Colors:", colorsStr, "Included");
         addRow("Typography:", formData.fontPreference, "Included");
         addRow("Copywriting:", formData.needsCopywriting ? "Professional SEO Copywriting" : "Client Provided", formData.needsCopywriting ? "+€1,500" : "Included");
+
         const assets = formData.uploadedFiles.length > 0 ? formData.uploadedFiles.map(f => f.name).join(", ") : "No files provided yet";
         addRow("Uploaded Assets:", assets);
         yPos += 5;
 
-        // 3. ENGINEERING & LOGISTICS
         addSectionTitle("ENGINEERING & LOGISTICS");
         if (formData.selectedIntegrations.length > 0) {
             formData.selectedIntegrations.forEach(id => {
@@ -288,6 +283,7 @@ export default function DefinitiveDiscoveryPage() {
         }
 
         addRow("SEO Setup:", formData.seoLevel === 'advanced' ? dData.seoLevels.advanced : dData.seoLevels.standard, formData.seoLevel === 'advanced' ? "+€1,500" : "Included");
+
         const timeLabel = formData.timeline === 'enterprise' ? "4 - 6 Months (Enterprise Scale)" : (dData.timelines[formData.timeline as keyof typeof dData.timelines] || "Standard");
         const time = TIMELINES.find(t => t.id === formData.timeline);
         let timeModStr = "Included";
@@ -297,15 +293,14 @@ export default function DefinitiveDiscoveryPage() {
             timeModStr = `${time.multiplier > 1 ? '+' : '-'}€${diff.toLocaleString()}`;
         }
         addRow("Timeline:", timeLabel, timeModStr);
-        
-        // AYLIK ABONELİK PDF'TE GÖSTERİMİ
+
         const cMaint = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
         addRow("Monthly Retainer:", cMaint ? cMaint.title : "None", cMaint && cMaint.price > 0 ? `+€${cMaint.price} / mo` : "");
+
         if (formData.designNotes) {
             addRow("Additional Notes:", formData.designNotes);
         }
 
-        // --- TOPLAM TUTAR ---
         checkPageBreak(30);
         yPos += 5;
         doc.setDrawColor(228, 228, 231);
@@ -318,8 +313,7 @@ export default function DefinitiveDiscoveryPage() {
         doc.setTextColor(16, 185, 129);
         doc.text(`€${calculateTotal().toLocaleString()}`, pageWidth - 25, yPos, { align: "right" });
         doc.setTextColor(24, 24, 27);
-        
-        // AYLIK ABONELİĞİ PDF'TE VURGULAMA
+
         if (cMaint && cMaint.price > 0) {
             yPos += 8;
             doc.setFontSize(12);
@@ -329,7 +323,6 @@ export default function DefinitiveDiscoveryPage() {
             doc.setTextColor(24, 24, 27);
         }
 
-        // --- FOOTER ---
         const footerY = doc.internal.pageSize.getHeight() - 25;
         doc.setDrawColor(228, 228, 231);
         doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
@@ -343,7 +336,6 @@ export default function DefinitiveDiscoveryPage() {
         setDownloadingPdf(false);
     };
 
-    // --- VERİTABANINA KAYIT VE OTOMATİK BİLDİRİM ---
     const submitDiscovery = async () => {
         setLoading(true);
         const dsNumber = `DS-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -354,6 +346,7 @@ export default function DefinitiveDiscoveryPage() {
         if (formData.hasAccentColor) colorsString += `, Accent: ${formData.accentColor}`;
 
         const cMaint = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
+        
         const detailsPayload = {
             "Company": formData.companyName,
             "Goals": formData.projectGoals,
@@ -368,10 +361,11 @@ export default function DefinitiveDiscoveryPage() {
             "Timeline": formData.timeline === 'enterprise' ? "4-6 Months" : formData.timeline,
             "Maintenance": cMaint ? `${cMaint.title} (€${cMaint.price}/mo)` : "None",
             "Assets": formData.uploadedFiles.map(f => f.url).join(' | '),
-            "Notes": formData.designNotes
+            "Notes": formData.designNotes,
+            "Terms Accepted": `Yes (${new Date().toISOString()})`
         };
+
         try {
-            // RLS kısıtlamalarına takılmamak için data geri istemiyoruz
             const { error } = await supabase.from('project_discovery').insert([{
                 discovery_number: dsNumber,
                 client_name: formData.clientName,
@@ -380,9 +374,9 @@ export default function DefinitiveDiscoveryPage() {
                 details: detailsPayload,
                 estimated_price: finalPrice
             }]);
+
             if (error) throw error;
 
-            // OTOMATİK E-POSTA BİLDİRİMİ
             await fetch('/api/email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -397,7 +391,7 @@ export default function DefinitiveDiscoveryPage() {
                     currency: 'EUR'
                 })
             }).catch(err => console.error("Email notification failed:", err));
-            
+
             setDiscoveryId(dsNumber);
             setCurrentStep(8);
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -407,29 +401,28 @@ export default function DefinitiveDiscoveryPage() {
             setLoading(false);
         }
     };
-    
-    // --- ADIM KONTROLLERİ ---
+
     const isStepValid = () => {
         if (currentStep === 1) return formData.companyName.trim().length > 0 && formData.projectGoals.trim().length > 0;
         if (currentStep === 2) return formData.architecture !== '';
         if (currentStep === 3) return formData.designStyle !== '';
-        if (currentStep === 7) return formData.clientName.trim().length > 0 && formData.clientEmail.trim().length > 0 && formData.billingAddress.trim().length > 0;
+        // CHECKBOX GÜVENLİK KİLİDİ
+        if (currentStep === 7) return formData.clientName.trim().length > 0 && formData.clientEmail.trim().length > 0 && formData.billingAddress.trim().length > 0 && formData.acceptedTerms;
         return true; 
     };
-    
+
     const nextStep = () => {
         if (isStepValid()) {
             setCurrentStep(prev => prev + 1);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
-    
+
     if (!dData || !cData) return <div className="pt-40 text-center font-mono text-xs uppercase tracking-widest text-zinc-400">Loading Translations...</div>;
-    
+
     return (
         <div className="min-h-screen bg-white text-black font-sans pb-32 md:pb-40 selection:bg-black selection:text-white relative">
             
-            {/* ÜST PROGRESS BAR */}
             {currentStep < 8 && (
                 <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-zinc-100 p-4 md:p-6 shadow-sm">
                     <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
@@ -457,10 +450,8 @@ export default function DefinitiveDiscoveryPage() {
                 </div>
             )}
 
-            {/* ANA İÇERİK */}
             <div className="max-w-4xl mx-auto p-6 md:p-12 pt-12 md:pt-20">
 
-                {/* STEP 1: THE VISION */}
                 {currentStep === 1 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -493,7 +484,6 @@ export default function DefinitiveDiscoveryPage() {
                     </div>
                 )}
 
-                {/* STEP 2: CORE ARCHITECTURE */}
                 {currentStep === 2 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -506,6 +496,7 @@ export default function DefinitiveDiscoveryPage() {
                                 const optIds = ["landing", "corporate", "ecommerce", "saas"];
                                 const isSelected = formData.architecture === optIds[index];
                                 const priceObj = ARCHITECTURE_OPTIONS.find(a => a.id === optIds[index]);
+                                
                                 return (
                                     <div 
                                         key={optIds[index]} 
@@ -550,7 +541,6 @@ export default function DefinitiveDiscoveryPage() {
                     </div>
                 )}
 
-                {/* STEP 3: AESTHETICS & BRANDING */}
                 {currentStep === 3 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -623,7 +613,6 @@ export default function DefinitiveDiscoveryPage() {
                     </div>
                 )}
 
-                {/* STEP 4: ASSETS & COPYWRITING */}
                 {currentStep === 4 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -676,7 +665,6 @@ export default function DefinitiveDiscoveryPage() {
                     </div>
                 )}
 
-                {/* STEP 5: TECHNICAL INTEGRATIONS */}
                 {currentStep === 5 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -718,7 +706,6 @@ export default function DefinitiveDiscoveryPage() {
                     </div>
                 )}
 
-                {/* STEP 6: LOGISTICS & SEO */}
                 {currentStep === 6 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -728,7 +715,6 @@ export default function DefinitiveDiscoveryPage() {
 
                         <div className="space-y-8">
                             
-                            {/* BÜYÜK PROJE UYARISI */}
                             {isComplexProject && (
                                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
                                     <svg className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -739,19 +725,16 @@ export default function DefinitiveDiscoveryPage() {
                                 </div>
                             )}
 
-                            {/* TIMELINE */}
                             <div className="space-y-4">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Deployment Timeline</label>
                                 <div className="grid grid-cols-1 gap-3">
                                     {['relaxed', 'standard', 'expedited', 'enterprise'].map(tId => {
                                         const isEnterprise = tId === 'enterprise';
-                                        
-                                        // Büyük proje değilse enterprise gösterme
                                         if (isEnterprise && !isComplexProject) return null;
-                                        // Büyük proje ise diğerlerini disable et
                                         const isDisabled = isComplexProject && !isEnterprise;
                                         const isSelected = formData.timeline === tId;
                                         const tInfo = TIMELINES.find(x => x.id === tId);
+
                                         return (
                                             <div 
                                                 key={tId} 
@@ -778,7 +761,6 @@ export default function DefinitiveDiscoveryPage() {
                                 </div>
                             </div>
 
-                            {/* YENİ: AYLIK CONTINUOUS ENGINEERING PAKETLERİ (MRR) */}
                             <div className="space-y-4 pt-4 border-t border-zinc-100">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Continuous Engineering (Monthly)</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -810,7 +792,6 @@ export default function DefinitiveDiscoveryPage() {
                                 </div>
                             </div>
 
-                            {/* SEO */}
                             <div className="space-y-4 pt-4 border-t border-zinc-100">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">SEO Optimization Level</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -831,7 +812,6 @@ export default function DefinitiveDiscoveryPage() {
                     </div>
                 )}
 
-                {/* STEP 7: CREDENTIALS */}
                 {currentStep === 7 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
@@ -866,11 +846,34 @@ export default function DefinitiveDiscoveryPage() {
                                 <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.notes}</label>
                                 <textarea placeholder={dData.form.notesPlace} className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold h-24 resize-none focus:border-black transition-colors" value={formData.designNotes} onChange={(e) => setFormData({...formData, designNotes: e.target.value})} />
                             </div>
+
+                            {/* GÜVENLİ (FALLBACK) YASAL ONAY KUTUCUĞU */}
+                            <div className="mt-8 p-6 bg-white border-2 border-zinc-200 rounded-2xl flex items-start gap-4 hover:border-black transition-colors group shadow-sm">
+                                <div className="relative flex items-start mt-1">
+                                    <input
+                                        id="terms"
+                                        name="terms"
+                                        type="checkbox"
+                                        checked={formData.acceptedTerms}
+                                        onChange={(e) => setFormData({...formData, acceptedTerms: e.target.checked})}
+                                        className="w-6 h-6 rounded-md border-zinc-300 text-black focus:ring-black cursor-pointer accent-black"
+                                    />
+                                </div>
+                                <div className="text-xs font-bold text-zinc-600 leading-relaxed flex-1">
+                                    <label htmlFor="terms" className="cursor-pointer block select-none">
+                                        {dData.form?.termsAgree || "I acknowledge that I have read and agree to the "} 
+                                        <a href="/legal/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-black font-black underline underline-offset-2 hover:text-emerald-600 transition-colors">
+                                            {dData.form?.termsLink || "Novatrum Master Service Agreement"}
+                                        </a>
+                                        {dData.form?.termsDesc || ". I understand that this definitive blueprint forms the technical scope and billing terms of our collaboration."}
+                                    </label>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 )}
 
-                {/* STEP 8: SUCCESS / LOCKED */}
                 {currentStep === 8 && (
                     <div className="text-center space-y-10 animate-in zoom-in-95 py-10 md:py-20">
                         <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/30 animate-bounce">
@@ -895,7 +898,6 @@ export default function DefinitiveDiscoveryPage() {
                                 <span className="text-2xl text-emerald-600 font-black font-mono">€{calculateTotal().toLocaleString()}</span>
                             </div>
                             
-                            {/* Başarı ekranında aylık abonelik gösterimi */}
                             {monthlyPrice > 0 && (
                                 <div className="flex justify-between items-center mb-8 border-t border-zinc-100 pt-4">
                                     <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Monthly Retainer</span>
@@ -919,7 +921,6 @@ export default function DefinitiveDiscoveryPage() {
                             </button>
                         </div>
                         
-                        {/* YENİ: ONBOARDING BEKLENTİ BİLGİLENDİRMESİ */}
                         <div className="mt-6 bg-zinc-50 border border-zinc-200 p-5 rounded-2xl max-w-lg mx-auto text-left shadow-sm">
                             <p className="text-[10px] font-black uppercase tracking-widest text-zinc-900 mb-2 flex items-center gap-2">
                                 <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -937,7 +938,6 @@ export default function DefinitiveDiscoveryPage() {
                 )}
             </div>
 
-            {/* STICKY BOTTOM NAVIGATION BAR */}
             {currentStep < 8 && (
                 <div className="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-zinc-200 p-4 md:p-6 z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
                     <div className="max-w-6xl mx-auto flex items-center justify-between gap-2 md:gap-6">
