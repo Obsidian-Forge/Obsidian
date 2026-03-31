@@ -11,7 +11,7 @@ export default function AdminInfrastructurePage() {
     const [initializing, setInitializing] = useState(false);
     const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
     
-    // MODAL İÇİN YENİ STATELER
+    // MODAL İÇİN STATELER
     const [selectedNode, setSelectedNode] = useState<any | null>(null);
     const [nodeLogs, setNodeLogs] = useState<any[]>([]);
     const [loadingLogs, setLoadingLogs] = useState(false);
@@ -44,7 +44,6 @@ export default function AdminInfrastructurePage() {
         setLoading(false);
     };
 
-    // YENİ: LOGLARI GETİRME FONKSİYONU
     const openHealthReport = async (node: any) => {
         setSelectedNode(node);
         setLoadingLogs(true);
@@ -53,10 +52,50 @@ export default function AdminInfrastructurePage() {
             .select('*')
             .eq('node_id', node.id)
             .order('created_at', { ascending: false })
-            .limit(10); // Son 10 olayı getir
+            .limit(10);
             
         if (data) setNodeLogs(data);
         setLoadingLogs(false);
+    };
+
+    // YENİ: OTOMATİK OLAY RAPORU OLUŞTURUCU (AI-LIKE)
+    const generateIncidentReport = () => {
+        if (!nodeLogs || nodeLogs.length === 0) {
+            alert("No logs available to generate a report.");
+            return;
+        }
+
+        const latestLog = nodeLogs[0];
+        const isCurrentlyDown = latestLog.status !== 'operational';
+        const downLogs = nodeLogs.filter(l => l.status !== 'operational');
+
+        let report = `🚨 NOVATRUM INCIDENT REPORT 🚨\n`;
+        report += `Client / System: ${selectedNode.label}\n`;
+        report += `Date: ${new Date().toLocaleDateString()}\n\n`;
+
+        if (downLogs.length === 0) {
+            const avgLatency = Math.round(nodeLogs.reduce((acc, log) => acc + (log.latency || 0), 0) / nodeLogs.length);
+            report += `Status: 🟢 100% OPERATIONAL\n`;
+            report += `Analysis: No outages detected in the recent monitoring window. Systems are running optimally with an average latency of ${avgLatency}ms.\n`;
+        } else {
+            const firstDown = downLogs[downLogs.length - 1]; // En eski hata
+            report += `Status: ${isCurrentlyDown ? '🔴 ONGOING OUTAGE' : '🟢 RESOLVED'}\n`;
+            report += `Incident Detected: ${new Date(firstDown.created_at).toLocaleString()}\n`;
+            
+            if (!isCurrentlyDown) {
+                report += `Incident Resolved: ${new Date(latestLog.created_at).toLocaleString()}\n`;
+            }
+            
+            report += `Diagnostic Code: ${firstDown.details?.error || '503 Service Unavailable / Connection Timeout'}\n\n`;
+            report += `Action Taken: Novatrum autonomous monitoring nodes detected the anomaly instantly. `;
+            report += isCurrentlyDown 
+                ? `Our infrastructure team is actively investigating the root cause to restore services.` 
+                : `Service has been successfully restored, and stable connections have been verified across all nodes.`;
+        }
+
+        // Panoya kopyala
+        navigator.clipboard.writeText(report);
+        alert("✅ Professional Incident Report copied to clipboard!\nYou can paste it directly in WhatsApp, Telegram, or Email.");
     };
 
     const initializeDefaultNodes = async () => {
@@ -118,14 +157,10 @@ export default function AdminInfrastructurePage() {
 
     const StatusCard = ({ node }: { node: any }) => (
         <div className="group relative bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm transition-all hover:border-zinc-300 flex flex-col justify-between">
-            
-            {/* SAĞ ÜST İKONLAR */}
             <div className="absolute top-6 right-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                {/* YENİ: LOG RAPOR BUTONU */}
                 <button onClick={() => openHealthReport(node)} className="p-2 text-zinc-400 hover:text-indigo-600 bg-white hover:bg-indigo-50 rounded-lg transition-colors" title="View Health Report">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </button>
-                {/* SİLME BUTONU */}
                 <button onClick={() => deleteNode(node.id)} className="p-2 text-zinc-300 hover:text-red-500 bg-white hover:bg-red-50 rounded-lg transition-colors" title="Delete Node">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
                 </button>
@@ -242,7 +277,7 @@ export default function AdminInfrastructurePage() {
                 </footer>
             </main>
 
-            {/* YENİ: HEALTH REPORT MODAL (AÇILIR PENCERE) */}
+            {/* HEALTH REPORT MODAL */}
             {selectedNode && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
                     <div className="absolute inset-0 bg-zinc-900/40 backdrop-blur-sm" onClick={() => setSelectedNode(null)}></div>
@@ -252,9 +287,21 @@ export default function AdminInfrastructurePage() {
                                 <h2 className="text-2xl font-black uppercase tracking-tight text-zinc-900">{selectedNode.label}</h2>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-1">Diagnostic Report & Logs</p>
                             </div>
-                            <button onClick={() => setSelectedNode(null)} className="p-2 bg-white border border-zinc-200 rounded-full hover:bg-zinc-100 transition-colors">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
+                            
+                            {/* SAĞ ÜST BUTON GRUBU */}
+                            <div className="flex items-center gap-3">
+                                <button 
+                                    onClick={generateIncidentReport}
+                                    disabled={loadingLogs || nodeLogs.length === 0}
+                                    className="bg-zinc-900 hover:bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                                    Copy Report
+                                </button>
+                                <button onClick={() => setSelectedNode(null)} className="p-2 bg-white border border-zinc-200 rounded-full hover:bg-zinc-100 transition-colors">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
                         </div>
                         
                         <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white">
