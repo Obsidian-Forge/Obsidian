@@ -73,10 +73,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
       {/* HEADER */}
       <header className="sticky top-0 w-full z-[100] bg-white/80 backdrop-blur-md">
         <div className="w-full px-6 md:px-16 h-20 md:h-24 flex items-center justify-between relative border-b-0">
-          
+
           <Link href="/" className="flex items-center gap-3 group relative z-[110]" onClick={() => setIsOpen(false)}>
             <div className="w-7 h-7 flex items-center justify-center transition-transform group-hover:scale-95">
-               <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
+              <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase leading-none mt-0.5">
               Novatrum
@@ -97,23 +97,23 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
               Client Portal
             </Link>
-            
-            <button 
+
+            <button
               onClick={() => setIsOpen(!isOpen)}
               className="flex md:hidden flex-col justify-center items-center w-10 h-10 gap-1.5 focus:outline-none relative"
               aria-label="Toggle Menu"
             >
-              <motion.span 
+              <motion.span
                 animate={isOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                className="w-6 h-0.5 bg-black block origin-center" 
+                className="w-6 h-0.5 bg-black block origin-center"
               />
-              <motion.span 
+              <motion.span
                 animate={isOpen ? { opacity: 0, x: 20 } : { opacity: 1, x: 0 }}
-                className="w-6 h-0.5 bg-black block" 
+                className="w-6 h-0.5 bg-black block"
               />
-              <motion.span 
+              <motion.span
                 animate={isOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                className="w-6 h-0.5 bg-black block origin-center" 
+                className="w-6 h-0.5 bg-black block origin-center"
               />
             </button>
           </div>
@@ -123,7 +123,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
       {/* MOBILE MENU OVERLAY */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -139,8 +139,8 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                   transition={{ delay: 0.1 + i * 0.05 }}
                   className="w-full"
                 >
-                  <Link 
-                    href={link.href} 
+                  <Link
+                    href={link.href}
                     onClick={() => setIsOpen(false)}
                     className="text-4xl font-black uppercase tracking-tighter text-black hover:text-zinc-500 transition-colors block py-2"
                   >
@@ -148,7 +148,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                   </Link>
                 </motion.div>
               ))}
-              
+
               {/* YEŞİL NOKTALI MOBİL BUTON */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -156,7 +156,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                 transition={{ delay: 0.1 + navLinks.length * 0.05 }}
                 className="w-full mt-8 px-4"
               >
-                <Link 
+                <Link
                   href="/client/login"
                   onClick={() => setIsOpen(false)}
                   className="inline-flex items-center justify-center gap-3 w-full max-w-[280px] py-5 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl mx-auto"
@@ -178,35 +178,35 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
       {/* FOOTER - GÜNCELLENDİ */}
       <footer className="w-full bg-white py-16 px-6 md:px-16 mt-12 border-t border-zinc-100/50">
         <div className="w-full flex flex-col md:flex-row items-start justify-between gap-12">
-          
+
           {/* Şirket Bilgileri */}
           <div className="flex flex-col gap-4 max-w-sm">
-             <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <div className="w-7 h-7 flex items-center justify-center">
                 <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase leading-none mt-0.5">
                 Novatrum
               </span>
-             </div>
-             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-               &copy; {new Date().getFullYear()} Novatrum. {t.footer.rights} <br/> 
-               {t.footer.builtIn}
-             </p>
-             
-             <div className="flex items-center gap-4 mt-2">
-               <Link href="/terms" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
-                 {t.nav.terms}
-               </Link>
-               <Link href="/privacy" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
-                 {t.nav.privacy}
-               </Link>
-             </div>
+            </div>
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
+              &copy; {new Date().getFullYear()} Novatrum. {t.footer.rights} <br />
+              {t.footer.builtIn}
+            </p>
+
+            <div className="flex items-center gap-4 mt-2">
+              <Link href="/terms" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                {t.nav.terms}
+              </Link>
+              <Link href="/privacy" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                {t.nav.privacy}
+              </Link>
+            </div>
           </div>
-          
+
           {/* Link Sütunları */}
           <div className="flex flex-col sm:flex-row gap-12 md:gap-24 w-full md:w-auto">
-            
+
             {/* Navigasyon (Company) */}
             <div className="flex flex-col gap-5">
               <span className="text-[10px] font-black text-black uppercase tracking-[0.2em]">Company</span>
@@ -226,6 +226,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                 <Link href="/docs" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
                   Documentation Center
                 </Link>
+                {/* YENİ: STATUS PAGE LİNKİ */}
+                <Link href="/status" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                  Novatrum Status
+                </Link>
                 <Link href="/client/login" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
                   Client Portal
                 </Link>
@@ -240,7 +244,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                   LinkedIn
                 </a>
               </div>
-              
+
               <div className="relative inline-block text-left mt-2">
                 <select
                   value={language}
