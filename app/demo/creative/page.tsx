@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence, Variants } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
 export default function CreativeDemoPage() {
@@ -37,10 +37,10 @@ export default function CreativeDemoPage() {
         return () => { document.body.style.overflow = 'unset'; };
     }, [isMenuOpen]);
 
-    const fadeUp = {
-        hidden: { opacity: 0, y: 60 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] } }
-    };
+    const fadeUp: Variants = {
+    hidden: { opacity: 0, y: 60 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] } }
+};
 
     const demoLinks = [
         { id: 'projects', label: 'Projects' },
