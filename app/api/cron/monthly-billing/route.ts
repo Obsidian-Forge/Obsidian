@@ -47,7 +47,7 @@ export async function POST(request: Request) {
         if (generatedCount > 0) {
             await resend.emails.send({
                 from: 'Novatrum System <onboarding@resend.dev>', // Domain doğrulaması yaptıysan kendi mailini yazabilirsin
-                to: 'ycankoc2004@gmail.com', // BURAYA KENDİ MAİLİNİ YAZ
+                to: 'novatrum.hq@gmail.com', // BURAYA KENDİ MAİLİNİ YAZ
                 subject: `🔔 Faturalar Hazır: ${currentMonthName} ${currentYear}`,
                 html: `
                     <h1>İşlem Başarılı!</h1>
