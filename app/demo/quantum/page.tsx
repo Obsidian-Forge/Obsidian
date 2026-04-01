@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence, Variants } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 
 // --- 3D TILT KART BİLEŞENİ (Fareyi takip eden 3D efekt) ---
