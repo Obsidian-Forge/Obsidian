@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import jsPDF from 'jspdf';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -47,17 +47,24 @@ const MAINTENANCE_OPTIONS = [
     { id: "scale", price: 999, title: "Scale", desc: "Essential package + 15 hours of monthly development. Your dedicated tech team." }
 ];
 
-export default function DefinitiveDiscoveryPage() {
+function DiscoveryFormContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { t } = useLanguage();
-    const dData = t.discoveryPage;
-    const cData = t.calculator;
+    
+    // Güvenli erişim için fallback değerler
+    const dData = t?.discoveryPage || { 
+        phase: 'Phase', of: 'of', liveEstimate: 'Live Estimate', 
+        visionTitle: 'Vision', visionSub: '', form: {} 
+    };
+    const cData = t?.calculator || { stepsData: [{ options: [] }] };
 
     const [currentStep, setCurrentStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [downloadingPdf, setDownloadingPdf] = useState(false);
     const [discoveryId, setDiscoveryId] = useState<string | null>(null);
+    const [incomingDemoInfo, setIncomingDemoInfo] = useState<{name: string, color: string} | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const totalSteps = 8;
@@ -89,6 +96,39 @@ export default function DefinitiveDiscoveryPage() {
         designNotes: '',
         acceptedTerms: false
     });
+
+    // URL'den Demo Parametresini Yakala ve Formu Doldur
+    useEffect(() => {
+        const demoParam = searchParams.get('demo');
+        if (demoParam) {
+            let prefill = {};
+            let demoInfo = null;
+
+            switch(demoParam) {
+                case 'quantum':
+                    prefill = { architecture: 'saas', designStyle: 'interactive', primaryColor: '#d946ef', fontPreference: 'sans-serif' };
+                    demoInfo = { name: 'Quantum Engine', color: 'text-fuchsia-500 bg-fuchsia-50 border-fuchsia-200' };
+                    break;
+                case 'fintech':
+                    prefill = { architecture: 'saas', designStyle: 'bold', primaryColor: '#d4ff00', fontPreference: 'sans-serif' };
+                    demoInfo = { name: 'Aegis Finance', color: 'text-lime-600 bg-lime-50 border-lime-200' };
+                    break;
+                case 'logistics':
+                    prefill = { architecture: 'saas', designStyle: 'corporate', primaryColor: '#2563eb', fontPreference: 'sans-serif' };
+                    demoInfo = { name: 'Node Logistics', color: 'text-blue-600 bg-blue-50 border-blue-200' };
+                    break;
+                case 'creative':
+                    prefill = { architecture: 'corporate', designStyle: 'minimal', primaryColor: '#10b981', fontPreference: 'serif' };
+                    demoInfo = { name: 'Aura Creative', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+                    break;
+            }
+
+            if (demoInfo) {
+                setFormData(prev => ({ ...prev, ...prefill }));
+                setIncomingDemoInfo(demoInfo);
+            }
+        }
+    }, [searchParams]);
 
     const isComplexProject = formData.architecture === 'saas' || formData.architecture === 'ecommerce' || formData.estimatedPages > 15;
 
@@ -134,7 +174,7 @@ export default function DefinitiveDiscoveryPage() {
         const fileExt = file.name.split('.').pop();
         const fileName = `discovery-asset-${Date.now()}.${fileExt}`;
         const filePath = `discovery_uploads/${fileName}`;
-        
+
         try {
             const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
             if (uploadError) throw uploadError;
@@ -253,13 +293,13 @@ export default function DefinitiveDiscoveryPage() {
         yPos += 5;
 
         addSectionTitle("ARCHITECTURE & DESIGN");
-        const archLabel = cData.stepsData[0].options.find((o:any) => o.id === formData.architecture)?.label || "Not set";
+        const archLabel = cData.stepsData?.[0]?.options?.find((o:any) => o.id === formData.architecture)?.label || "Not set";
         const arch = ARCHITECTURE_OPTIONS.find(a => a.id === formData.architecture);
         addRow("Core Platform:", archLabel, arch ? `+€${arch.price.toLocaleString()}` : "");
         const extraPagesCost = formData.estimatedPages > 5 ? (formData.estimatedPages - 5) * 200 : 0;
         addRow("Page Count:", `${formData.estimatedPages} Pages`, extraPagesCost > 0 ? `+€${extraPagesCost.toLocaleString()}` : "Included");
 
-        const designLabel = dData.designStyles[formData.designStyle as keyof typeof dData.designStyles] || "Not set";
+        const designLabel = dData.designStyles?.[formData.designStyle as keyof typeof dData.designStyles] || "Not set";
         const design = DESIGN_STYLES.find(d => d.id === formData.designStyle);
         addRow("Design Style:", designLabel, design && design.price > 0 ? `+€${design.price.toLocaleString()}` : "Included");
         let colorsStr = `Primary: ${formData.primaryColor}, Secondary: ${formData.secondaryColor}`;
@@ -267,7 +307,6 @@ export default function DefinitiveDiscoveryPage() {
         addRow("Brand Colors:", colorsStr, "Included");
         addRow("Typography:", formData.fontPreference, "Included");
         addRow("Copywriting:", formData.needsCopywriting ? "Professional SEO Copywriting" : "Client Provided", formData.needsCopywriting ? "+€1,500" : "Included");
-
         const assets = formData.uploadedFiles.length > 0 ? formData.uploadedFiles.map(f => f.name).join(", ") : "No files provided yet";
         addRow("Uploaded Assets:", assets);
         yPos += 5;
@@ -276,15 +315,14 @@ export default function DefinitiveDiscoveryPage() {
         if (formData.selectedIntegrations.length > 0) {
             formData.selectedIntegrations.forEach(id => {
                 const intg = INTEGRATION_OPTIONS.find(i => i.id === id);
-                if (intg) addRow("Integration:", dData.integrations[id as keyof typeof dData.integrations], `+€${intg.price.toLocaleString()}`);
+                if (intg) addRow("Integration:", dData.integrations?.[id as keyof typeof dData.integrations] || id, `+€${intg.price.toLocaleString()}`);
             });
         } else {
             addRow("Integrations:", "No extra integrations selected");
         }
 
-        addRow("SEO Setup:", formData.seoLevel === 'advanced' ? dData.seoLevels.advanced : dData.seoLevels.standard, formData.seoLevel === 'advanced' ? "+€1,500" : "Included");
-
-        const timeLabel = formData.timeline === 'enterprise' ? "4 - 6 Months (Enterprise Scale)" : (dData.timelines[formData.timeline as keyof typeof dData.timelines] || "Standard");
+        addRow("SEO Setup:", formData.seoLevel === 'advanced' ? dData.seoLevels?.advanced : dData.seoLevels?.standard, formData.seoLevel === 'advanced' ? "+€1,500" : "Included");
+        const timeLabel = formData.timeline === 'enterprise' ? "4 - 6 Months (Enterprise Scale)" : (dData.timelines?.[formData.timeline as keyof typeof dData.timelines] || "Standard");
         const time = TIMELINES.find(t => t.id === formData.timeline);
         let timeModStr = "Included";
         if (time && time.multiplier !== 1.0) {
@@ -296,7 +334,6 @@ export default function DefinitiveDiscoveryPage() {
 
         const cMaint = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
         addRow("Monthly Retainer:", cMaint ? cMaint.title : "None", cMaint && cMaint.price > 0 ? `+€${cMaint.price} / mo` : "");
-
         if (formData.designNotes) {
             addRow("Additional Notes:", formData.designNotes);
         }
@@ -313,7 +350,6 @@ export default function DefinitiveDiscoveryPage() {
         doc.setTextColor(16, 185, 129);
         doc.text(`€${calculateTotal().toLocaleString()}`, pageWidth - 25, yPos, { align: "right" });
         doc.setTextColor(24, 24, 27);
-
         if (cMaint && cMaint.price > 0) {
             yPos += 8;
             doc.setFontSize(12);
@@ -331,7 +367,6 @@ export default function DefinitiveDiscoveryPage() {
         doc.setTextColor(113, 113, 122);
         doc.text("This document is a definitive blueprint estimate securely logged in the Novatrum network.", 20, footerY + 5);
         doc.text("Our team will review your parameters and send an Onboarding Invite to finalize integration.", 20, footerY + 10);
-
         doc.save(`Novatrum_Architecture_${discoveryId || 'Draft'}.pdf`);
         setDownloadingPdf(false);
     };
@@ -340,23 +375,22 @@ export default function DefinitiveDiscoveryPage() {
         setLoading(true);
         const dsNumber = `DS-${Math.floor(1000 + Math.random() * 9000)}`;
         const finalPrice = calculateTotal();
-        const projectTypeLabel = cData.stepsData[0].options.find((a:any) => a.id === formData.architecture)?.label || 'Custom Software';
+        const projectTypeLabel = cData.stepsData?.[0]?.options?.find((a:any) => a.id === formData.architecture)?.label || 'Custom Software';
 
         let colorsString = `Primary: ${formData.primaryColor}, Secondary: ${formData.secondaryColor}`;
         if (formData.hasAccentColor) colorsString += `, Accent: ${formData.accentColor}`;
 
         const cMaint = MAINTENANCE_OPTIONS.find(m => m.id === formData.maintenanceTier);
-        
         const detailsPayload = {
             "Company": formData.companyName,
             "Goals": formData.projectGoals,
             "Competitors": formData.competitors,
-            "Design Style": dData.designStyles[formData.designStyle as keyof typeof dData.designStyles] || 'Not specified',
+            "Design Style": dData.designStyles?.[formData.designStyle as keyof typeof dData.designStyles] || 'Not specified',
             "Colors": colorsString,
             "Typography": formData.fontPreference,
             "Page Count": formData.estimatedPages,
             "Copywriting": formData.needsCopywriting ? 'Requested' : 'Client Provided',
-            "Integrations": formData.selectedIntegrations.map(id => dData.integrations[id as keyof typeof dData.integrations]).join(', '),
+            "Integrations": formData.selectedIntegrations.map(id => dData.integrations?.[id as keyof typeof dData.integrations] || id).join(', '),
             "SEO Setup": formData.seoLevel,
             "Timeline": formData.timeline === 'enterprise' ? "4-6 Months" : formData.timeline,
             "Maintenance": cMaint ? `${cMaint.title} (€${cMaint.price}/mo)` : "None",
@@ -418,7 +452,7 @@ export default function DefinitiveDiscoveryPage() {
         }
     };
 
-    if (!dData || !cData) return <div className="pt-40 text-center font-mono text-xs uppercase tracking-widest text-zinc-400">Loading Translations...</div>;
+    if (!t) return <div className="pt-40 text-center font-mono text-xs uppercase tracking-widest text-zinc-400">Loading Translations...</div>;
 
     return (
         <div className="min-h-screen bg-white text-black font-sans pb-32 md:pb-40 selection:bg-black selection:text-white relative">
@@ -454,6 +488,20 @@ export default function DefinitiveDiscoveryPage() {
 
                 {currentStep === 1 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                        
+                        {/* DEMO'DAN GELENLER İÇİN ÖZEL UYARI */}
+                        {incomingDemoInfo && (
+                            <div className={`p-4 rounded-2xl border flex items-center gap-4 animate-in fade-in zoom-in duration-500 ${incomingDemoInfo.color}`}>
+                                <div className="w-10 h-10 bg-white/50 rounded-full flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest mb-1">Architecture Detected</h4>
+                                    <p className="text-sm font-bold opacity-90">Pre-configuring blueprint parameters based on <strong>{incomingDemoInfo.name}</strong> module.</p>
+                                </div>
+                            </div>
+                        )}
+
                         <div>
                             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.visionTitle}</h1>
                             <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.visionSub}</p>
@@ -462,22 +510,22 @@ export default function DefinitiveDiscoveryPage() {
                         <div className="space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.entity}</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.entity || 'Company / Entity'}</label>
                                     <input type="text" placeholder="e.g. Acme Corp" value={formData.companyName} onChange={(e) => setFormData({...formData, companyName: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-5 md:p-6 rounded-[24px] outline-none text-sm font-bold focus:border-black focus:bg-white transition-colors" />
                                 </div>
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.website}</label>
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.website || 'Current Website (Optional)'}</label>
                                     <input type="text" placeholder="https://..." value={formData.currentWebsite} onChange={(e) => setFormData({...formData, currentWebsite: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-5 md:p-6 rounded-[24px] outline-none text-sm font-bold focus:border-black focus:bg-white transition-colors" />
                                 </div>
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.goals}</label>
-                                <textarea placeholder={dData.form.goalsPlace} value={formData.projectGoals} onChange={(e) => setFormData({...formData, projectGoals: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-5 md:p-6 rounded-[24px] outline-none text-sm font-bold focus:border-black focus:bg-white transition-colors h-32 resize-none" />
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.goals || 'Primary Goals'}</label>
+                                <textarea placeholder={dData.form?.goalsPlace || 'What is the main objective of this architecture?'} value={formData.projectGoals} onChange={(e) => setFormData({...formData, projectGoals: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-5 md:p-6 rounded-[24px] outline-none text-sm font-bold focus:border-black focus:bg-white transition-colors h-32 resize-none" />
                             </div>
 
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.competitors}</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.competitors || 'Competitors / References'}</label>
                                 <textarea placeholder="..." value={formData.competitors} onChange={(e) => setFormData({...formData, competitors: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-5 md:p-6 rounded-[24px] outline-none text-sm font-bold focus:border-black focus:bg-white transition-colors h-24 resize-none" />
                             </div>
                         </div>
@@ -487,16 +535,15 @@ export default function DefinitiveDiscoveryPage() {
                 {currentStep === 2 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.archTitle}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.archSub}</p>
+                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.archTitle || 'Architecture'}</h1>
+                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.archSub || 'Select the core platform structure.'}</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {cData.stepsData[0].options.slice(0, 4).map((opt: any, index: number) => {
+                            {cData.stepsData?.[0]?.options?.slice(0, 4).map((opt: any, index: number) => {
                                 const optIds = ["landing", "corporate", "ecommerce", "saas"];
                                 const isSelected = formData.architecture === optIds[index];
                                 const priceObj = ARCHITECTURE_OPTIONS.find(a => a.id === optIds[index]);
-                                
                                 return (
                                     <div 
                                         key={optIds[index]} 
@@ -514,7 +561,7 @@ export default function DefinitiveDiscoveryPage() {
                                             {priceObj && <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-zinc-100 px-3 py-1 rounded-md whitespace-nowrap">+€{priceObj.price.toLocaleString()}</span>}
                                         </div>
                                         <h3 className="text-xl font-black uppercase mb-2">{opt.label}</h3>
-                                        <p className="text-xs font-bold text-zinc-500 leading-relaxed">{cData.stepsData[0].options[index].desc}</p>
+                                        <p className="text-xs font-bold text-zinc-500 leading-relaxed">{opt.desc || priceObj?.desc}</p>
                                     </div>
                                 );
                             })}
@@ -524,7 +571,7 @@ export default function DefinitiveDiscoveryPage() {
                             <div className={formData.architecture === 'landing' ? 'opacity-50 pointer-events-none' : ''}>
                                 <div className="flex justify-between items-center mb-4">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                                        {formData.architecture === 'landing' ? dData.form.singlePage : dData.form.pages}
+                                        {formData.architecture === 'landing' ? (dData.form?.singlePage || 'Single Page') : (dData.form?.pages || 'Estimated Pages')}
                                     </label>
                                     <span className="font-mono font-black text-xl">{formData.architecture === 'landing' ? '1' : formData.estimatedPages}</span>
                                 </div>
@@ -544,12 +591,12 @@ export default function DefinitiveDiscoveryPage() {
                 {currentStep === 3 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.designTitle}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.designSub}</p>
+                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.designTitle || 'Design Identity'}</h1>
+                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.designSub || 'Define the visual language.'}</p>
                         </div>
 
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.designDesc}</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.designDesc || 'Design Style'}</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {DESIGN_STYLES.map(style => (
                                     <div 
@@ -558,7 +605,7 @@ export default function DefinitiveDiscoveryPage() {
                                         className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.designStyle === style.id ? 'border-black bg-black text-white shadow-xl' : 'border-zinc-200 hover:border-black text-black bg-white'}`}
                                     >
                                         <div className="flex justify-between items-start w-full mb-2">
-                                            <h3 className="font-black uppercase">{dData.designStyles[style.id as keyof typeof dData.designStyles] || style.id}</h3>
+                                            <h3 className="font-black uppercase">{dData.designStyles?.[style.id as keyof typeof dData.designStyles] || style.id}</h3>
                                             {style.price > 0 && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md whitespace-nowrap ${formData.designStyle === style.id ? 'bg-white/20' : 'bg-zinc-100 text-zinc-500'}`}>+€{style.price}</span>}
                                         </div>
                                         <p className={`text-xs font-bold leading-relaxed mt-2 ${formData.designStyle === style.id ? 'text-zinc-300' : 'text-zinc-500'}`}>
@@ -574,7 +621,7 @@ export default function DefinitiveDiscoveryPage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Brand Colors</label>
                                 <div className="flex flex-wrap gap-4">
                                     <div className="flex-1 bg-zinc-50 p-4 rounded-2xl border border-zinc-200 flex flex-col items-center gap-3">
-                                        <span className="text-[9px] font-bold uppercase text-zinc-400">{dData.form.color}</span>
+                                        <span className="text-[9px] font-bold uppercase text-zinc-400">{dData.form?.color || 'Primary'}</span>
                                         <input type="color" value={formData.primaryColor} onChange={(e) => setFormData({...formData, primaryColor: e.target.value})} className="w-12 h-12 rounded-full cursor-pointer border-0 p-0" />
                                     </div>
                                     <div className="flex-1 bg-zinc-50 p-4 rounded-2xl border border-zinc-200 flex flex-col items-center gap-3">
@@ -587,20 +634,20 @@ export default function DefinitiveDiscoveryPage() {
                                             <button onClick={() => setFormData({...formData, hasAccentColor: false})} className="absolute top-2 right-2 text-zinc-400 hover:text-red-500 transition-colors">
                                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                             </button>
-                                            <span className="text-[9px] font-bold uppercase text-zinc-400">{dData.form.accent}</span>
+                                            <span className="text-[9px] font-bold uppercase text-zinc-400">{dData.form?.accent || 'Accent'}</span>
                                             <input type="color" value={formData.accentColor} onChange={(e) => setFormData({...formData, accentColor: e.target.value})} className="w-12 h-12 rounded-full cursor-pointer border-0 p-0" />
                                         </div>
                                     ) : (
                                         <button onClick={() => setFormData({...formData, hasAccentColor: true})} className="flex-1 bg-white border-2 border-dashed border-zinc-200 p-4 rounded-2xl flex flex-col items-center justify-center gap-2 hover:bg-zinc-50 transition-colors">
                                             <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                                            <span className="text-[9px] font-bold uppercase text-zinc-400">{dData.form.hasAccent}</span>
+                                            <span className="text-[9px] font-bold uppercase text-zinc-400">{dData.form?.hasAccent || 'Add Accent'}</span>
                                         </button>
                                     )}
                                 </div>
                             </div>
                             
                             <div className="space-y-4">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.fonts}</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.fonts || 'Typography'}</label>
                                 <div className="grid grid-cols-1 gap-2">
                                     {['sans-serif', 'serif', 'monospace'].map(font => (
                                         <div key={font} onClick={() => setFormData({...formData, fontPreference: font})} className={`p-4 rounded-xl border cursor-pointer text-center transition-all ${formData.fontPreference === font ? 'bg-zinc-100 border-zinc-400' : 'bg-white border-zinc-200 hover:bg-zinc-50'}`}>
@@ -616,8 +663,8 @@ export default function DefinitiveDiscoveryPage() {
                 {currentStep === 4 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.contentTitle}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.contentSub}</p>
+                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.contentTitle || 'Content & Assets'}</h1>
+                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.contentSub || 'Provide materials for the project.'}</p>
                         </div>
 
                         <div className={`p-8 rounded-[32px] border-2 transition-all cursor-pointer ${formData.needsCopywriting ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-zinc-300 bg-white'}`} onClick={() => setFormData({...formData, needsCopywriting: !formData.needsCopywriting})}>
@@ -626,7 +673,7 @@ export default function DefinitiveDiscoveryPage() {
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${formData.needsCopywriting ? 'border-emerald-500 bg-emerald-500' : 'border-zinc-300'}`}>
                                         {formData.needsCopywriting && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                     </div>
-                                    {dData.form.copy}
+                                    {dData.form?.copy || 'Professional Copywriting'}
                                 </h3>
                                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-white px-3 py-1 rounded-full border border-emerald-100 whitespace-nowrap">+€1,500</span>
                             </div>
@@ -634,7 +681,7 @@ export default function DefinitiveDiscoveryPage() {
                         </div>
 
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form.assets}</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.assets || 'Upload Assets'}</label>
                             
                             <div className="border-2 border-dashed border-zinc-300 rounded-[32px] p-10 text-center bg-zinc-50 hover:bg-zinc-100 transition-colors relative cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                                 <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
@@ -646,7 +693,7 @@ export default function DefinitiveDiscoveryPage() {
                                             <svg className="w-6 h-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                         </div>
                                     )}
-                                    <p className="text-sm font-black uppercase tracking-widest">{uploading ? dData.fileUploading : dData.fileClick}</p>
+                                    <p className="text-sm font-black uppercase tracking-widest">{uploading ? (dData.fileUploading || 'Uploading...') : (dData.fileClick || 'Click to Upload')}</p>
                                     <p className="text-xs font-bold text-zinc-400">PDF, PNG, JPG, ZIP (Max 50MB)</p>
                                 </div>
                             </div>
@@ -668,8 +715,8 @@ export default function DefinitiveDiscoveryPage() {
                 {currentStep === 5 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.engTitle}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.engSub}</p>
+                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.engTitle || 'Engineering & Integrations'}</h1>
+                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.engSub || 'Select required technical capabilities.'}</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -692,7 +739,7 @@ export default function DefinitiveDiscoveryPage() {
                                                 <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${isSelected ? 'border-white bg-white text-black' : 'border-zinc-300'}`}>
                                                     {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                                 </div>
-                                                <span className="font-black uppercase text-sm">{dData.integrations[opt.id as keyof typeof dData.integrations] || opt.id}</span>
+                                                <span className="font-black uppercase text-sm">{dData.integrations?.[opt.id as keyof typeof dData.integrations] || opt.id}</span>
                                             </div>
                                             <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md whitespace-nowrap ${isSelected ? 'bg-white/20' : 'bg-emerald-50 text-emerald-600'}`}>
                                                 +€{opt.price.toLocaleString()}
@@ -709,8 +756,8 @@ export default function DefinitiveDiscoveryPage() {
                 {currentStep === 6 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.logTitle}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.logSub}</p>
+                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.logTitle || 'Logistics'}</h1>
+                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.logSub || 'Define timeline and maintenance.'}</p>
                         </div>
 
                         <div className="space-y-8">
@@ -719,8 +766,8 @@ export default function DefinitiveDiscoveryPage() {
                                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
                                     <svg className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-800">{dData.constraint.title}</p>
-                                        <p className="text-xs font-bold text-amber-700/80 mt-1">{dData.constraint.desc}</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-amber-800">{dData.constraint?.title || 'Scale Constraint'}</p>
+                                        <p className="text-xs font-bold text-amber-700/80 mt-1">{dData.constraint?.desc || 'Complex architectures require enterprise timelines.'}</p>
                                     </div>
                                 </div>
                             )}
@@ -746,7 +793,7 @@ export default function DefinitiveDiscoveryPage() {
                                             >
                                                 <div className="flex justify-between items-center w-full">
                                                     <h3 className={`font-black uppercase text-sm ${isSelected && !isDisabled ? (tId === 'expedited' ? 'text-red-600' : 'text-black') : 'text-zinc-700'}`}>
-                                                        {isEnterprise ? "4 - 6 Months (Enterprise Scale)" : dData.timelines[tId as keyof typeof dData.timelines]}
+                                                        {isEnterprise ? "4 - 6 Months (Enterprise Scale)" : (dData.timelines?.[tId as keyof typeof dData.timelines] || tId)}
                                                     </h3>
                                                     {isSelected && !isDisabled && (
                                                         <div className={`w-3 h-3 rounded-full ${tId === 'expedited' ? 'bg-red-500' : tId === 'relaxed' ? 'bg-blue-500' : 'bg-black'}`} />
@@ -796,12 +843,12 @@ export default function DefinitiveDiscoveryPage() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">SEO Optimization Level</label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div onClick={() => setFormData({...formData, seoLevel: 'standard'})} className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.seoLevel === 'standard' ? 'border-black bg-zinc-50' : 'border-zinc-200 hover:border-black bg-white'}`}>
-                                        <h3 className="font-black uppercase mb-1">{dData.seoLevels.standard}</h3>
+                                        <h3 className="font-black uppercase mb-1">{dData.seoLevels?.standard || 'Standard'}</h3>
                                         <p className="text-xs font-bold text-zinc-500 mt-2">Included. Basic meta tags and fast load speeds.</p>
                                     </div>
                                     <div onClick={() => setFormData({...formData, seoLevel: 'advanced'})} className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.seoLevel === 'advanced' ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 hover:border-black bg-white'}`}>
                                         <div className="flex justify-between items-start mb-1 w-full">
-                                            <h3 className="font-black uppercase text-emerald-800">{dData.seoLevels.advanced}</h3>
+                                            <h3 className="font-black uppercase text-emerald-800">{dData.seoLevels?.advanced || 'Advanced'}</h3>
                                             <span className="text-[9px] font-black uppercase text-emerald-600 bg-white px-2 py-1 rounded-md border border-emerald-100 whitespace-nowrap">+€1,500</span>
                                         </div>
                                         <p className="text-xs font-bold text-emerald-700/70 mt-2">Schema markup, programmatic sitemaps, core web vitals optimization.</p>
@@ -815,36 +862,36 @@ export default function DefinitiveDiscoveryPage() {
                 {currentStep === 7 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.credTitle}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.credSub}</p>
+                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.credTitle || 'Credentials'}</h1>
+                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.credSub || 'Finalize authorization details.'}</p>
                         </div>
 
                         <div className="bg-zinc-50 border border-zinc-200 p-8 md:p-12 rounded-[40px] space-y-6 shadow-sm">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.name}</label>
+                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.name || 'Full Name *'}</label>
                                     <input type="text" placeholder="John Doe" required className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.clientName} onChange={(e) => setFormData({...formData, clientName: e.target.value})} />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.email}</label>
+                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.email || 'Email Address *'}</label>
                                     <input type="email" placeholder="john@example.com" required className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.clientEmail} onChange={(e) => setFormData({...formData, clientEmail: e.target.value})} />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.phone}</label>
+                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.phone || 'Phone Number'}</label>
                                     <input type="tel" placeholder="+1..." className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.clientPhone} onChange={(e) => setFormData({...formData, clientPhone: e.target.value})} />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.vat}</label>
+                                    <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.vat || 'VAT Number'}</label>
                                     <input type="text" placeholder="BE0000..." className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.vatNumber} onChange={(e) => setFormData({...formData, vatNumber: e.target.value})} />
                                 </div>
                             </div>
                             <div>
-                                <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.address}</label>
+                                <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.address || 'Billing Address *'}</label>
                                 <textarea placeholder="Street, City, Postal Code, Country" required className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold h-24 resize-none focus:border-black transition-colors" value={formData.billingAddress} onChange={(e) => setFormData({...formData, billingAddress: e.target.value})} />
                             </div>
                             <div>
-                                <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form.notes}</label>
-                                <textarea placeholder={dData.form.notesPlace} className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold h-24 resize-none focus:border-black transition-colors" value={formData.designNotes} onChange={(e) => setFormData({...formData, designNotes: e.target.value})} />
+                                <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.notes || 'Additional Notes'}</label>
+                                <textarea placeholder={dData.form?.notesPlace || 'Any final details?'} className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold h-24 resize-none focus:border-black transition-colors" value={formData.designNotes} onChange={(e) => setFormData({...formData, designNotes: e.target.value})} />
                             </div>
 
                             {/* GÜVENLİ (FALLBACK) YASAL ONAY KUTUCUĞU */}
@@ -881,16 +928,16 @@ export default function DefinitiveDiscoveryPage() {
                         </div>
                         
                         <div>
-                            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-4">{dData.success.title}</h2>
+                            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-4">{dData.success?.title || 'Blueprint Submitted'}</h2>
                             <p className="text-zinc-500 font-bold max-w-lg mx-auto leading-relaxed text-sm md:text-base">
-                                {dData.success.desc}
-                                <br/><span className="text-black block mt-2">{dData.success.sub}</span>
+                                {dData.success?.desc || 'Your architecture specification has been securely logged.'}
+                                <br/><span className="text-black block mt-2">{dData.success?.sub || 'Our team will review it shortly.'}</span>
                             </p>
                         </div>
                         
                         <div className="bg-zinc-50 p-10 md:p-12 rounded-[40px] border-2 border-zinc-100 max-w-md mx-auto relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
-                            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">{dData.success.dsNumber}</p>
+                            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">{dData.success?.dsNumber || 'Reference Number'}</p>
                             <p className="text-5xl font-black font-mono tracking-tighter text-black select-all mb-8">{discoveryId}</p>
                             
                             <div className="pt-8 border-t border-zinc-200 flex justify-between items-center mb-4">
@@ -915,7 +962,7 @@ export default function DefinitiveDiscoveryPage() {
                                 ) : (
                                     <>
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                        {dData.btn.pdf}
+                                        {dData.btn?.pdf || 'Download PDF Copy'}
                                     </>
                                 )}
                             </button>
@@ -932,7 +979,7 @@ export default function DefinitiveDiscoveryPage() {
                         </div>
 
                         <div className="pt-8 flex flex-col items-center gap-4">
-                            <button onClick={() => router.push('/')} className="bg-black text-white px-12 py-5 rounded-full font-black uppercase text-xs tracking-[0.2em] hover:bg-zinc-800 transition-all shadow-lg active:scale-95">{dData.btn.hub}</button>
+                            <button onClick={() => router.push('/')} className="bg-black text-white px-12 py-5 rounded-full font-black uppercase text-xs tracking-[0.2em] hover:bg-zinc-800 transition-all shadow-lg active:scale-95">{dData.btn?.hub || 'Return Home'}</button>
                         </div>
                     </div>
                 )}
@@ -958,9 +1005,9 @@ export default function DefinitiveDiscoveryPage() {
                                     className="bg-emerald-500 text-white px-6 md:px-16 py-3.5 md:py-5 rounded-2xl md:rounded-[20px] font-black uppercase text-[9px] md:text-xs tracking-[0.2em] active:scale-95 transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3"
                                 >
                                     {loading ? (
-                                        <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {dData.btn.encrypting}</>
+                                        <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {dData.btn?.encrypting || 'Encrypting...'}</>
                                     ) : (
-                                        <>{dData.btn.submit} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg></>
+                                        <>{dData.btn?.submit || 'Submit Protocol'} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg></>
                                     )}
                                 </button>
                             ) : (
@@ -969,7 +1016,7 @@ export default function DefinitiveDiscoveryPage() {
                                     disabled={!isStepValid()}
                                     className="bg-black text-white px-6 md:px-16 py-3.5 md:py-5 rounded-2xl md:rounded-[20px] font-black uppercase text-[9px] md:text-xs tracking-[0.2em] active:scale-95 transition-all shadow-xl disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:gap-3 hover:bg-zinc-800"
                                 >
-                                    {dData.btn.next} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                    {dData.btn?.next || 'Next Step'} <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                                 </button>
                             )}
                         </div>
@@ -977,5 +1024,14 @@ export default function DefinitiveDiscoveryPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+// Suspense için wrap edilmiş versiyon
+export default function DefinitiveDiscoveryPage() {
+    return (
+        <Suspense fallback={<div className="pt-40 text-center font-mono text-xs uppercase tracking-widest text-zinc-400">Loading Environment...</div>}>
+            <DiscoveryFormContent />
+        </Suspense>
     );
 }

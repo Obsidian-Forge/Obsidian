@@ -1,0 +1,17 @@
+name: Monthly Billing Automation
+
+on:
+  schedule:
+    # Her ayın 1'inde saat 08:00'de çalışır (UTC zaman dilimi)
+    - cron: '0 8 1 * *'
+  workflow_dispatch: # Manuel olarak da tetikleyebilmen için
+
+jobs:
+  run-billing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit Next.js API Route
+        run: |
+          curl -X POST ${{ secrets.PRODUCTION_URL }}/api/cron/monthly-billing \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          -H "Content-Type: application/json"

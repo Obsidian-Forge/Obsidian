@@ -11,38 +11,35 @@ export default function AdminDashboardPage() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
-
-    // TOAST NOTIFICATION STATE
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // DATA STATES
     const [clients, setClients] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
     const [clientInvoices, setClientInvoices] = useState<any[]>([]);
     const [supportTicketsCount, setSupportTicketsCount] = useState(0);
     const [quickNotes, setQuickNotes] = useState<any[]>([]);
-
-    // FORM STATES
     const [newQuickNote, setNewQuickNote] = useState('');
     const [clientForm, setClientForm] = useState({ email: '', fullName: '', companyName: '', phone: '', address: '' });
     const [projectForm, setProjectForm] = useState({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
-
-    // PROJECT UPDATE STATES
     const [localProgress, setLocalProgress] = useState<{ [key: string]: number }>({});
     const [projectInputs, setProjectInputs] = useState<{ [key: string]: { log: string, status: string } }>({});
     const [timers, setTimers] = useState<{ [key: string]: { active: boolean; sessionStart: number | null; totalElapsed: number; displayTime?: number } }>({});
-
-    // NOTIFICATION STATES
     const [newDiscoveryCount, setNewDiscoveryCount] = useState(0);
     const [hasAnyUnread, setHasAnyUnread] = useState(false);
 
-    // MODAL (PANEL) STATES
     const [selectedProjectDetails, setSelectedProjectDetails] = useState<any>(null);
     const [projectDiscoveryData, setProjectDiscoveryData] = useState<any>(null);
     const [projectFilesData, setProjectFilesData] = useState<any[]>([]);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [demoSettings, setDemoSettings] = useState({
+        globalNetwork: 'Active',
+        creative: 'Online',
+        fintech: 'Online',
+        logistics: 'Online',
+        quantum: 'Online'
+    });
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToast({ message, type });
@@ -76,7 +73,6 @@ export default function AdminDashboardPage() {
         };
     }, [router]);
 
-    // 1. POLLING & AUTH KONTROLÜ (GÖRÜNMEZ YENİLEME)
     useEffect(() => {
         const checkAdmin = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -101,7 +97,6 @@ export default function AdminDashboardPage() {
             
             setIsAdmin(true);
             
-            // İlk Yükleme
             fetchData();
             fetchQuickNotes();
             fetchDiscoveryCount();
@@ -110,7 +105,6 @@ export default function AdminDashboardPage() {
         
         checkAdmin();
 
-        // 15 Saniyede Bir Arka Planda Güncelle
         const pollInterval = setInterval(() => {
             fetchData();
             fetchQuickNotes();
@@ -121,7 +115,6 @@ export default function AdminDashboardPage() {
         return () => clearInterval(pollInterval);
     }, [router]);
 
-    // 2. SAYAÇ AKIŞI (HER 1 SANİYEDE UI GÜNCELLENİR)
     useEffect(() => {
         const interval = setInterval(() => {
             setTimers(prev => {
@@ -143,12 +136,13 @@ export default function AdminDashboardPage() {
     }, []);
 
     const fetchData = async () => {
-        const [clientsRes, projectsRes, statusRes, invRes, ticketsRes] = await Promise.all([
+        const [clientsRes, projectsRes, statusRes, invRes, ticketsRes, showroomRes] = await Promise.all([
             supabase.from('clients').select('*').is('archived_at', null).order('created_at', { ascending: false }),
             supabase.from('projects').select('*, clients(full_name, email, archived_at), project_updates(*)').order('created_at', { ascending: false }),
             supabase.from('system_status').select('*').order('label'),
             supabase.from('client_invoices').select('*'),
-            supabase.from('support_tickets').select('status')
+            supabase.from('support_tickets').select('status'),
+            supabase.from('showroom_settings').select('*').eq('id', 1).single()
         ]);
 
         if (clientsRes.data) setClients(clientsRes.data);
@@ -157,7 +151,6 @@ export default function AdminDashboardPage() {
                 ...p,
                 project_updates: p.project_updates ? p.project_updates.sort((a:any, b:any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : []
             }));
-            
             setProjects(activeProjectsList);
             
             const progressMap: { [key: string]: number } = {};
@@ -165,13 +158,9 @@ export default function AdminDashboardPage() {
             const newTimers: any = {};
             
             activeProjectsList.forEach(p => { 
-                // Local progress koruma mantığı
                 progressMap[p.id] = localProgress[p.id] ?? p.progress_percent; 
-                
-                // Input koruma mantığı
                 inputsMap[p.id] = projectInputs[p.id] || { log: '', status: p.status || 'Planning' };
 
-                // Sayaç mantığı
                 const dbActive = p.last_timer_start !== null;
                 const sessionStart = dbActive ? Math.floor(new Date(p.last_timer_start).getTime() / 1000) : null;
                 const displayTime = dbActive ? (p.total_time_spent || 0) + (Math.floor(Date.now() / 1000) - sessionStart!) : p.total_time_spent || 0;
@@ -182,7 +171,6 @@ export default function AdminDashboardPage() {
             setProjectInputs(prev => ({ ...inputsMap, ...prev }));
             setTimers(newTimers);
 
-            // Eğer modal açıksa, selectedProjectDetails içindeki güncel veriyi de tazele
             if (selectedProjectDetails) {
                 const updatedSelectedProject = activeProjectsList.find(p => p.id === selectedProjectDetails.id);
                 if (updatedSelectedProject) setSelectedProjectDetails(updatedSelectedProject);
@@ -190,6 +178,7 @@ export default function AdminDashboardPage() {
         }
         
         if (statusRes.data) setSystemStatuses(statusRes.data);
+        
         if (invRes.data && clientsRes.data) {
             const activeClientIds = clientsRes.data.map(c => c.id);
             const activeInvoices = invRes.data.filter(inv => activeClientIds.includes(inv.client_id));
@@ -198,6 +187,16 @@ export default function AdminDashboardPage() {
         
         if (ticketsRes.data) {
             setSupportTicketsCount(ticketsRes.data.filter(t => t.status === 'open' || t.status === 'new').length);
+        }
+
+        if (showroomRes.data) {
+            setDemoSettings({
+                globalNetwork: showroomRes.data.global_network,
+                creative: showroomRes.data.creative,
+                fintech: showroomRes.data.fintech,
+                logistics: showroomRes.data.logistics,
+                quantum: showroomRes.data.quantum
+            });
         }
     };
 
@@ -216,22 +215,22 @@ export default function AdminDashboardPage() {
             .from('support_tickets')
             .select('*', { count: 'exact', head: true })
             .eq('status', 'new');
+            
         const { count: repliesCount } = await supabase
             .from('support_replies')
             .select('*', { count: 'exact', head: true })
             .eq('sender_type', 'client')
             .eq('is_read', false);
+            
         setHasAnyUnread((ticketsCount || 0) > 0 || (repliesCount || 0) > 0);
     };
 
-    // --- PROJE PANELİ (MODAL) YÖNETİMİ ---
     const handleOpenProjectDetails = async (project: any) => {
         setSelectedProjectDetails(project);
         setLoadingDetails(true);
         setProjectDiscoveryData(null);
         setProjectFilesData([]);
-        
-        // Modal açıldığında form statelerini güvenli şekilde eşitle
+
         if (localProgress[project.id] === undefined) {
             setLocalProgress(prev => ({...prev, [project.id]: project.progress_percent}));
         }
@@ -256,6 +255,7 @@ export default function AdminDashboardPage() {
                 .select('*')
                 .eq('client_id', project.client_id)
                 .order('created_at', { ascending: false });
+
             if (filesData) setProjectFilesData(filesData);
 
         } catch (error) {
@@ -301,13 +301,13 @@ export default function AdminDashboardPage() {
         fetchQuickNotes();
     };
 
-    // --- MÜHENDİSLİK AKSİYONLARI (MODAL İÇİNDEN ÇAĞRILACAK) ---
     const toggleTimer = async (projectId: string) => {
         const project = projects.find(p => p.id === projectId);
         if (!project) return;
 
         const timerState = timers[projectId];
         const isCurrentlyActive = timerState?.active;
+
         try {
             if (isCurrentlyActive) {
                 const sessionDuration = (Math.floor(Date.now() / 1000)) - timerState.sessionStart!;
@@ -332,26 +332,22 @@ export default function AdminDashboardPage() {
             const newProgress = localProgress[projectId];
             const currentInputs = projectInputs[projectId];
             
-            // Projeyi Güncelle (Yüzde ve Statü)
             await supabase.from('projects').update({ 
                 progress_percent: newProgress,
                 status: currentInputs?.status || 'Planning'
             }).eq('id', projectId);
 
-            // Log yazıldıysa onu da ekle
             if (currentInputs?.log?.trim()) {
                 await supabase.from('project_updates').insert({ 
                     project_id: projectId, 
                     message: currentInputs.log.trim(), 
                     progress_at_time: newProgress 
                 });
-                
-                // İşlem bitince formdaki log inputunu temizle
                 setProjectInputs(prev => ({...prev, [projectId]: {...currentInputs, log: ''}}));
             }
             
             showToast("Project synchronized perfectly.", 'success');
-            fetchData(); // ANINDA UI YENİLEME
+            fetchData();
         } catch (err: any) { 
             showToast(err.message, 'error');
         } finally { 
@@ -359,12 +355,12 @@ export default function AdminDashboardPage() {
         }
     };
 
-    // --- FORM İŞLEMLERİ ---
     const handleCreateClient = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
             const { data: existingClient } = await supabase.from('clients').select('id, archived_at').eq('email', clientForm.email).maybeSingle();
+            
             if (existingClient) {
                 if (existingClient.archived_at) {
                     showToast("This email belongs to an ARCHIVED entity. Please use Archives.", 'error');
@@ -376,6 +372,7 @@ export default function AdminDashboardPage() {
             }
 
             const code = `NVTR-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+            
             const insertData: any = {
                 email: clientForm.email,
                 full_name: clientForm.fullName,
@@ -384,8 +381,10 @@ export default function AdminDashboardPage() {
                 address: clientForm.address || null,
                 access_code: code
             };
+
             const { error } = await supabase.from('clients').insert(insertData);
             if (error) throw error;
+
             setClientForm({ email: '', fullName: '', companyName: '', phone: '', address: '' });
             showToast(`Entity authorized successfully. Deployment Key: ${code}`, 'success');
             setActiveTab('overview');
@@ -409,6 +408,7 @@ export default function AdminDashboardPage() {
                 status: projectForm.status, 
                 progress_percent: projectForm.progress 
             });
+
             if (error) throw error;
 
             setProjectForm({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
@@ -422,7 +422,29 @@ export default function AdminDashboardPage() {
         }
     };
 
-    // YARDIMCI FONKSİYONLAR
+    const handleUpdateShowroomSettings = async () => {
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('showroom_settings')
+                .update({
+                    global_network: demoSettings.globalNetwork,
+                    creative: demoSettings.creative,
+                    fintech: demoSettings.fintech,
+                    logistics: demoSettings.logistics,
+                    quantum: demoSettings.quantum
+                })
+                .eq('id', 1);
+
+            if (error) throw error;
+            showToast("Showroom parameters synchronized globally.", 'success');
+        } catch (err: any) {
+            showToast("Failed to sync settings: " + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const formatTime = (seconds: number) => {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
@@ -450,7 +472,6 @@ export default function AdminDashboardPage() {
     return (
         <div className="flex h-screen w-full bg-zinc-50 text-black font-sans overflow-hidden selection:bg-black selection:text-white relative">
 
-            {/* TOAST BİLDİRİMİ */}
             {toast && (
                 <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl z-[9999] animate-in slide-in-from-bottom-5 duration-300 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 border ${
                     toast.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' :
@@ -463,7 +484,6 @@ export default function AdminDashboardPage() {
                 </div>
              )}
 
-            {/* DEV KONTROL PANELİ (MODAL) */}
             {selectedProjectDetails && (() => {
                 const pId = selectedProjectDetails.id;
                 const timer = timers[pId];
@@ -472,12 +492,10 @@ export default function AdminDashboardPage() {
 
                 return (
                     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-                        {/* Arka Plan Overlay */}
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setSelectedProjectDetails(null)}></div>
                         
                         <div className="bg-[#f8f9fa] w-full max-w-6xl h-[90vh] flex flex-col rounded-[40px] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 border border-zinc-200 overflow-hidden">
                             
-                            {/* MODAL HEADER */}
                             <div className="px-8 md:px-12 py-8 bg-white border-b border-zinc-200 flex justify-between items-center shrink-0">
                                 <div>
                                     <div className="flex items-center gap-3 mb-1">
@@ -505,13 +523,10 @@ export default function AdminDashboardPage() {
                                 </div>
                             </div>
 
-                            {/* MODAL BODY (TWO COLUMNS) */}
                             <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                                     
-                                    {/* SOL SÜTUN: ENGINEERING & ARCHITECTURE LOAD */}
                                     <div className="space-y-8">
-                                        {/* SAYAÇ & SESSION BÖLÜMÜ */}
                                         <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
                                             <div className="flex justify-between items-start mb-6">
                                                 <div>
@@ -530,7 +545,6 @@ export default function AdminDashboardPage() {
                                             </button>
                                         </div>
 
-                                        {/* ARCHITECTURE LOAD & VERCEL STEPS */}
                                         <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
                                             <div className="flex justify-between items-end mb-4">
                                                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Architecture Load</span>
@@ -540,7 +554,6 @@ export default function AdminDashboardPage() {
                                                 <div className="h-full bg-black transition-all duration-300" style={{ width: `${currentProg}%` }} />
                                             </div>
                                             
-                                            {/* STEPS PREVIEW */}
                                             <div className="space-y-3.5 mb-8">
                                                 {[
                                                     { label: 'Provisioning Servers & Initial Setup', threshold: 20 },
@@ -560,7 +573,6 @@ export default function AdminDashboardPage() {
                                                 })}
                                             </div>
                                             
-                                            {/* LOAD CONTROLS */}
                                             <div className="pt-6 border-t border-zinc-100">
                                                 <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block mb-4">Adjust Load Range</label>
                                                 <input 
@@ -590,10 +602,7 @@ export default function AdminDashboardPage() {
                                         </div>
                                     </div>
 
-                                    {/* SAĞ SÜTUN: DISCOVERY, ASSETS, LEDGER & DANGER ZONE */}
                                     <div className="space-y-8">
-                                        
-                                        {/* Deployment Ledger Preview */}
                                         <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6 flex items-center gap-2">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
@@ -615,7 +624,6 @@ export default function AdminDashboardPage() {
                                             </div>
                                         </div>
 
-                                        {/* Discovery Requirements */}
                                         <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6 flex items-center gap-2">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -640,7 +648,6 @@ export default function AdminDashboardPage() {
                                             )}
                                         </div>
 
-                                        {/* Client Vault & Assets */}
                                         <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
                                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6 flex items-center gap-2">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
@@ -681,7 +688,6 @@ export default function AdminDashboardPage() {
                                             </div>
                                         </div>
 
-                                        {/* Danger Zone */}
                                         <div className="pt-6">
                                             <button
                                                 onClick={() => handleDeleteProject(pId)}
@@ -701,7 +707,6 @@ export default function AdminDashboardPage() {
                 );
             })()}
 
-            {/* MOBİL HEADER */}
             <div className="md:hidden fixed top-0 w-full bg-white border-b border-zinc-200 z-40 p-4 flex justify-between items-center text-black">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 flex items-center justify-center shrink-0">
@@ -719,7 +724,6 @@ export default function AdminDashboardPage() {
                 </div>
             </div>
 
-            {/* ANA SIDEBAR (GÜNCELLENDİ) */}
             <aside className={`fixed inset-y-0 left-0 z-50 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 w-64 bg-white border-r border-zinc-200 p-6 flex flex-col h-full shadow-2xl`}>
                 <div className="mb-10 flex flex-col items-center text-center">
                     <div className="w-16 h-16 mb-4 flex items-center justify-center bg-white border border-zinc-100 p-2 rounded-full shadow-sm">
@@ -732,8 +736,10 @@ export default function AdminDashboardPage() {
                 <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
                     {[
                         { id: 'overview', label: 'Command Center', action: null },
+                        { id: 'ledger', label: 'Financial Ledger', action: () => router.push('/admin/ledger') },
                         { id: 'discoveries', label: 'Discovery Logs', badgeText: newDiscoveryCount > 0 ? `${newDiscoveryCount} NEW` : null, action: () => router.push('/admin/discoveries') },
                         { id: 'tickets', label: 'Support Queue', badgeText: hasAnyUnread ? 'NEW' : null, action: () => router.push('/admin/support') },
+                        { id: 'showroom', label: 'Showroom Controls', action: null },
                         { id: 'status', label: 'Infrastructure', action: () => router.push('/admin/status') },
                         { id: 'clients', label: 'Active Database', action: () => router.push('/admin/clients') },
                         { id: 'archive', label: 'Entity Archive', action: () => router.push('/admin/archive') }
@@ -761,7 +767,6 @@ export default function AdminDashboardPage() {
                             Invoice Generator
                         </button>
                         
-                        {/* TAŞINAN ACTION BUTONLARI */}
                         <button
                             onClick={() => { setActiveTab('add_client'); setIsMobileMenuOpen(false); }}
                             className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeTab === 'add_client' ? 'bg-black text-white shadow-md' : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200 hover:border-black hover:text-black'}`}
@@ -791,13 +796,68 @@ export default function AdminDashboardPage() {
                 </div>
             </aside>
 
-            {/* ANA ÇALIŞMA ALANI */}
             <main className="flex-1 h-full overflow-y-auto md:pl-64 p-6 lg:p-10 relative z-0 mt-16 md:mt-0 bg-[#f8f9fa]">
+
+                {activeTab === 'showroom' && (
+                    <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-6 border-b border-zinc-200">
+                            <div className="flex items-center gap-4">
+                                <h1 className="text-[40px] md:text-[50px] font-black tracking-tighter uppercase text-zinc-900 leading-none">Showroom Controls</h1>
+                            </div>
+                        </div>
+
+                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-6">Global Network Status</h2>
+                            <select 
+                                value={demoSettings.globalNetwork}
+                                onChange={(e) => setDemoSettings(prev => ({...prev, globalNetwork: e.target.value}))}
+                                className="w-full md:w-1/3 bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold uppercase cursor-pointer focus:border-zinc-400 focus:bg-white transition-colors mb-6"
+                            >
+                                <option value="Active">Network Active</option>
+                                <option value="Maintenance">Maintenance Mode</option>
+                                <option value="Degraded">Degraded Performance</option>
+                            </select>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {[
+                                { key: 'creative', title: 'Aura Creative' },
+                                { key: 'fintech', title: 'Aegis Finance' },
+                                { key: 'logistics', title: 'Node Logistics' },
+                                { key: 'quantum', title: 'Quantum Engine' }
+                            ].map((demo) => (
+                                <div key={demo.key} className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-2xl font-black uppercase tracking-tighter text-zinc-900">{demo.title}</h3>
+                                        <div className={`w-3 h-3 rounded-full ${demoSettings[demo.key as keyof typeof demoSettings] === 'Online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                                    </div>
+                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Module Status</label>
+                                    <select 
+                                        value={demoSettings[demo.key as keyof typeof demoSettings]}
+                                        onChange={(e) => setDemoSettings(prev => ({...prev, [demo.key]: e.target.value}))}
+                                        className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold uppercase cursor-pointer focus:border-zinc-400 focus:bg-white transition-colors"
+                                    >
+                                        <option value="Online">Online / Ready</option>
+                                        <option value="Offline">Offline</option>
+                                        <option value="Maintenance">Under Maintenance</option>
+                                    </select>
+                                </div>
+                            ))}
+                        </div>
+
+                        <button 
+                            onClick={handleUpdateShowroomSettings}
+                            disabled={loading}
+                            className="w-full md:w-auto bg-black text-white px-10 py-5 rounded-xl font-black text-[10px] uppercase tracking-[0.25em] hover:bg-zinc-800 disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all"
+                        >
+                            {loading ? 'Synchronizing...' : 'Sync Showroom Changes'}
+                        </button>
+                    </div>
+                )}
 
                 {activeTab === 'overview' && (
                     <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
                         
-                        {/* HEADER */}
                         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-6 border-b border-zinc-200">
                             <div className="flex items-center gap-4">
                                 <h1 className="text-[40px] md:text-[50px] font-black tracking-tighter uppercase text-zinc-900 leading-none">Workspace</h1>
@@ -805,15 +865,20 @@ export default function AdminDashboardPage() {
                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                 </button>
                             </div>
-                            <div className="flex items-center gap-2 bg-white px-4 py-2 border border-zinc-200 rounded-full shadow-sm">
-                                <div className={`w-2 h-2 rounded-full ${isSystemDown ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-                                <span className={`text-[9px] font-black uppercase tracking-widest ${isSystemDown ? 'text-red-500' : 'text-zinc-500'}`}>
-                                    {isSystemDown ? 'SYSTEM OUTAGE' : 'Node Operational'}
-                                </span>
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => router.push('/admin/ledger')} className="hidden sm:flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors shadow-sm active:scale-95">
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Revenue Ledger
+                                </button>
+                                <div className="flex items-center gap-2 bg-white px-4 py-2 border border-zinc-200 rounded-full shadow-sm">
+                                    <div className={`w-2 h-2 rounded-full ${isSystemDown ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
+                                    <span className={`text-[9px] font-black uppercase tracking-widest ${isSystemDown ? 'text-red-500' : 'text-zinc-500'}`}>
+                                        {isSystemDown ? 'SYSTEM OUTAGE' : 'Node Operational'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* GÜNCELLENMİŞ KPI KUTULARI (Daha Anlaşılır) */}
                         <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
                             {[
                                 { l: "Total Registered Clients", v: clients.length, highlight: false },
@@ -830,10 +895,8 @@ export default function AdminDashboardPage() {
 
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                             
-                            {/* SOL/ORTA SÜTUN: PROJELER */}
                             <div className="xl:col-span-2 space-y-10">
                                 
-                                {/* ACTIVE ENGINEERING SESSIONS (SADELEŞTİRİLMİŞ ÖNİZLEME) */}
                                 <div>
                                     <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-6 flex items-center gap-2">
                                         <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -877,7 +940,6 @@ export default function AdminDashboardPage() {
                                     )}
                                 </div>
 
-                                {/* QUEUE STATUS (IDLE PROJECTS) */}
                                 {idleProjects.length > 0 && (
                                     <div>
                                         <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-6">Queue Status (Idle)</h2>
@@ -914,7 +976,6 @@ export default function AdminDashboardPage() {
                                 )}
                             </div>
 
-                            {/* SAĞ SÜTUN: INTERNAL MEMOS */}
                             <div className="xl:col-span-1">
                                 <div className="flex flex-col bg-white border border-zinc-200 rounded-[32px] p-6 md:p-8 shadow-sm h-full max-h-[600px] sticky top-8">
                                     <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-6 flex items-center gap-2">
@@ -952,7 +1013,6 @@ export default function AdminDashboardPage() {
                     </div>
                 )}
 
-                {/* ADD CLIENT TAB */}
                 {activeTab === 'add_client' && (
                     <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
                         <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
@@ -996,7 +1056,6 @@ export default function AdminDashboardPage() {
                     </div>
                 )}
 
-                {/* ADD PROJECT TAB */}
                 {activeTab === 'add_project' && (
                     <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
                         <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
