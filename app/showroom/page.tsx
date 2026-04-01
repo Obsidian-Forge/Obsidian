@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -78,7 +78,7 @@ export default function ShowroomPage() {
                 });
             }
         };
-        
+
         // İlk açılışta hemen veriyi çek
         fetchShowroomSettings();
 
@@ -97,7 +97,7 @@ export default function ShowroomPage() {
                     // Admin panelinde "Sync" butonuna basıldığı anda burası tetiklenir!
                     console.log("Canlı güncelleme geldi!", payload.new);
                     const newData = payload.new;
-                    
+
                     // State'leri anında güncelliyoruz
                     setGlobalNetworkStatus(newData.global_network);
                     setModuleStatuses({
@@ -117,10 +117,16 @@ export default function ShowroomPage() {
         };
     }, []);
 
-    const fadeUp = {
-        hidden: { opacity: 0, y: 30 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.23, 1, 0.32, 1] } }
+    // 133. Satırı böyle yap:
+    const fadeUp: Variants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+        }
     };
+    
 
     const handleDemoClick = (route: string, status: string) => {
         if (status === 'Offline' || status === 'Maintenance') return;
@@ -129,7 +135,7 @@ export default function ShowroomPage() {
 
     return (
         <div className="min-h-screen bg-[#FCFCFC] text-black font-sans overflow-x-hidden flex flex-col relative selection:bg-black selection:text-white">
-            
+
             {/* FÜTÜRİSTİK BLUEPRINT (TEKNİK ÇİZİM) ARKA PLANI */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[linear-gradient(#e5e7eb_1px,transparent_1px),linear-gradient(90deg,#e5e7eb_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_40%,transparent_100%)] opacity-40" />
@@ -143,7 +149,7 @@ export default function ShowroomPage() {
                     </div>
                     <span className="text-[11px] font-black tracking-[0.3em] text-black uppercase mt-1">Novatrum</span>
                 </Link>
-                
+
                 {/* DİNAMİK GLOBAL NETWORK DURUMU */}
                 <div className={`flex items-center gap-3 bg-white border px-5 py-2.5 rounded-full shadow-sm transition-colors ${globalNetworkStatus === 'Active' ? 'border-zinc-200' : 'border-red-200 bg-red-50'}`}>
                     <span className={`w-2 h-2 rounded-full ${globalNetworkStatus === 'Active' ? 'bg-emerald-500 animate-pulse' : globalNetworkStatus === 'Maintenance' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
@@ -155,7 +161,7 @@ export default function ShowroomPage() {
 
             {/* MAIN İÇERİK */}
             <main className="flex-1 relative z-10 w-full max-w-[1400px] mx-auto px-6 md:px-12 pb-32 pt-10">
-                
+
                 {/* BAŞLIK BÖLÜMÜ */}
                 <div className="mb-20">
                     <motion.div initial="hidden" animate="visible" variants={fadeUp}>
@@ -190,7 +196,7 @@ export default function ShowroomPage() {
                                 {isAvailable && (
                                     <div className={`absolute inset-0 bg-gradient-to-br ${demo.hoverGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                                 )}
-                                
+
                                 <div className="relative z-10 flex flex-col h-full">
                                     {/* Üst Kısım: İkon ve Modül Numarası */}
                                     <div className="flex justify-between items-start mb-16">
@@ -201,7 +207,7 @@ export default function ShowroomPage() {
                                             <span className={`text-[9px] font-black uppercase tracking-[0.3em] transition-colors ${isAvailable ? 'text-zinc-400 group-hover:text-zinc-900' : 'text-zinc-400'}`}>
                                                 Module 0{index + 1}
                                             </span>
-                                            
+
                                             {/* DİNAMİK DURUM ETİKETİ */}
                                             <span className={`text-[9px] font-bold uppercase tracking-widest mt-1 transition-opacity ${isAvailable ? `opacity-0 group-hover:opacity-100 ${demo.accentText}` : status === 'Maintenance' ? 'text-amber-500' : 'text-red-500'}`}>
                                                 {status === 'Online' ? 'Ready' : status}
