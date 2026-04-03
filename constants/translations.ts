@@ -199,7 +199,12 @@ export const translations = {
         address: "Billing Address (City, Country) *",
         vat: "VAT Number (Optional)",
         notes: "Design Notes",
-        notesPlace: "Share any specific visual directions or technical notes..."
+        notesPlace: "Share any specific visual directions or technical notes...",
+        transparencyTitle: "Operational Compliance",
+        transparencyDesc: "Our pricing model separates engineering value from mandatory operational costs (licenses, cloud infrastructure, and business compliance). This ensures full transparency.",
+        exclVat: "Excl. VAT & Operational Expenses",
+        twoMonthsFreeBadge: "2 Months Free Included",
+        pdfDisclaimer: "* Estimate represents engineering value. Operational expenses and VAT are calculated during onboarding.",
       },
       summary: {
         title: "Intelligence Summary",
@@ -211,7 +216,8 @@ export const translations = {
         maintenance: "Maintenance",
         design: "Design Direction",
         integrations: "Integrations",
-        total: "Live Calculation (€)"
+        total: "Live Calculation (€)",
+        twoMonthsFreeNote: "First 2 Months Free",
       },
       btn: {
         prev: "Previous Phase",
@@ -625,7 +631,12 @@ export const translations = {
         address: "Billing Adres (Stad, Land) *",
         vat: "BTW-nummer (Optioneel)",
         notes: "Ontwerpnotities",
-        notesPlace: "Deel specifieke visuele richtlijnen of technische opmerkingen..."
+        notesPlace: "Deel specifieke visuele richtlijnen of technische opmerkingen...",
+        transparencyTitle: "Operationele Naleving",
+        transparencyDesc: "Ons prijsmodel scheidt de technische waarde van verplichte operationele kosten (licenties, cloudinfrastructuur en zakelijke compliance). Dit zorgt voor volledige transparantie.",
+        exclVat: "Excl. BTW & Operationele Kosten",
+        twoMonthsFreeBadge: "2 Maanden Gratis Inbegrepen",
+        pdfDisclaimer: "* Schatting vertegenwoordigt technische waarde. Operationele kosten en BTW worden berekend tijdens de onboarding.",
       },
       summary: {
         title: "Intelligence Samenvatting",
@@ -637,7 +648,8 @@ export const translations = {
         maintenance: "Onderhoud",
         design: "Ontwerprichting",
         integrations: "Integraties",
-        total: "Canlı Hesaplama (€)"
+        total: "Canlı Hesaplama (€)",
+        twoMonthsFreeNote: "Eerste 2 Maanden Gratis",
       },
       btn: {
         prev: "Vorige Fase",
@@ -1050,7 +1062,12 @@ export const translations = {
         address: "Adresse de Facturation (Ville, Pays) *",
         vat: "Numéro de TVA (Optionnel)",
         notes: "Notes de Conception",
-        notesPlace: "Partagez toute direction visuelle spécifique ou note technique..."
+        notesPlace: "Partagez toute direction visuelle spécifique ou note technique...",
+        transparencyTitle: "Conformité Opérationnelle",
+        transparencyDesc: "Notre modèle de tarification sépare la valeur d'ingénierie des coûts opérationnels obligatoires (licences, infrastructure cloud et conformité commerciale). Cela garantit une transparence totale.",
+        exclVat: "Hors TVA & Frais Opérationnels",
+        twoMonthsFreeBadge: "2 Mois Gratuits Inclus",
+        pdfDisclaimer: "* L'estimation représente la valeur d'ingénierie. Les frais opérationnels et la TVA sont calculés lors de l'intégration.",
       },
       summary: {
         title: "Résumé d'Intelligence",
@@ -1062,7 +1079,8 @@ export const translations = {
         maintenance: "Maintenance",
         design: "Direction de Conception",
         integrations: "Intégrations",
-        total: "Calcul en Direct (€)"
+        total: "Calcul en Direct (€)",
+        twoMonthsFreeNote: "Les 2 Premiers Mois Gratuits",
       },
       btn: {
         prev: "Phase Précédente",
@@ -1477,7 +1495,12 @@ export const translations = {
         address: "Fatura Adresi (Şehir, Ülke) *",
         vat: "Vergi Numarası (Opsiyonel)",
         notes: "Tasarım Notları",
-        notesPlace: "Belirli görsel yönlendirmeleri veya teknik notları paylaşın..."
+        notesPlace: "Belirli görsel yönlendirmeleri veya teknik notları paylaşın...",
+        transparencyTitle: "Operasyonel Şeffaflık",
+        transparencyDesc: "Fiyatlandırma modelimiz, mühendislik değerini zorunlu operasyonel maliyetlerden (lisanslar, bulut altyapısı ve yasal uyumluluk) ayırır. Bu, tam bir şeffaflık sağlar.",
+        exclVat: "Hariç: KDV & Altyapı Bedeli",
+        twoMonthsFreeBadge: "2 Ay Ücretsiz Dahil",
+        pdfDisclaimer: "* Tahmin mühendislik değerini temsil eder. Operasyonel giderler (Altyapı/Uyum) ve KDV kayıt aşamasında hesaplanır.",
       },
       summary: {
         title: "Zeka Özeti",
@@ -1489,7 +1512,8 @@ export const translations = {
         maintenance: "Bakım",
         design: "Tasarım Yönü",
         integrations: "Entegrasyonlar",
-        total: "Canlı Hesaplama (€)"
+        total: "Canlı Hesaplama (€)",
+        twoMonthsFreeNote: "İlk 2 Ay Ücretsiz",
       },
       btn: {
         prev: "Önceki Aşama",

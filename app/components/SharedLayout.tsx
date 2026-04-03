@@ -6,74 +6,6 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
 
-// DAHA SAĞLAM, MODERN VE "CHAMELEON" (RENK DEĞİŞTİREN) CUSTOM CURSOR
-const CustomCursor = () => {
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [isHovering, setIsHovering] = useState(false);
-    const [isDesktop, setIsDesktop] = useState(false); // Sadece masaüstünde göster
-
-    useEffect(() => {
-        // Cihazın fare destekleyip desteklemediğini kontrol et
-        const mediaQuery = window.matchMedia("(pointer: fine)");
-        setIsDesktop(mediaQuery.matches);
-
-        const updateMousePosition = (e: MouseEvent) => {
-            setMousePosition({ x: e.clientX, y: e.clientY });
-        };
-
-        const handleMouseOver = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
-            // Buton, link veya input üzerindeysek cursor'ı büyüt
-            if (target.closest('a') || target.closest('button') || target.closest('input') || target.closest('.cursor-pointer')) {
-                setIsHovering(true);
-            } else {
-                setIsHovering(false);
-            }
-        };
-
-        if (mediaQuery.matches) {
-            window.addEventListener("mousemove", updateMousePosition);
-            window.addEventListener("mouseover", handleMouseOver);
-        }
-
-        return () => {
-            window.removeEventListener("mousemove", updateMousePosition);
-            window.removeEventListener("mouseover", handleMouseOver);
-        };
-    }, []);
-
-    // Mobilde cursor gösterme
-    if (!isDesktop) return null;
-
-    return (
-        <>
-            {/* Küçük, hızlı takip eden nokta (mix-blend-difference eklendi ve beyaz yapıldı) */}
-            <motion.div
-                className="fixed top-0 left-0 w-2 h-2 bg-white mix-blend-difference rounded-full pointer-events-none z-[9999]"
-                animate={{
-                    x: mousePosition.x - 4,
-                    y: mousePosition.y - 4,
-                }}
-                transition={{ type: "tween", ease: "backOut", duration: 0.1 }}
-            />
-
-            {/* Büyük, yumuşak takip eden halka (mix-blend-difference eklendi ve beyaz yapıldı) */}
-            <motion.div
-                className="fixed top-0 left-0 border border-white mix-blend-difference rounded-full pointer-events-none z-[9998]"
-                animate={{
-                    x: mousePosition.x - (isHovering ? 24 : 16),
-                    y: mousePosition.y - (isHovering ? 24 : 16),
-                    width: isHovering ? 48 : 32,
-                    height: isHovering ? 48 : 32,
-                    opacity: isHovering ? 0.8 : 1,
-                    backgroundColor: isHovering ? "rgba(255,255,255,0.2)" : "transparent"
-                }}
-                transition={{ type: "spring", stiffness: 150, damping: 20, mass: 1 }}
-            />
-        </>
-    );
-};
-
 export default function SharedLayout({ children }: { children: React.ReactNode }) {
     const [isOpen, setIsOpen] = useState(false);
     const { language, setLanguage, t } = useLanguage();
@@ -101,11 +33,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         }
     }, [isOpen]);
 
-    // EĞER TEMİZ BİR SAYFADAYSAK SADECE ÇOCUKLARI VE CURSOR'U GÖSTER (İmleç her yerde açık)
+    // EĞER TEMİZ BİR SAYFADAYSAK SADECE ÇOCUKLARI GÖSTER
     if (isCleanPage) {
         return (
             <div className="min-h-screen font-sans relative">
-                <CustomCursor />
                 {children}
             </div>
         );
@@ -114,7 +45,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     // NORMAL WEB SİTESİ SAYFALARI İÇİN STANDART LAYOUT
     return (
         <div className="min-h-screen bg-white text-black font-sans flex flex-col relative">
-            <CustomCursor />
 
             {/* HEADER */}
             <header className="sticky top-0 w-full z-[100] bg-white/80 backdrop-blur-md">

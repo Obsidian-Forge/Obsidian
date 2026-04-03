@@ -52,10 +52,9 @@ function DiscoveryFormContent() {
     const searchParams = useSearchParams();
     const { t } = useLanguage();
     
-    // Güvenli erişim için fallback değerler
     const dData = t?.discoveryPage || { 
         phase: 'Phase', of: 'of', liveEstimate: 'Live Estimate', 
-        visionTitle: 'Vision', visionSub: '', form: {} 
+        visionTitle: 'Vision', visionSub: '', form: {}, summary: {} 
     };
     const cData = t?.calculator || { stepsData: [{ options: [] }] };
 
@@ -97,7 +96,6 @@ function DiscoveryFormContent() {
         acceptedTerms: false
     });
 
-    // URL'den Demo Parametresini Yakala ve Formu Doldur
     useEffect(() => {
         const demoParam = searchParams.get('demo');
         if (demoParam) {
@@ -216,7 +214,8 @@ function DiscoveryFormContent() {
 
         const logoData = await loadImage("/logo.png");
         if (logoData) doc.addImage(logoData, 'PNG', 20, 15, 25, 25);
-        else { doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.text("NOVATRUM", 20, 25); }
+        else { doc.setFontSize(22); doc.setFont("helvetica", "bold"); doc.text("NOVATRUM", 20, 25);
+        }
 
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
@@ -350,9 +349,19 @@ function DiscoveryFormContent() {
         doc.setTextColor(16, 185, 129);
         doc.text(`€${calculateTotal().toLocaleString()}`, pageWidth - 25, yPos, { align: "right" });
         doc.setTextColor(24, 24, 27);
+
+        // --- YENİ PDF NOTU: ŞEFFAFLIK VURGUSU ---
+        yPos += 8;
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "italic");
+        doc.setTextColor(113, 113, 122);
+        doc.text(dData.form?.pdfDisclaimer || "* Estimate represents engineering value. Operational expenses and VAT are calculated during onboarding.", pageWidth - 25, yPos, { align: "right" });
+        doc.setTextColor(24, 24, 27);
+
         if (cMaint && cMaint.price > 0) {
-            yPos += 8;
+            yPos += 10;
             doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
             doc.text("MONTHLY CONTINUOUS ENGINEERING", 25, yPos);
             doc.setTextColor(16, 185, 129);
             doc.text(`€${cMaint.price} / mo`, pageWidth - 25, yPos, { align: "right" });
@@ -440,7 +449,6 @@ function DiscoveryFormContent() {
         if (currentStep === 1) return formData.companyName.trim().length > 0 && formData.projectGoals.trim().length > 0;
         if (currentStep === 2) return formData.architecture !== '';
         if (currentStep === 3) return formData.designStyle !== '';
-        // CHECKBOX GÜVENLİK KİLİDİ
         if (currentStep === 7) return formData.clientName.trim().length > 0 && formData.clientEmail.trim().length > 0 && formData.billingAddress.trim().length > 0 && formData.acceptedTerms;
         return true; 
     };
@@ -473,11 +481,16 @@ function DiscoveryFormContent() {
                             </div>
                         </div>
 
-                        <div className="hidden md:flex items-center gap-3">
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{dData.liveEstimate}</span>
-                            <span className="text-lg font-black font-mono text-emerald-600">
-                                €{calculateTotal().toLocaleString()}
-                                {monthlyPrice > 0 && <span className="text-xs text-zinc-400 ml-1">+ €{monthlyPrice}/mo</span>}
+                        <div className="hidden md:flex flex-col items-end">
+                            <div className="flex items-center gap-3">
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{dData.liveEstimate}</span>
+                                <span className="text-lg font-black font-mono text-emerald-600">
+                                    €{calculateTotal().toLocaleString()}
+                                    {monthlyPrice > 0 && <span className="text-xs text-zinc-400 ml-1">+ €{monthlyPrice}/mo</span>}
+                                </span>
+                            </div>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-zinc-400 mt-1">
+                                {dData.form?.exclVat || 'Excl. VAT & Operational Expenses'}
                             </span>
                         </div>
                     </div>
@@ -488,8 +501,6 @@ function DiscoveryFormContent() {
 
                 {currentStep === 1 && (
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
-                        
-                        {/* DEMO'DAN GELENLER İÇİN ÖZEL UYARI */}
                         {incomingDemoInfo && (
                             <div className={`p-4 rounded-2xl border flex items-center gap-4 animate-in fade-in zoom-in duration-500 ${incomingDemoInfo.color}`}>
                                 <div className="w-10 h-10 bg-white/50 rounded-full flex items-center justify-center shrink-0">
@@ -503,7 +514,7 @@ function DiscoveryFormContent() {
                         )}
 
                         <div>
-                            <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.visionTitle}</h1>
+                             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.visionTitle}</h1>
                             <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.visionSub}</p>
                         </div>
 
@@ -528,7 +539,7 @@ function DiscoveryFormContent() {
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.competitors || 'Competitors / References'}</label>
                                 <textarea placeholder="..." value={formData.competitors} onChange={(e) => setFormData({...formData, competitors: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 p-5 md:p-6 rounded-[24px] outline-none text-sm font-bold focus:border-black focus:bg-white transition-colors h-24 resize-none" />
                             </div>
-                        </div>
+                         </div>
                     </div>
                 )}
 
@@ -567,6 +578,19 @@ function DiscoveryFormContent() {
                             })}
                         </div>
 
+                        {/* ŞEFFAFLIK VE MASRAF BİLGİSİ KUTUSU */}
+                        <div className="mt-8 p-6 bg-zinc-50 border border-zinc-200 rounded-[24px] flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm border border-zinc-100">
+                                <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-900">{dData.form?.transparencyTitle || 'Operational Compliance'}</p>
+                                <p className="text-xs font-bold text-zinc-500 mt-2 leading-relaxed">
+                                    {dData.form?.transparencyDesc || 'Our pricing model separates engineering value from mandatory operational costs (licenses, cloud infrastructure, and business compliance). This ensures full transparency.'}
+                                </p>
+                            </div>
+                        </div>
+
                         <div className="bg-zinc-50 p-8 md:p-10 rounded-[32px] border border-zinc-200 space-y-8 mt-12">
                             <div className={formData.architecture === 'landing' ? 'opacity-50 pointer-events-none' : ''}>
                                 <div className="flex justify-between items-center mb-4">
@@ -576,11 +600,11 @@ function DiscoveryFormContent() {
                                     <span className="font-mono font-black text-xl">{formData.architecture === 'landing' ? '1' : formData.estimatedPages}</span>
                                 </div>
                                 <input 
-                                    type="range" min="1" max="50" 
+                                     type="range" min="1" max="50" 
                                     value={formData.architecture === 'landing' ? 1 : formData.estimatedPages} 
                                     onChange={(e) => setFormData({...formData, estimatedPages: parseInt(e.target.value)})}
                                     disabled={formData.architecture === 'landing'}
-                                    className={`w-full h-2 rounded-full appearance-none ${formData.architecture === 'landing' ? 'bg-zinc-200 cursor-not-allowed' : 'accent-black bg-zinc-200 cursor-pointer'}`} 
+                                     className={`w-full h-2 rounded-full appearance-none ${formData.architecture === 'landing' ? 'bg-zinc-200 cursor-not-allowed' : 'accent-black bg-zinc-200 cursor-pointer'}`} 
                                 />
                                 <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-4 text-center">First 5 pages included. +€200 per additional page.</p>
                             </div>
@@ -592,11 +616,11 @@ function DiscoveryFormContent() {
                     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div>
                             <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">{dData.designTitle || 'Design Identity'}</h1>
-                            <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.designSub || 'Define the visual language.'}</p>
+                             <p className="text-zinc-500 font-bold mt-4 text-sm md:text-base leading-relaxed">{dData.designSub || 'Define the visual language.'}</p>
                         </div>
 
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.designDesc || 'Design Style'}</label>
+                             <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">{dData.form?.designDesc || 'Design Style'}</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {DESIGN_STYLES.map(style => (
                                     <div 
@@ -605,7 +629,7 @@ function DiscoveryFormContent() {
                                         className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex flex-col justify-between ${formData.designStyle === style.id ? 'border-black bg-black text-white shadow-xl' : 'border-zinc-200 hover:border-black text-black bg-white'}`}
                                     >
                                         <div className="flex justify-between items-start w-full mb-2">
-                                            <h3 className="font-black uppercase">{dData.designStyles?.[style.id as keyof typeof dData.designStyles] || style.id}</h3>
+                                             <h3 className="font-black uppercase">{dData.designStyles?.[style.id as keyof typeof dData.designStyles] || style.id}</h3>
                                             {style.price > 0 && <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md whitespace-nowrap ${formData.designStyle === style.id ? 'bg-white/20' : 'bg-zinc-100 text-zinc-500'}`}>+€{style.price}</span>}
                                         </div>
                                         <p className={`text-xs font-bold leading-relaxed mt-2 ${formData.designStyle === style.id ? 'text-zinc-300' : 'text-zinc-500'}`}>
@@ -655,7 +679,7 @@ function DiscoveryFormContent() {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                             </div>
                         </div>
                     </div>
                 )}
@@ -721,7 +745,7 @@ function DiscoveryFormContent() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {INTEGRATION_OPTIONS.map(opt => {
-                                const isSelected = formData.selectedIntegrations.includes(opt.id);
+                                 const isSelected = formData.selectedIntegrations.includes(opt.id);
                                 return (
                                     <div 
                                         key={opt.id} 
@@ -774,6 +798,7 @@ function DiscoveryFormContent() {
 
                             <div className="space-y-4">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-2">Deployment Timeline</label>
+                                
                                 <div className="grid grid-cols-1 gap-3">
                                     {['relaxed', 'standard', 'expedited', 'enterprise'].map(tId => {
                                         const isEnterprise = tId === 'enterprise';
@@ -781,7 +806,6 @@ function DiscoveryFormContent() {
                                         const isDisabled = isComplexProject && !isEnterprise;
                                         const isSelected = formData.timeline === tId;
                                         const tInfo = TIMELINES.find(x => x.id === tId);
-
                                         return (
                                             <div 
                                                 key={tId} 
@@ -822,11 +846,19 @@ function DiscoveryFormContent() {
                                                 `}
                                             >
                                                 <div className="flex justify-between items-start mb-2 w-full">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-300'}`}>
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`w-4 h-4 mt-0.5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-300'}`}>
                                                             {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
                                                         </div>
-                                                        <h3 className={`font-black uppercase text-sm ${isSelected ? 'text-black' : 'text-zinc-800'}`}>{opt.title}</h3>
+                                                        <div className="flex flex-col items-start">
+                                                            <h3 className={`font-black uppercase text-sm ${isSelected ? 'text-black' : 'text-zinc-800'}`}>{opt.title}</h3>
+                                                            {/* YENİ: Bedava etiketi sadece ücretli paketlerde çıkar */}
+                                                            {opt.price > 0 && (
+                                                                <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mt-1">
+                                                                    {dData.form?.twoMonthsFreeBadge || '2 Months Free Included'}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md whitespace-nowrap ${isSelected ? 'bg-white border border-zinc-200 text-black' : 'bg-zinc-100 text-zinc-500'}`}>
                                                         {opt.price > 0 ? `+€${opt.price} / mo` : 'Included'}
@@ -876,25 +908,25 @@ function DiscoveryFormContent() {
                                     <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.email || 'Email Address *'}</label>
                                     <input type="email" placeholder="john@example.com" required className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.clientEmail} onChange={(e) => setFormData({...formData, clientEmail: e.target.value})} />
                                 </div>
-                                <div>
+                                 <div>
                                     <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.phone || 'Phone Number'}</label>
                                     <input type="tel" placeholder="+1..." className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.clientPhone} onChange={(e) => setFormData({...formData, clientPhone: e.target.value})} />
                                 </div>
-                                <div>
+                                 <div>
                                     <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.vat || 'VAT Number'}</label>
                                     <input type="text" placeholder="BE0000..." className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold focus:border-black transition-colors" value={formData.vatNumber} onChange={(e) => setFormData({...formData, vatNumber: e.target.value})} />
                                 </div>
-                            </div>
+                             </div>
                             <div>
                                 <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.address || 'Billing Address *'}</label>
                                 <textarea placeholder="Street, City, Postal Code, Country" required className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold h-24 resize-none focus:border-black transition-colors" value={formData.billingAddress} onChange={(e) => setFormData({...formData, billingAddress: e.target.value})} />
                             </div>
-                            <div>
+                             <div>
                                 <label className="text-[9px] font-bold uppercase text-zinc-400 tracking-widest block mb-2 pl-2">{dData.form?.notes || 'Additional Notes'}</label>
                                 <textarea placeholder={dData.form?.notesPlace || 'Any final details?'} className="w-full bg-white border border-zinc-200 p-4 md:p-5 rounded-xl md:rounded-[20px] outline-none text-xs font-bold h-24 resize-none focus:border-black transition-colors" value={formData.designNotes} onChange={(e) => setFormData({...formData, designNotes: e.target.value})} />
                             </div>
 
-                            {/* GÜVENLİ (FALLBACK) YASAL ONAY KUTUCUĞU */}
+                            {/* GÜVENLİ YASAL ONAY VE ŞEFFAF MASRAF VURGUSU */}
                             <div className="mt-8 p-6 bg-white border-2 border-zinc-200 rounded-2xl flex items-start gap-4 hover:border-black transition-colors group shadow-sm">
                                 <div className="relative flex items-start mt-1">
                                     <input
@@ -912,11 +944,10 @@ function DiscoveryFormContent() {
                                         <a href="/legal/terms" target="_blank" onClick={(e) => e.stopPropagation()} className="text-black font-black underline underline-offset-2 hover:text-emerald-600 transition-colors">
                                             {dData.form?.termsLink || "Novatrum Master Service Agreement"}
                                         </a>
-                                        {dData.form?.termsDesc || ". I understand that this definitive blueprint forms the technical scope and billing terms of our collaboration."}
+                                        {dData.form?.termsDesc || ". I understand this estimate represents engineering value. Final billing will reflect this plus mandatory project-bound expenses and applicable VAT."}
                                     </label>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 )}
@@ -947,13 +978,16 @@ function DiscoveryFormContent() {
                             
                             {monthlyPrice > 0 && (
                                 <div className="flex justify-between items-center mb-8 border-t border-zinc-100 pt-4">
-                                    <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Monthly Retainer</span>
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-[10px] font-bold uppercase text-zinc-500 tracking-widest">Monthly Retainer</span>
+                                        <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">{dData.summary?.twoMonthsFreeNote || 'First 2 Months Free'}</span>
+                                    </div>
                                     <span className="text-lg text-emerald-600 font-black font-mono">+€{monthlyPrice} / mo</span>
                                 </div>
                             )}
 
                             <button 
-                                onClick={downloadClientCopy}
+                                 onClick={downloadClientCopy}
                                 disabled={downloadingPdf}
                                 className="w-full bg-white border border-zinc-200 text-black py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-100 transition-colors flex items-center justify-center gap-3 shadow-sm disabled:opacity-50"
                             >
@@ -974,7 +1008,8 @@ function DiscoveryFormContent() {
                                 Next Steps: Onboarding Protocol
                             </p>
                             <p className="text-xs font-bold text-zinc-500 leading-relaxed">
-                                Our engineering team will review your blueprint. Once approved, you will receive a secure <strong>Onboarding Invite</strong> via email to initialize your profile and generate your dedicated Deployment Key.
+                                Our engineering team will review your blueprint.
+                                Once approved, you will receive a secure <strong>Onboarding Invite</strong> via email to initialize your profile and generate your dedicated Deployment Key.
                             </p>
                         </div>
 
@@ -991,12 +1026,17 @@ function DiscoveryFormContent() {
                         
                         <div className="flex flex-col">
                             <p className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-0.5 md:mb-1">{dData.liveEstimate}</p>
-                            <p className="text-lg md:text-2xl font-black font-mono text-black whitespace-nowrap">
-                                €{calculateTotal().toLocaleString()}
-                                {monthlyPrice > 0 && <span className="text-sm md:text-lg text-zinc-400 ml-1 md:ml-2">+€{monthlyPrice}/mo</span>}
+                            <div className="flex items-end gap-2">
+                                <p className="text-lg md:text-2xl font-black font-mono text-black whitespace-nowrap">
+                                    €{calculateTotal().toLocaleString()}
+                                    {monthlyPrice > 0 && <span className="text-sm md:text-lg text-zinc-400 ml-1 md:ml-2">+€{monthlyPrice}/mo</span>}
+                                </p>
+                            </div>
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-400 mt-1 md:mt-0">
+                                {dData.form?.exclVat || 'Excl. VAT & Operational Expenses'}
                             </p>
                         </div>
-                    
+                        
                         <div className="flex gap-3">
                             {currentStep === 7 ? (
                                 <button 
@@ -1027,7 +1067,6 @@ function DiscoveryFormContent() {
     );
 }
 
-// Suspense için wrap edilmiş versiyon
 export default function DefinitiveDiscoveryPage() {
     return (
         <Suspense fallback={<div className="pt-40 text-center font-mono text-xs uppercase tracking-widest text-zinc-400">Loading Environment...</div>}>

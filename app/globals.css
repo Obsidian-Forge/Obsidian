@@ -35,25 +35,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  cursor: auto;
   min-height: 100vh;
-}
-
-/* SADECE BİLGİSAYAR (MOUSE/POINTER) İÇİN ÖZEL CURSOR AYARLARI */
-@media (pointer: fine) {
-  *, a, button, input, textarea, select {
-    cursor: none !important;
-  }
 }
 
 /* SADECE MOBİL/DOKUNMATİK İÇİN AYARLAR */
 @media (pointer: coarse) {
   .hide-on-mobile {
     display: none !important;
-  }
-
-  *, a, button, input, textarea, select {
-    cursor: auto !important;
   }
 }
 
