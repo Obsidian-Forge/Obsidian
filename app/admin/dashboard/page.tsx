@@ -26,10 +26,7 @@ interface Project {
     progress_percent: number;
     archived_at?: string;
     created_at: string;
-    clients?: {
-        full_name: string;
-        access_code: string;
-    };
+    clients?: any; // <--- ÇÖZÜM: Katı kuralları kaldırdık, her şeyi kabul edecek.
 }
 
 interface Invoice {
@@ -58,14 +55,14 @@ interface QuickNote {
 
 export default function AdminDashboardPage() {
     const router = useRouter();
-    
+
     // AKTİF SEKME (Sadece dashboard'da kalan özellikler için)
-    const [activeTab, setActiveTab] = useState('overview'); 
-    
+    const [activeTab, setActiveTab] = useState('overview');
+
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
-    
+
     // DİNAMİK SELAMLAMA STATE
     const [greeting, setGreeting] = useState('Good morning.');
 
@@ -81,8 +78,8 @@ export default function AdminDashboardPage() {
     const [supportTicketsCount, setSupportTicketsCount] = useState(0);
     const [quickNotes, setQuickNotes] = useState<QuickNote[]>([]);
     const [newQuickNote, setNewQuickNote] = useState('');
-    const [discoveryCount, setDiscoveryCount] = useState(0); 
-    
+    const [discoveryCount, setDiscoveryCount] = useState(0);
+
     // FORMS
     const [clientForm, setClientForm] = useState({ email: '', fullName: '', companyName: '', phone: '', address: '' });
     const [projectForm, setProjectForm] = useState({ clientId: '', name: '', progress: 0 });
@@ -96,7 +93,7 @@ export default function AdminDashboardPage() {
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [adminPasswordForm, setAdminPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
     const [savingPassword, setSavingPassword] = useState(false);
-    
+
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -114,7 +111,7 @@ export default function AdminDashboardPage() {
         const checkAdmin = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return router.push('/admin/login');
-            
+
             const { data: member } = await supabase.from('members').select('role').eq('id', user.id).single();
             if (member?.role !== 'admin') {
                 router.push('/client/login');
@@ -158,20 +155,19 @@ export default function AdminDashboardPage() {
                     clients (full_name, access_code)
                 `)
                 .order('created_at', { ascending: false });
-                
+
             if (pError) {
                 console.warn("Projects relation error:", pError.message);
                 showToast("Database Relation Error: " + pError.message, "error");
             }
+            // [cite: 132]
             if (pData) {
-                // Aktif (Yüzde 100'den küçük VEYA status deployed olmayanlar)
                 const active = pData.filter(p => (p.progress_percent < 100 && p.status !== 'deployed') && !p.archived_at);
                 const completed = pData.filter(p => (p.progress_percent >= 100 || p.status === 'deployed') && !p.archived_at);
-                
-                setProjects(active);
-                setCompletedProjects(completed);
-            }
 
+                setProjects(active as any); // "as any" ekleyerek tip kontrolünü esnettik
+                setCompletedProjects(completed as any);
+            }
             // 3. System Status 
             const { data: sData } = await supabase.from('system_status').select('*').order('label');
             if (sData) setSystemStatuses(sData);
@@ -234,7 +230,7 @@ export default function AdminDashboardPage() {
             showToast('Entity registered securely.', 'success');
             setClientForm({ email: '', fullName: '', companyName: '', phone: '', address: '' });
             fetchData();
-            router.push('/admin/clients'); 
+            router.push('/admin/clients');
         } catch (err: any) {
             showToast('Error registering entity: ' + err.message, 'error');
         } finally {
@@ -319,7 +315,7 @@ export default function AdminDashboardPage() {
                 progress_percent: 100,
                 status: 'deployed'
             }).eq('id', project.id);
-            
+
             if (error) throw error;
 
             await supabase.from('project_updates').insert({
@@ -358,7 +354,7 @@ export default function AdminDashboardPage() {
         try {
             const { data } = await supabase.from('project_updates').select('*').eq('project_id', project.id).order('created_at', { ascending: false });
             setSelectedProjectUpdates({ ...project, updatesList: data || [] });
-        } catch (err) {}
+        } catch (err) { }
     };
 
     const handleAddUpdate = async (e: React.FormEvent) => {
@@ -424,7 +420,7 @@ export default function AdminDashboardPage() {
         try {
             await supabase.from('quick_notes').delete().eq('id', id);
             fetchData();
-        } catch (err) {}
+        } catch (err) { }
     };
 
     // --- ADMIN SETTINGS ---
@@ -460,7 +456,7 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans flex flex-col md:flex-row relative selection:bg-black selection:text-white">
-            
+
             {/* GLOBAL TOAST NOTIFICATION */}
             <AnimatePresence>
                 {toast && (
@@ -468,10 +464,9 @@ export default function AdminDashboardPage() {
                         initial={{ opacity: 0, y: -20, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3.5 rounded-full shadow-2xl border flex items-center gap-3 backdrop-blur-xl ${
-                            toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-                            : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'
-                        }`}
+                        className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3.5 rounded-full shadow-2xl border flex items-center gap-3 backdrop-blur-xl ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                                : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'
+                            }`}
                     >
                         {toast.type === 'success' && <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>}
                         {toast.type === 'error' && <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>}
@@ -497,10 +492,10 @@ export default function AdminDashboardPage() {
             {/* SIDEBAR (Tüm Linkler Gerçek Route'lara Bağlandı) */}
             <aside className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block w-full md:w-72 bg-white border-r border-zinc-200 flex flex-col h-[calc(100vh-73px)] md:h-screen sticky top-[73px] md:top-0 z-40 shadow-sm shrink-0`}>
                 <div className="p-8 hidden md:block border-b border-zinc-100">
-                    <h1 className="text-2xl font-light tracking-tight text-black">Novatrum<br/><span className="font-medium text-zinc-400 text-lg">Command</span></h1>
+                    <h1 className="text-2xl font-light tracking-tight text-black">Novatrum<br /><span className="font-medium text-zinc-400 text-lg">Command</span></h1>
                 </div>
                 <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-                    
+
                     {/* OVERVIEW */}
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'overview' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
                         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -603,7 +598,7 @@ export default function AdminDashboardPage() {
                         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                         Admin Settings
                     </button>
-                    
+
                 </nav>
                 <div className="p-4 border-t border-zinc-200 bg-zinc-50 mt-auto">
                     <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm appearance-none">
@@ -615,11 +610,11 @@ export default function AdminDashboardPage() {
 
             {/* MAIN CONTENT YÖNETİMİ (Sekmelere Göre İçerik Değişir) */}
             <main className="flex-1 p-6 md:p-10 lg:p-14 overflow-y-auto w-full relative z-10 custom-scrollbar">
-                
+
                 {/* 1. OVERVIEW TAB */}
                 {activeTab === 'overview' && (
                     <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in duration-500">
-                        
+
                         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-8">
                             <div>
                                 <h2 className="text-4xl md:text-5xl font-light tracking-tight text-black">{greeting}</h2>
@@ -654,7 +649,7 @@ export default function AdminDashboardPage() {
                         </div>
 
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                            
+
                             {/* SOL SÜTUN - OVERVIEW PROJECTS */}
                             <div className="xl:col-span-2 space-y-8">
                                 <div>
@@ -665,15 +660,15 @@ export default function AdminDashboardPage() {
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {projects.slice(0,4).map((p) => {
+                                            {projects.slice(0, 4).map((p) => {
                                                 const isRevoked = p.clients?.access_code?.startsWith('REVOKED');
                                                 return (
                                                     <div key={p.id} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-all relative group flex flex-col ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-zinc-200'}`}>
-                                                        
+
                                                         {/* YENİ: Edit Modal İkonu Eklendi */}
-                                                        <button 
-                                                            onClick={() => openProjectUpdatesModal(p)} 
-                                                            className="absolute top-6 right-6 p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all z-10 appearance-none shadow-sm bg-zinc-50 text-zinc-400 hover:bg-zinc-200 hover:text-black" 
+                                                        <button
+                                                            onClick={() => openProjectUpdatesModal(p)}
+                                                            className="absolute top-6 right-6 p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all z-10 appearance-none shadow-sm bg-zinc-50 text-zinc-400 hover:bg-zinc-200 hover:text-black"
                                                             title="Manage Timeline"
                                                         >
                                                             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -720,14 +715,13 @@ export default function AdminDashboardPage() {
                                         {systemStatuses.map(sys => (
                                             <div key={sys.id} className="flex items-center justify-between p-4 bg-zinc-50 border border-zinc-100 rounded-2xl group">
                                                 <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-700">{sys.label}</span>
-                                                <select 
-                                                    value={sys.status} 
+                                                <select
+                                                    value={sys.status}
                                                     onChange={(e) => updateSystemStatus(sys.id, e.target.value)}
-                                                    className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg outline-none cursor-pointer border appearance-none transition-colors ${
-                                                        sys.status === 'operational' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                        sys.status === 'degraded' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                                        'bg-red-50 text-red-600 border-red-200'
-                                                    }`}
+                                                    className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg outline-none cursor-pointer border appearance-none transition-colors ${sys.status === 'operational' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                            sys.status === 'degraded' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                                                'bg-red-50 text-red-600 border-red-200'
+                                                        }`}
                                                 >
                                                     <option value="operational">Operational</option>
                                                     <option value="degraded">Degraded</option>
@@ -771,14 +765,14 @@ export default function AdminDashboardPage() {
                             <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-2">Active Queue</h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Manage all ongoing infrastructure deployments.</p>
                         </header>
-                        
+
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {projects.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10 w-full col-span-full">No active deployments.</p>}
                             {projects.map((p) => {
                                 const isRevoked = p.clients?.access_code?.startsWith('REVOKED');
                                 return (
                                     <div key={p.id} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-all relative group flex flex-col ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-zinc-200'}`}>
-                                        
+
                                         <div className="absolute top-6 right-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
                                             <button onClick={() => openProjectUpdatesModal(p)} className={`p-2.5 rounded-xl appearance-none shadow-sm ${isRevoked ? 'bg-red-100 text-red-500 hover:bg-red-200 hover:text-red-700' : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-200 hover:text-black'}`} title="Manage Timeline">
                                                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -849,7 +843,7 @@ export default function AdminDashboardPage() {
                             <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-2">Completed Builds</h2>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Fully deployed and operational environments.</p>
                         </header>
-                        
+
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {completedProjects.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10 w-full col-span-full">No completed deployments.</p>}
                             {completedProjects.map((p) => {
@@ -955,7 +949,7 @@ export default function AdminDashboardPage() {
                 {selectedProjectUpdates && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
                         <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-white border border-zinc-200 shadow-2xl rounded-[40px] w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
-                            
+
                             <div className="px-8 py-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
                                 <div>
                                     <h2 className="text-2xl font-light tracking-tight text-zinc-900 truncate max-w-sm">{selectedProjectUpdates.name}</h2>
@@ -970,7 +964,7 @@ export default function AdminDashboardPage() {
                             {selectedProjectUpdates.progress_percent < 100 && (
                                 <div className="px-8 py-5 border-b border-zinc-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Ready for Production?</p>
-                                    <button 
+                                    <button
                                         onClick={() => markProjectAsCompleted(selectedProjectUpdates)}
                                         className="px-6 py-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
                                     >
@@ -1039,16 +1033,16 @@ export default function AdminDashboardPage() {
                                     <div>
                                         <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">New Password</label>
                                         <div className="relative">
-                                            <input 
-                                                type={showNewPassword ? "text" : "password"} 
-                                                required 
-                                                minLength={6} 
-                                                value={adminPasswordForm.newPassword} 
-                                                onChange={e => setAdminPasswordForm({...adminPasswordForm, newPassword: e.target.value})} 
-                                                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" 
+                                            <input
+                                                type={showNewPassword ? "text" : "password"}
+                                                required
+                                                minLength={6}
+                                                value={adminPasswordForm.newPassword}
+                                                onChange={e => setAdminPasswordForm({ ...adminPasswordForm, newPassword: e.target.value })}
+                                                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none"
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowNewPassword(!showNewPassword)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors focus:outline-none"
                                             >
@@ -1063,16 +1057,16 @@ export default function AdminDashboardPage() {
                                     <div>
                                         <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Confirm Password</label>
                                         <div className="relative">
-                                            <input 
-                                                type={showConfirmPassword ? "text" : "password"} 
-                                                required 
-                                                minLength={6} 
-                                                value={adminPasswordForm.confirmPassword} 
-                                                onChange={e => setAdminPasswordForm({...adminPasswordForm, confirmPassword: e.target.value})} 
-                                                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" 
+                                            <input
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                required
+                                                minLength={6}
+                                                value={adminPasswordForm.confirmPassword}
+                                                onChange={e => setAdminPasswordForm({ ...adminPasswordForm, confirmPassword: e.target.value })}
+                                                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none"
                                             />
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors focus:outline-none"
                                             >

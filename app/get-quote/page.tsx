@@ -355,8 +355,7 @@ function DiscoveryFormContent() {
                                 return (
                                     <div 
                                         key={opt.id} 
-                                        onClick={() => setFormData(prev => ({ architecture: opt.id, estimatedPages: opt.id === 'landing' ? 1 : (prev.architecture === 'landing' ? 5 : prev.estimatedPages), ...prev, architecture: opt.id }))}
-                                        className={`p-8 rounded-[32px] border transition-all duration-300 cursor-pointer flex flex-col justify-between ${isSelected ? 'border-black shadow-md bg-white scale-[1.02]' : 'border-zinc-200 hover:border-zinc-400 bg-white'}`}
+onClick={() => setFormData(prev => ({ ...prev, architecture: opt.id, estimatedPages: opt.id === 'landing' ? 1 : (prev.architecture === 'landing' ? 5 : prev.estimatedPages) }))}                                        className={`p-8 rounded-[32px] border transition-all duration-300 cursor-pointer flex flex-col justify-between ${isSelected ? 'border-black shadow-md bg-white scale-[1.02]' : 'border-zinc-200 hover:border-zinc-400 bg-white'}`}
                                     >
                                         <div className="flex justify-between items-start mb-8">
                                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-black bg-black' : 'border-zinc-300'}`}>
