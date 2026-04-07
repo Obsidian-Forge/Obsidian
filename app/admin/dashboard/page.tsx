@@ -508,6 +508,12 @@ export default function AdminDashboardPage() {
                         System Status
                     </button>
 
+                    {/* EMAIL MAKER */}
+                    <button onClick={() => router.push('/admin/email-maker')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                        Email Maker
+                    </button>
+
                     <div className="pt-4 pb-2"><p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Database</p></div>
 
                     {/* ACTIVE DATABASE */}
