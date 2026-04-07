@@ -661,7 +661,7 @@ export default function AdminDashboardPage() {
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {projects.slice(0, 4).map((p) => {
-                                                const isRevoked = p.clients?.access_code?.startsWith('REVOKED');
+                                                const isRevoked = (p.clients as any)?.[0]?.access_code?.startsWith('REVOKED');
                                                 return (
                                                     <div key={p.id} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-all relative group flex flex-col ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-zinc-200'}`}>
 
@@ -683,7 +683,7 @@ export default function AdminDashboardPage() {
                                                                 )}
                                                             </div>
                                                             <h3 className="text-xl font-light tracking-tight text-zinc-900 mb-1 truncate pr-8" title={p.name}>{p.name}</h3>
-                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 truncate">{p.clients?.full_name}</p>
+                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 truncate">{(p.clients as any)?.[0]?.full_name}</p>
                                                         </div>
                                                         <div className="mt-auto">
                                                             <div className="flex justify-between items-end mb-2">
@@ -769,7 +769,7 @@ export default function AdminDashboardPage() {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             {projects.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10 w-full col-span-full">No active deployments.</p>}
                             {projects.map((p) => {
-                                const isRevoked = p.clients?.access_code?.startsWith('REVOKED');
+                                const isRevoked = (p.clients as any)?.[0]?.access_code?.startsWith('REVOKED');
                                 return (
                                     <div key={p.id} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-all relative group flex flex-col ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-zinc-200'}`}>
 
@@ -792,7 +792,7 @@ export default function AdminDashboardPage() {
                                                 <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">ID: {p.id.split('-')[0].toUpperCase()}</span>
                                             </div>
                                             <h3 className="text-2xl md:text-3xl font-light tracking-tight text-zinc-900 mb-1 truncate" title={p.name}>{p.name}</h3>
-                                            <p className="text-xs font-medium text-zinc-500 truncate" title={p.clients?.full_name}>{p.clients?.full_name}</p>
+                                            <p className="text-xs font-medium text-zinc-500 truncate" title={(p.clients as any)?.[0]?.full_name}>{(p.clients as any)?.[0]?.full_name}</p>
                                         </div>
 
                                         <div className="mb-8">
@@ -857,7 +857,7 @@ export default function AdminDashboardPage() {
                                             <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Operational</p>
                                         </div>
                                         <h3 className="text-xl md:text-2xl font-light tracking-tight text-zinc-900 mb-1 truncate">{p.name}</h3>
-                                        <p className="text-xs font-medium text-zinc-500 truncate">{p.clients?.full_name}</p>
+                                        <p className="text-xs font-medium text-zinc-500 truncate">{(p.clients as any)?.[0]?.full_name}</p>
                                         <div className="mt-6 pt-4 border-t border-zinc-200 flex justify-between items-center">
                                             <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Load: 100%</span>
                                             <button onClick={() => openProjectUpdatesModal(p)} className="text-[9px] font-bold uppercase tracking-widest text-black hover:underline appearance-none">View Logs</button>
