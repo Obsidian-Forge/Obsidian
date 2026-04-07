@@ -286,7 +286,7 @@ const contentData: Record<DocType, Record<Language, DocContent>> = {
         },
         {
           title: "4. Secure Vault & Credentials",
-          content: "De Secure Vault is een zwaar versleutelde omgeving binnen uw portaal. Hier vindt u uw e-mailwachtwoorden, en kunt u veilig gevoelige informatie, zoals API-sleutels, delen met het Novatrum engineering team zonder e-mail te hoeven gebruiken."
+          content: "The Secure Vault is a zwaar versleutelde omgeving binnen uw portaal. Hier vindt u uw e-mailwachtwoorden, en kunt u veilig gevoelige informatie, zoals API-sleutels, delen met het Novatrum engineering team zonder e-mail te hoeven gebruiken."
         },
         {
           title: "5. Real-time Support Desk",
@@ -306,7 +306,7 @@ const contentData: Record<DocType, Record<Language, DocContent>> = {
       steps: [
         {
           title: "1. Aperçu du Tableau de Bord",
-          content: "Votre Portail Client est conçu pour vous offrir une transparence et un contrôle total sur votre projet. L'image ci-dessous met en évidence les sections principales.",
+          content: "Votre Portail Client est conçu pour vous offrir une transparence et un contrôle total sur votre projet. L' image ci-dessous met en évidence les sections principales.",
           image: "/docs/client-portal-overview.png"
         },
         {
@@ -507,72 +507,85 @@ export default function DocsPage() {
 
   return (
     <div className="pt-24 min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto p-6 font-sans text-black">
+      <style>{`
+        @media print { .print\\:hidden { display: none !important; } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+      
+      <div className="max-w-6xl mx-auto p-4 md:p-6 font-sans text-black">
         
-        <div className="flex justify-between items-center mb-12 print:hidden">
-          <h1 className="text-3xl font-black uppercase tracking-widest text-black">Novatrum Documentation</h1>
-          <div className="flex space-x-2 bg-zinc-50 p-1 border border-zinc-200 rounded-lg">
-            {(["en", "nl", "fr", "tr"] as Language[]).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={`px-6 py-2 rounded-md text-[10px] font-bold uppercase tracking-widest transition-all ${
-                  lang === l ? "bg-black text-white shadow-md" : "text-zinc-500 hover:text-black hover:bg-zinc-100"
-                }`}
-              >
-                {l}
-              </button>
-            ))}
+        {/* Responsive Header */}
+        <div className="flex flex-col gap-6 mb-12 print:hidden">
+          <h1 className="text-2xl md:text-3xl font-light tracking-tighter uppercase text-black">Novatrum Documentation</h1>
+          
+          {/* Scrollable Language Selector */}
+          <div className="w-full overflow-x-auto no-scrollbar pb-2">
+            <div className="flex space-x-2 bg-zinc-50 p-1 border border-zinc-200 rounded-xl w-max">
+              {(["en", "nl", "fr", "tr"] as Language[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLang(l)}
+                  className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    lang === l ? "bg-black text-white shadow-md" : "text-zinc-500 hover:text-black hover:bg-zinc-100"
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-12">
-          {/* Sidebar Navigation */}
-          <div className="w-full md:w-64 flex flex-col gap-3 print:hidden shrink-0">
-            <button 
-              onClick={() => setActiveDoc("dns")} 
-              className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border ${
-                activeDoc === "dns" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 hover:border-zinc-300 hover:text-black border-zinc-100"
-              }`}
-            >
-              <Server size={18} /> DNS & Hosting
-            </button>
-            <button 
-              onClick={() => setActiveDoc("email")} 
-              className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border ${
-                activeDoc === "email" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 hover:border-zinc-300 hover:text-black border-zinc-100"
-              }`}
-            >
-              <Mail size={18} /> Email Setup
-            </button>
-            <button 
-              onClick={() => setActiveDoc("portal")} 
-              className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border ${
-                activeDoc === "portal" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 hover:border-zinc-300 hover:text-black border-zinc-100"
-              }`}
-            >
-              <UserCircle size={18} /> Client Portal
-            </button>
-            <button 
-              onClick={() => setActiveDoc("troubleshooting")} 
-              className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border ${
-                activeDoc === "troubleshooting" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 hover:border-zinc-300 hover:text-black border-zinc-100"
-              }`}
-            >
-              <AlertTriangle size={18} /> Emergency Protocol
-            </button>
+        <div className="flex flex-col md:flex-row gap-10">
+          {/* Scrollable Sidebar Navigation for Mobile */}
+          <div className="w-full md:w-64 overflow-x-auto no-scrollbar print:hidden shrink-0">
+            <div className="flex md:flex-col gap-3 pb-2 md:pb-0">
+              <button 
+                onClick={() => setActiveDoc("dns")} 
+                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border shrink-0 md:shrink ${
+                  activeDoc === "dns" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 border-zinc-100"
+                }`}
+              >
+                <Server size={18} /> <span className="whitespace-nowrap">DNS & Hosting</span>
+              </button>
+              <button 
+                onClick={() => setActiveDoc("email")} 
+                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border shrink-0 md:shrink ${
+                  activeDoc === "email" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 border-zinc-100"
+                }`}
+              >
+                <Mail size={18} /> <span className="whitespace-nowrap">Email Setup</span>
+              </button>
+              <button 
+                onClick={() => setActiveDoc("portal")} 
+                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border shrink-0 md:shrink ${
+                  activeDoc === "portal" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 border-zinc-100"
+                }`}
+              >
+                <UserCircle size={18} /> <span className="whitespace-nowrap">Client Portal</span>
+              </button>
+              <button 
+                onClick={() => setActiveDoc("troubleshooting")} 
+                className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all text-[11px] font-bold uppercase tracking-widest border shrink-0 md:shrink ${
+                  activeDoc === "troubleshooting" ? "bg-black text-white border-black shadow-lg" : "bg-white text-zinc-500 border-zinc-100"
+                }`}
+              >
+                <AlertTriangle size={18} /> <span className="whitespace-nowrap">Emergency Protocol</span>
+              </button>
+            </div>
           </div>
 
           {/* Main Content Area */}
           <div className="flex-1 pb-24">
-            <div className="flex justify-between items-start mb-8 border-b border-zinc-100 pb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-zinc-100 pb-8 gap-6">
               <div>
-                <h2 className="text-3xl font-black text-black mb-3">{currentContent.title}</h2>
-                <p className="text-zinc-500 text-sm leading-relaxed">{currentContent.description}</p>
+                <h2 className="text-2xl md:text-3xl font-light tracking-tighter text-black mb-3">{currentContent.title}</h2>
+                <p className="text-zinc-500 text-sm leading-relaxed font-medium">{currentContent.description}</p>
               </div>
               <button 
                 onClick={handlePrint}
-                className="flex items-center gap-2 px-5 py-2.5 bg-zinc-50 border border-zinc-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-zinc-100 hover:border-zinc-300 transition-all print:hidden shrink-0"
+                className="flex items-center gap-2 px-5 py-3 bg-zinc-50 border border-zinc-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-100 transition-all print:hidden w-full md:w-auto justify-center"
               >
                 <Download size={14} /> Save PDF
               </button>
@@ -580,10 +593,10 @@ export default function DocsPage() {
 
             {/* Checklist Section */}
             <div className="mb-10 bg-zinc-50/50 border border-zinc-200 p-6 rounded-2xl print:hidden">
-              <h4 className="text-[11px] font-black uppercase tracking-widest text-black mb-4">
+              <h4 className="text-[11px] font-bold uppercase tracking-widest text-black mb-4">
                 {currentContent.checklistTitle}
               </h4>
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 {currentContent.checklistItems.map((item, index) => (
                   <button 
                     key={index}
@@ -591,11 +604,11 @@ export default function DocsPage() {
                     className="flex items-center gap-3 text-left group"
                   >
                     {checklist[index] ? (
-                      <CheckSquare size={18} className="text-emerald-500" />
+                      <CheckSquare size={20} className="text-emerald-500 shrink-0" />
                     ) : (
-                      <Square size={18} className="text-zinc-400 group-hover:text-black transition-colors" />
+                      <Square size={20} className="text-zinc-400 shrink-0" />
                     )}
-                    <span className={`text-sm transition-colors ${checklist[index] ? "text-zinc-400 line-through" : "text-zinc-700 group-hover:text-black"}`}>
+                    <span className={`text-sm leading-snug font-medium transition-colors ${checklist[index] ? "text-zinc-400 line-through" : "text-zinc-700"}`}>
                       {item}
                     </span>
                   </button>
@@ -603,39 +616,41 @@ export default function DocsPage() {
               </div>
             </div>
 
-            <div className="space-y-10">
+            <div className="space-y-8 md:space-y-12">
               {currentContent.steps.map((step, index) => (
-                <div key={index} className="bg-white p-8 rounded-2xl border border-zinc-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
-                  <h3 className="text-lg font-black text-black mb-4">{step.title}</h3>
-                  <p className="text-zinc-600 whitespace-pre-line leading-relaxed text-sm">{step.content}</p>
+                <div key={index} className="bg-white p-6 md:p-10 rounded-[32px] border border-zinc-100 shadow-sm">
+                  <h3 className="text-base md:text-lg font-bold text-black mb-5 uppercase tracking-tight">{step.title}</h3>
+                  <p className="text-zinc-600 whitespace-pre-line leading-relaxed text-sm font-medium">{step.content}</p>
                   
                   {step.image && (
-                    <div className="mt-6 border border-zinc-200 rounded-xl overflow-hidden bg-zinc-50 p-2">
-                      <img src={step.image} alt={step.title} className="w-full h-auto rounded-lg shadow-sm border border-zinc-100" />
+                    <div className="mt-8 border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/50 p-3">
+                      <img src={step.image} alt={step.title} className="w-full h-auto rounded-xl shadow-sm" />
                     </div>
                   )}
                   
                   {step.warning && (
-                    <div className="bg-red-50/50 border-l-4 border-red-500 p-5 mt-6 rounded-r-xl">
-                      <p className="text-red-700 text-sm font-semibold">{step.warning}</p>
+                    <div className="bg-red-50/30 border-l-4 border-red-500 p-5 mt-8 rounded-r-2xl">
+                      <p className="text-red-700 text-sm font-bold uppercase tracking-tight flex items-center gap-2">
+                        <AlertTriangle size={14} /> {step.warning}
+                      </p>
                     </div>
                   )}
                 </div>
               ))}
 
               {activeDoc === "dns" && (
-                <div className="mt-12 border border-zinc-200 rounded-2xl p-8 print:hidden bg-zinc-50/50">
-                  <h4 className="text-sm font-black text-black uppercase tracking-widest mb-6">Quick Copy Values</h4>
+                <div className="mt-12 border border-zinc-200 rounded-3xl p-6 md:p-10 print:hidden bg-zinc-50/30">
+                  <h4 className="text-xs font-bold text-black uppercase tracking-widest mb-8">Quick Copy Values</h4>
                   <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                      <span className="font-mono text-sm text-zinc-700">76.76.21.21</span>
-                      <button onClick={() => handleCopy("76.76.21.21")} className="text-zinc-400 hover:text-black transition-colors">
+                    <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
+                      <span className="font-mono text-sm font-bold text-zinc-800">76.76.21.21</span>
+                      <button onClick={() => handleCopy("76.76.21.21")} className="text-zinc-400 hover:text-black transition-colors p-2">
                         {copied === "76.76.21.21" ? <CheckCircle2 size={20} className="text-emerald-500" /> : <Copy size={20} />}
                       </button>
                     </div>
-                    <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-zinc-200 shadow-sm">
-                      <span className="font-mono text-sm text-zinc-700">cname.vercel-dns.com</span>
-                      <button onClick={() => handleCopy("cname.vercel-dns.com")} className="text-zinc-400 hover:text-black transition-colors">
+                    <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-zinc-200 shadow-sm">
+                      <span className="font-mono text-xs md:text-sm font-bold text-zinc-800 truncate mr-4">cname.vercel-dns.com</span>
+                      <button onClick={() => handleCopy("cname.vercel-dns.com")} className="text-zinc-400 hover:text-black transition-colors p-2 shrink-0">
                         {copied === "cname.vercel-dns.com" ? <CheckCircle2 size={20} className="text-emerald-500" /> : <Copy size={20} />}
                       </button>
                     </div>

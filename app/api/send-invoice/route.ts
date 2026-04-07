@@ -1,70 +1,120 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-export async function POST(request: Request) {
-    const resend = new Resend(process.env.RESEND_API_KEY);
+// Resend servisi için API Key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
+export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { clientEmail, clientName, isCombined, invoices } = body;
+        
+        // Ledger sayfasından (Frontend) gelen verileri karşılıyoruz
+        const { to, clientEmail, clientName, fileName, fileUrl, isBatch, attachments } = body;
 
-        // 1. Gelen verinin kontrolü
-        // Eğer invoices dizisi yoksa (eski sistemden geliyorsa), geriye dönük uyumluluk için dizi oluşturalım
-        const invoiceList = invoices || [{ 
-            invoiceNumber: body.invoiceNumber, 
-            pdfUrl: body.pdfUrl 
-        }];
+        // Hedef e-posta adresi
+        const targetEmail = to || clientEmail;
 
-        // 2. Tüm PDF linklerini asenkron olarak indirip Buffer'a çeviriyoruz
-        const attachments = await Promise.all(
-            invoiceList.map(async (inv: any) => {
-                const pdfResponse = await fetch(inv.pdfUrl);
-                if (!pdfResponse.ok) throw new Error(`Failed to download PDF: ${inv.invoiceNumber}`);
-                
-                const arrayBuffer = await pdfResponse.arrayBuffer();
-                const buffer = Buffer.from(arrayBuffer);
+        if (!targetEmail) {
+            throw new Error("Recipient email address is missing.");
+        }
 
-                return {
-                    filename: `${inv.invoiceNumber}.pdf`,
-                    content: buffer,
-                };
-            })
-        );
+        let emailSubject = '';
+        let htmlContent = '';
+        let emailAttachments: any[] = [];
 
-        // 3. Mail İçeriğini Hazırlama
-        const subject = isCombined 
-            ? `Documents Update from Novatrum - ${invoiceList.length} Files`
-            : `Invoice Update from Novatrum: ${invoiceList[0].invoiceNumber}`;
+        // 1. TOPLU GÖNDERİM (BATCH MODE)
+        if (isBatch && attachments && attachments.length > 0) {
+            emailSubject = `Novatrum: Invoice Package Ready (${attachments.length} Documents)`;
+            
+            // Raw Linkleri Kaldırdık, Sadece İsimleri Gösteriyoruz
+            const listHtml = attachments.map((att: any) => 
+                `<li style="margin-bottom: 8px; font-weight: bold; color: #3f3f46;">
+                    • ${att.fileName}
+                </li>`
+            ).join('');
 
-        const htmlContent = `
-            <div style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
-                <h2 style="color: #000;">Hello ${clientName},</h2>
-                <p>Please find the requested documentation attached to this email.</p>
-                <ul style="background: #f4f4f5; padding: 20px; border-radius: 12px; list-style: none;">
-                    ${invoiceList.map((inv: any) => `<li style="font-weight: bold; margin-bottom: 5px;">• ${inv.invoiceNumber}</li>`).join('')}
-                </ul>
-                <p>If you have any questions regarding these documents or the infrastructure nodes, please reach out to our support desk.</p>
-                <br />
-                <p style="font-size: 12px; color: #71717a;">
-                    Best regards,<br />
-                    <strong>Novatrum Systems</strong><br />
-                    Flanders, Belgium
-                </p>
-            </div>
-        `;
+            // Buton KALDILARAK sadeleştirildi
+            htmlContent = `
+                <div style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px;">
+                    <h2 style="color: #000;">Hello ${clientName},</h2>
+                    <p>We have issued <strong>${attachments.length} new document(s)</strong> for your secure Novatrum workspace.</p>
+                    <p>You will find the following files securely <strong>attached to this email</strong>:</p>
+                    <ul style="background: #f4f4f5; padding: 20px; border-radius: 12px; list-style: none;">
+                        ${listHtml}
+                    </ul>
+                    <p>If you have any questions regarding these documents, please reach out to our support desk.</p>
+                    <br />
+                    <p style="font-size: 12px; color: #71717a;">
+                        Best regards,<br />
+                        <strong>Novatrum Infrastructure & Engineering</strong><br />
+                        Flanders, Belgium
+                    </p>
+                </div>
+            `;
 
-        // 4. Maili Gönder
+            // PDF'leri indirip Mail Eklentisi (Attachment) Yapıyoruz
+            emailAttachments = await Promise.all(
+                attachments.map(async (att: any) => {
+                    const pdfResponse = await fetch(att.fileUrl);
+                    if (!pdfResponse.ok) throw new Error(`Failed to download PDF: ${att.fileName}`);
+                    
+                    const arrayBuffer = await pdfResponse.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+
+                    return {
+                        filename: att.fileName,
+                        content: buffer,
+                    };
+                })
+            );
+
+        } 
+        // 2. TEKİL GÖNDERİM (SINGLE INVOICE MODE)
+        else {
+            emailSubject = `Novatrum: New Invoice Available (${fileName})`;
+            
+            // Buton KALDILARAK sadeleştirildi
+            htmlContent = `
+                <div style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a; max-width: 600px;">
+                    <h2 style="color: #000;">Hello ${clientName},</h2>
+                    <p>A new document (<strong>${fileName}</strong>) has been generated for your secure Novatrum workspace.</p>
+                    <p>Please find the official document <strong>attached to this email</strong>.</p>
+                    <p>If you have any questions, please contact our support desk.</p>
+                    <br />
+                    <p style="font-size: 12px; color: #71717a;">
+                        Best regards,<br />
+                        <strong>Novatrum Infrastructure & Engineering</strong><br />
+                        Flanders, Belgium
+                    </p>
+                </div>
+            `;
+
+            // Tek PDF'i indirip Eklenti Yap
+            const pdfResponse = await fetch(fileUrl);
+            if (!pdfResponse.ok) throw new Error(`Failed to download PDF: ${fileName}`);
+            
+            const arrayBuffer = await pdfResponse.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            emailAttachments = [{
+                filename: fileName,
+                content: buffer,
+            }];
+        }
+
+        // 3. RESEND İLE MAİL GÖNDERİMİ
         const data = await resend.emails.send({
-            from: 'Novatrum <info@novatrum.eu>',
-            to: [clientEmail],
-            subject: subject,
+            from: 'Novatrum Billing <info@novatrum.eu>', 
+            to: [targetEmail],
+            subject: emailSubject,
             html: htmlContent,
-            attachments: attachments, // Resend burada listenin tamamını ekler
+            attachments: emailAttachments, // Dosya gerçekten eke kondu.
         });
 
         return NextResponse.json({ success: true, data });
+
     } catch (error: any) {
-        console.error("Email API Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error("Resend API Error:", error);
+        return NextResponse.json({ error: error.message || 'Failed to dispatch email' }, { status: 500 });
     }
 }

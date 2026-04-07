@@ -1,286 +1,409 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// --- TYPESCRIPT INTERFACES ---
+interface Client {
+    id: string;
+    full_name: string;
+    email: string;
+    company_name?: string;
+    phone_number?: string;
+    address?: string;
+    access_code: string;
+    archived_at?: string;
+    created_at: string;
+}
+
+interface Project {
+    id: string;
+    client_id: string;
+    name: string;
+    status: string;
+    progress_percent: number;
+    archived_at?: string;
+    created_at: string;
+    clients?: {
+        full_name: string;
+        access_code: string;
+    };
+}
+
+interface Invoice {
+    id: string;
+    client_id: string;
+    file_name: string;
+    file_url: string;
+    status: string;
+    created_at: string;
+    clients?: {
+        full_name: string;
+    };
+}
+
+interface SystemStatus {
+    id: string;
+    label: string;
+    status: string;
+}
+
+interface QuickNote {
+    id: string;
+    content: string;
+    created_at: string;
+}
+
 export default function AdminDashboardPage() {
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState('overview');
+    
+    // AKTİF SEKME (Sadece dashboard'da kalan özellikler için)
+    const [activeTab, setActiveTab] = useState('overview'); 
+    
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    
+    // DİNAMİK SELAMLAMA STATE
+    const [greeting, setGreeting] = useState('Good morning.');
+
+    // TOAST NOTIFICATION
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-    const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const [clients, setClients] = useState<any[]>([]);
-    const [projects, setProjects] = useState<any[]>([]);
-    const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
-    const [clientInvoices, setClientInvoices] = useState<any[]>([]);
+    // CORE DATA STATES
+    const [clients, setClients] = useState<Client[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
+    const [systemStatuses, setSystemStatuses] = useState<SystemStatus[]>([]);
+    const [clientInvoices, setClientInvoices] = useState<Invoice[]>([]);
     const [supportTicketsCount, setSupportTicketsCount] = useState(0);
-    const [quickNotes, setQuickNotes] = useState<any[]>([]);
+    const [quickNotes, setQuickNotes] = useState<QuickNote[]>([]);
     const [newQuickNote, setNewQuickNote] = useState('');
+    const [discoveryCount, setDiscoveryCount] = useState(0); 
+    
+    // FORMS
     const [clientForm, setClientForm] = useState({ email: '', fullName: '', companyName: '', phone: '', address: '' });
-    const [projectForm, setProjectForm] = useState({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
-    const [localProgress, setLocalProgress] = useState<{ [key: string]: number }>({});
-    const [projectInputs, setProjectInputs] = useState<{ [key: string]: { log: string, status: string } }>({});
-    const [timers, setTimers] = useState<{ [key: string]: { active: boolean; sessionStart: number | null; totalElapsed: number; displayTime?: number } }>({});
-    const [newDiscoveryCount, setNewDiscoveryCount] = useState(0);
-    const [hasAnyUnread, setHasAnyUnread] = useState(false);
+    const [projectForm, setProjectForm] = useState({ clientId: '', name: '', progress: 0 });
 
-    const [selectedProjectDetails, setSelectedProjectDetails] = useState<any>(null);
-    const [projectDiscoveryData, setProjectDiscoveryData] = useState<any>(null);
-    const [projectFilesData, setProjectFilesData] = useState<any[]>([]);
-    const [loadingDetails, setLoadingDetails] = useState(false);
-    const [demoSettings, setDemoSettings] = useState({
-        globalNetwork: 'Active',
-        creative: 'Online',
-        fintech: 'Online',
-        logistics: 'Online',
-        quantum: 'Online'
-    });
+    // MODAL STATES 
+    const [selectedProjectUpdates, setSelectedProjectUpdates] = useState<any>(null);
+    const [newUpdateMessage, setNewUpdateMessage] = useState('');
+    const [newUpdateProgress, setNewUpdateProgress] = useState(0);
+    const [savingUpdate, setSavingUpdate] = useState(false);
 
-    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [adminPasswordForm, setAdminPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
+    const [savingPassword, setSavingPassword] = useState(false);
+    
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ message, type });
-        if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-        toastTimerRef.current = setTimeout(() => setToast(null), 4000);
-    };
-
-    const handleLogout = async () => {
-        setLoading(true);
-        await supabase.auth.signOut();
-        router.push('/admin/login');
+        setTimeout(() => setToast(null), 3000);
     };
 
     useEffect(() => {
-        const INACTIVITY_LIMIT = 15 * 60 * 1000; 
-        let timeoutId: NodeJS.Timeout;
+        const hour = new Date().getHours();
+        if (hour < 12) setGreeting('Good morning.');
+        else if (hour < 18) setGreeting('Good afternoon.');
+        else setGreeting('Good evening.');
 
-        const resetTimer = () => {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(handleLogout, INACTIVITY_LIMIT);
+        const checkAdmin = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return router.push('/admin/login');
+            
+            const { data: member } = await supabase.from('members').select('role').eq('id', user.id).single();
+            if (member?.role !== 'admin') {
+                router.push('/client/login');
+            } else {
+                setIsAdmin(true);
+            }
         };
+        checkAdmin();
+        fetchData();
 
-        const events = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
-        events.forEach(event => window.addEventListener(event, resetTimer));
-        resetTimer(); 
+        const channel = supabase.channel('admin-dashboard-sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'client_invoices' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_notes' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'project_discovery' }, () => fetchData())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'project_updates' }, () => {
+                if (selectedProjectUpdates) fetchProjectUpdates(selectedProjectUpdates.id);
+            })
+            .subscribe();
 
         return () => {
-            events.forEach(event => window.removeEventListener(event, resetTimer));
-            clearTimeout(timeoutId);
-            if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+            supabase.removeChannel(channel);
         };
-    }, [router]);
-
-    useEffect(() => {
-        const checkAdmin = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (!session) { 
-                router.push('/admin/login'); 
-                return; 
-            }
-
-            const { data: { user } } = await supabase.auth.getUser();
-            const { data: member } = await supabase
-                .from('members')
-                .select('role')
-                .eq('id', user?.id)
-                .single();
-
-            if (member?.role !== 'admin') {
-                await supabase.auth.signOut(); 
-                router.push('/admin/login'); 
-                return;
-            } 
-            
-            setIsAdmin(true);
-            
-            fetchData();
-            fetchQuickNotes();
-            fetchDiscoveryCount();
-            checkUnreadTickets();
-        };
-        
-        checkAdmin();
-
-        const pollInterval = setInterval(() => {
-            fetchData();
-            fetchQuickNotes();
-            fetchDiscoveryCount();
-            checkUnreadTickets();
-        }, 15000);
-
-        return () => clearInterval(pollInterval);
-    }, [router]);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTimers(prev => {
-                const next = { ...prev };
-                let changed = false;
-                
-                for (const id in next) {
-                    if (next[id].active && next[id].sessionStart) {
-                        const now = Math.floor(Date.now() / 1000);
-                        next[id].displayTime = next[id].totalElapsed + (now - next[id].sessionStart!);
-                        changed = true;
-                    }
-                }
-                return changed ? next : prev;
-            });
-        }, 1000);
-        
-        return () => clearInterval(interval);
-    }, []);
+    }, [router, selectedProjectUpdates]);
 
     const fetchData = async () => {
-        const [clientsRes, projectsRes, statusRes, invRes, ticketsRes, showroomRes] = await Promise.all([
-            supabase.from('clients').select('*').is('archived_at', null).order('created_at', { ascending: false }),
-            supabase.from('projects').select('*, clients(full_name, email, archived_at), project_updates(*)').order('created_at', { ascending: false }),
-            supabase.from('system_status').select('*').order('label'),
-            supabase.from('client_invoices').select('*'),
-            supabase.from('support_tickets').select('status'),
-            supabase.from('showroom_settings').select('*').eq('id', 1).single()
-        ]);
-
-        if (clientsRes.data) setClients(clientsRes.data);
-        if (projectsRes.data) {
-            const activeProjectsList = projectsRes.data.filter(p => p.clients && !p.clients.archived_at).map(p => ({
-                ...p,
-                project_updates: p.project_updates ? p.project_updates.sort((a:any, b:any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : []
-            }));
-            setProjects(activeProjectsList);
-            
-            const progressMap: { [key: string]: number } = {};
-            const inputsMap: { [key: string]: any } = {};
-            const newTimers: any = {};
-            
-            activeProjectsList.forEach(p => { 
-                progressMap[p.id] = localProgress[p.id] ?? p.progress_percent; 
-                inputsMap[p.id] = projectInputs[p.id] || { log: '', status: p.status || 'Planning' };
-
-                const dbActive = p.last_timer_start !== null;
-                const sessionStart = dbActive ? Math.floor(new Date(p.last_timer_start).getTime() / 1000) : null;
-                const displayTime = dbActive ? (p.total_time_spent || 0) + (Math.floor(Date.now() / 1000) - sessionStart!) : p.total_time_spent || 0;
-                newTimers[p.id] = { active: dbActive, sessionStart, totalElapsed: p.total_time_spent || 0, displayTime };
-            });
-
-            setLocalProgress(progressMap);
-            setProjectInputs(prev => ({ ...inputsMap, ...prev }));
-            setTimers(newTimers);
-
-            if (selectedProjectDetails) {
-                const updatedSelectedProject = activeProjectsList.find(p => p.id === selectedProjectDetails.id);
-                if (updatedSelectedProject) setSelectedProjectDetails(updatedSelectedProject);
-            }
-        }
-        
-        if (statusRes.data) setSystemStatuses(statusRes.data);
-        
-        if (invRes.data && clientsRes.data) {
-            const activeClientIds = clientsRes.data.map(c => c.id);
-            const activeInvoices = invRes.data.filter(inv => activeClientIds.includes(inv.client_id));
-            setClientInvoices(activeInvoices);
-        }
-        
-        if (ticketsRes.data) {
-            setSupportTicketsCount(ticketsRes.data.filter(t => t.status === 'open' || t.status === 'new').length);
-        }
-
-        if (showroomRes.data) {
-            setDemoSettings({
-                globalNetwork: showroomRes.data.global_network,
-                creative: showroomRes.data.creative,
-                fintech: showroomRes.data.fintech,
-                logistics: showroomRes.data.logistics,
-                quantum: showroomRes.data.quantum
-            });
-        }
-    };
-
-    const fetchQuickNotes = async () => {
-        const { data } = await supabase.from('admin_quick_notes').select('*').order('created_at', { ascending: false }).limit(5);
-        if (data) setQuickNotes(data);
-    };
-
-    const fetchDiscoveryCount = async () => {
-        const { count } = await supabase.from('project_discovery').select('*', { count: 'exact', head: true }).in('status', ['pending', 'reviewed']);
-        if (count !== null) setNewDiscoveryCount(count);
-    };
-
-    const checkUnreadTickets = async () => {
-        const { count: ticketsCount } = await supabase
-            .from('support_tickets')
-            .select('*', { count: 'exact', head: true })
-            .eq('status', 'new');
-            
-        const { count: repliesCount } = await supabase
-            .from('support_replies')
-            .select('*', { count: 'exact', head: true })
-            .eq('sender_type', 'client')
-            .eq('is_read', false);
-            
-        setHasAnyUnread((ticketsCount || 0) > 0 || (repliesCount || 0) > 0);
-    };
-
-    const handleOpenProjectDetails = async (project: any) => {
-        setSelectedProjectDetails(project);
-        setLoadingDetails(true);
-        setProjectDiscoveryData(null);
-        setProjectFilesData([]);
-
-        if (localProgress[project.id] === undefined) {
-            setLocalProgress(prev => ({...prev, [project.id]: project.progress_percent}));
-        }
-        if (!projectInputs[project.id]) {
-            setProjectInputs(prev => ({...prev, [project.id]: { log: '', status: project.status || 'Planning' }}));
-        }
-
         try {
-            if (project.clients?.email) {
-                const { data: discData } = await supabase
-                    .from('project_discovery')
-                    .select('*')
-                    .eq('client_email', project.clients.email)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .single();
-                if (discData) setProjectDiscoveryData(discData);
+            // 1. Clients
+            const { data: cData } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
+            if (cData) setClients(cData.filter(c => !c.archived_at));
+
+            // 2. Projects (GÜNCELLENDİ: Foreign Key karmaşasını önlemek için '!inner' kullanıldı)
+            // Supabase'e direkt olarak clients tablosundaki full_name ve access_code alanlarını getirmesini söylüyoruz.
+            const { data: pData, error: pError } = await supabase
+                .from('projects')
+                .select(`
+                    id, client_id, name, status, progress_percent, archived_at, created_at,
+                    clients (full_name, access_code)
+                `)
+                .order('created_at', { ascending: false });
+                
+            if (pError) {
+                console.warn("Projects relation error:", pError.message);
+                showToast("Database Relation Error: " + pError.message, "error");
+            }
+            if (pData) {
+                // Aktif (Yüzde 100'den küçük VEYA status deployed olmayanlar)
+                const active = pData.filter(p => (p.progress_percent < 100 && p.status !== 'deployed') && !p.archived_at);
+                const completed = pData.filter(p => (p.progress_percent >= 100 || p.status === 'deployed') && !p.archived_at);
+                
+                setProjects(active);
+                setCompletedProjects(completed);
             }
 
-            const { data: filesData } = await supabase
-                .from('client_files')
-                .select('*')
-                .eq('client_id', project.client_id)
-                .order('created_at', { ascending: false });
+            // 3. System Status 
+            const { data: sData } = await supabase.from('system_status').select('*').order('label');
+            if (sData) setSystemStatuses(sData);
 
-            if (filesData) setProjectFilesData(filesData);
+            // 4. Invoices 
+            const { data: iData } = await supabase.from('client_invoices').select('*, clients(full_name)').eq('status', 'unpaid').order('created_at', { ascending: false });
+            if (iData) setClientInvoices(iData);
+
+            // 5. Support Tickets
+            const { data: tData } = await supabase.from('support_tickets').select('id').eq('status', 'open');
+            if (tData) setSupportTicketsCount(tData.length);
+
+            // 6. Quick Notes
+            const { data: nData } = await supabase.from('quick_notes').select('*').order('created_at', { ascending: false });
+            if (nData) setQuickNotes(nData);
+
+            // 7. Discovery (Intelligence) 
+            const { data: dData } = await supabase.from('project_discovery').select('id').eq('status', 'pending');
+            if (dData) setDiscoveryCount(dData.length);
 
         } catch (error) {
-            console.error("Error fetching details", error);
-        } finally {
-            setLoadingDetails(false);
+            console.error("Error fetching data:", error);
         }
     };
 
-    const handleDeleteProject = async (projectId: string) => {
-        const confirmDelete = window.confirm("Are you sure you want to permanently delete this project? This action cannot be undone.");
-        if (!confirmDelete) return;
+    // --- CRUD: CLIENTS ---
+    const handleCreateClient = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        const accessCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-        setLoadingDetails(true);
         try {
-            const { error } = await supabase.from('projects').delete().eq('id', projectId);
+            const { error } = await supabase.from('clients').insert({
+                email: clientForm.email,
+                full_name: clientForm.fullName,
+                company_name: clientForm.companyName,
+                phone_number: clientForm.phone,
+                address: clientForm.address,
+                access_code: accessCode
+            }).select().single();
+
             if (error) throw error;
 
-            showToast("Project successfully deleted.", 'success');
-            setSelectedProjectDetails(null);
+            try {
+                await fetch('/api/email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'access_code',
+                        email: clientForm.email,
+                        code: accessCode,
+                        clientName: clientForm.fullName,
+                        loginLink: `${window.location.origin}/client/login`
+                    })
+                });
+            } catch (mailErr) {
+                console.error("Email API Error:", mailErr);
+            }
+
+            showToast('Entity registered securely.', 'success');
+            setClientForm({ email: '', fullName: '', companyName: '', phone: '', address: '' });
+            fetchData();
+            router.push('/admin/clients'); 
+        } catch (err: any) {
+            showToast('Error registering entity: ' + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- CRUD: PROJECTS ---
+    const handleCreateProject = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!projectForm.clientId) return showToast('Please select a client.', 'error');
+        setLoading(true);
+
+        try {
+            const { data: project, error } = await supabase.from('projects').insert({
+                client_id: projectForm.clientId,
+                name: projectForm.name,
+                status: 'planning',
+                progress_percent: projectForm.progress
+            }).select().single();
+
+            if (error) throw error;
+
+            await supabase.from('project_updates').insert({
+                project_id: project.id,
+                message: 'Architecture provisioning initiated.',
+                progress_at_time: projectForm.progress
+            });
+
+            showToast('Deployment initialized.', 'success');
+            setProjectForm({ clientId: '', name: '', progress: 0 });
+            fetchData();
+            setActiveTab('active_queue');
+        } catch (err: any) {
+            showToast('Error initiating deployment: ' + err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const updateProjectProgress = async (id: string, newProgress: number, newStatus: string, message: string) => {
+        try {
+            const { error } = await supabase.from('projects').update({
+                progress_percent: newProgress,
+                status: newStatus
+            }).eq('id', id);
+            if (error) throw error;
+
+            if (message.trim()) {
+                await supabase.from('project_updates').insert({
+                    project_id: id,
+                    message: message,
+                    progress_at_time: newProgress
+                });
+            }
+            showToast('Architecture load updated.', 'success');
             fetchData();
         } catch (err: any) {
-            showToast("Failed to delete project: " + err.message, 'error');
+            showToast('Error updating deployment: ' + err.message, 'error');
+        }
+    };
+
+    const deleteProject = async (id: string) => {
+        if (!window.confirm('Are you sure you want to permanently delete this deployment?')) return;
+        try {
+            await supabase.from('project_updates').delete().eq('project_id', id);
+            const { error } = await supabase.from('projects').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deployment deleted.', 'success');
+            fetchData();
+            if (selectedProjectUpdates?.id === id) setSelectedProjectUpdates(null);
+        } catch (err: any) {
+            showToast('Error deleting deployment: ' + err.message, 'error');
+        }
+    };
+
+    const markProjectAsCompleted = async (project: any) => {
+        if (!window.confirm('Mark this project as COMPLETED? It will be moved to Completed Builds.')) return;
+        setSavingUpdate(true);
+        try {
+            const { error } = await supabase.from('projects').update({
+                progress_percent: 100,
+                status: 'deployed'
+            }).eq('id', project.id);
+            
+            if (error) throw error;
+
+            await supabase.from('project_updates').insert({
+                project_id: project.id,
+                message: 'System fully deployed and handed over to the client. Environment is now Operational.',
+                progress_at_time: 100
+            });
+
+            showToast('Project moved to Completed Builds.', 'success');
+            setSelectedProjectUpdates(null);
+            fetchData();
+            setActiveTab('completed_projects');
+        } catch (err: any) {
+            showToast('Error completing project: ' + err.message, 'error');
         } finally {
-            setLoadingDetails(false);
+            setSavingUpdate(false);
+        }
+    };
+
+    // --- PROJECT UPDATES (TIMELINE MODAL) ---
+    const fetchProjectUpdates = async (projectId: string) => {
+        try {
+            const { data, error } = await supabase.from('project_updates').select('*').eq('project_id', projectId).order('created_at', { ascending: false });
+            if (error) throw error;
+            if (selectedProjectUpdates) {
+                setSelectedProjectUpdates({ ...selectedProjectUpdates, updatesList: data || [] });
+            }
+        } catch (error) {
+            console.error("Error fetching updates", error);
+        }
+    };
+
+    const openProjectUpdatesModal = async (project: any) => {
+        setSelectedProjectUpdates({ ...project, updatesList: [] });
+        setNewUpdateProgress(project.progress_percent);
+        try {
+            const { data } = await supabase.from('project_updates').select('*').eq('project_id', project.id).order('created_at', { ascending: false });
+            setSelectedProjectUpdates({ ...project, updatesList: data || [] });
+        } catch (err) {}
+    };
+
+    const handleAddUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newUpdateMessage.trim()) return;
+        setSavingUpdate(true);
+        try {
+            await supabase.from('projects').update({ progress_percent: newUpdateProgress }).eq('id', selectedProjectUpdates.id);
+            const { error } = await supabase.from('project_updates').insert({
+                project_id: selectedProjectUpdates.id,
+                message: newUpdateMessage,
+                progress_at_time: newUpdateProgress
+            });
+            if (error) throw error;
+            setNewUpdateMessage('');
+            fetchProjectUpdates(selectedProjectUpdates.id);
+            fetchData();
+            showToast('Update pushed to timeline.', 'success');
+        } catch (error: any) {
+            showToast(error.message, 'error');
+        } finally {
+            setSavingUpdate(false);
+        }
+    };
+
+    const deleteUpdate = async (updateId: string) => {
+        if (!window.confirm('Delete this log entry?')) return;
+        try {
+            const { error } = await supabase.from('project_updates').delete().eq('id', updateId);
+            if (error) throw error;
+            fetchProjectUpdates(selectedProjectUpdates.id);
+        } catch (error: any) {
+            showToast(error.message, 'error');
+        }
+    };
+
+    // --- SYSTEM STATUS & NOTES ---
+    const updateSystemStatus = async (id: string, newStatus: string) => {
+        try {
+            const { error } = await supabase.from('system_status').update({ status: newStatus }).eq('id', id);
+            if (error) throw error;
+            showToast('Core node updated.', 'success');
+            fetchData();
+        } catch (err: any) {
+            showToast('Error: ' + err.message, 'error');
         }
     };
 
@@ -288,649 +411,292 @@ export default function AdminDashboardPage() {
         e.preventDefault();
         if (!newQuickNote.trim()) return;
         try {
-            await supabase.from('admin_quick_notes').insert({ note: newQuickNote });
+            const { error } = await supabase.from('quick_notes').insert({ content: newQuickNote });
+            if (error) throw error;
             setNewQuickNote('');
-            fetchQuickNotes();
-        } catch (err) { 
-            console.error(err);
+            fetchData();
+        } catch (err: any) {
+            showToast('Error saving memo.', 'error');
         }
     };
 
     const deleteQuickNote = async (id: string) => {
-        await supabase.from('admin_quick_notes').delete().eq('id', id);
-        fetchQuickNotes();
-    };
-
-    const toggleTimer = async (projectId: string) => {
-        const project = projects.find(p => p.id === projectId);
-        if (!project) return;
-
-        const timerState = timers[projectId];
-        const isCurrentlyActive = timerState?.active;
-
         try {
-            if (isCurrentlyActive) {
-                const sessionDuration = (Math.floor(Date.now() / 1000)) - timerState.sessionStart!;
-                const newTotalTime = (project.total_time_spent || 0) + sessionDuration;
-                await supabase.from('projects').update({ total_time_spent: newTotalTime, last_timer_start: null }).eq('id', projectId);
-                setTimers(prev => ({ ...prev, [projectId]: { active: false, sessionStart: null, totalElapsed: newTotalTime, displayTime: newTotalTime } }));
-            } else {
-                const nowIso = new Date().toISOString();
-                const nowSec = Math.floor(Date.now() / 1000);
-                await supabase.from('projects').update({ last_timer_start: nowIso }).eq('id', projectId);
-                setTimers(prev => ({ ...prev, [projectId]: { active: true, sessionStart: nowSec, totalElapsed: timerState.totalElapsed, displayTime: timerState.totalElapsed } }));
-            }
+            await supabase.from('quick_notes').delete().eq('id', id);
             fetchData();
-        } catch (err: any) { 
-            showToast("Timer error: " + err.message, 'error');
-        }
-    };
-    
-    const handleSyncProject = async (projectId: string) => {
-        setLoading(true);
-        try {
-            const newProgress = localProgress[projectId];
-            const currentInputs = projectInputs[projectId];
-            
-            await supabase.from('projects').update({ 
-                progress_percent: newProgress,
-                status: currentInputs?.status || 'Planning'
-            }).eq('id', projectId);
-
-            if (currentInputs?.log?.trim()) {
-                await supabase.from('project_updates').insert({ 
-                    project_id: projectId, 
-                    message: currentInputs.log.trim(), 
-                    progress_at_time: newProgress 
-                });
-                setProjectInputs(prev => ({...prev, [projectId]: {...currentInputs, log: ''}}));
-            }
-            
-            showToast("Project synchronized perfectly.", 'success');
-            fetchData();
-        } catch (err: any) { 
-            showToast(err.message, 'error');
-        } finally { 
-            setLoading(false);
-        }
+        } catch (err) {}
     };
 
-    const handleCreateClient = async (e: React.FormEvent) => {
+    // --- ADMIN SETTINGS ---
+    const handleUpdateAdminPassword = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        if (adminPasswordForm.newPassword !== adminPasswordForm.confirmPassword) {
+            return showToast("Passwords do not match", "error");
+        }
+        if (adminPasswordForm.newPassword.length < 6) {
+            return showToast("Password too short", "error");
+        }
+
+        setSavingPassword(true);
         try {
-            const { data: existingClient } = await supabase.from('clients').select('id, archived_at').eq('email', clientForm.email).maybeSingle();
-            
-            if (existingClient) {
-                if (existingClient.archived_at) {
-                    showToast("This email belongs to an ARCHIVED entity. Please use Archives.", 'error');
-                } else {
-                    showToast("An active entity with this email already exists.", 'error');
-                }
-                setLoading(false);
-                return;
-            }
-
-            const code = `NVTR-${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-            
-            const insertData: any = {
-                email: clientForm.email,
-                full_name: clientForm.fullName,
-                company_name: clientForm.companyName || null,
-                phone_number: clientForm.phone || null,
-                address: clientForm.address || null,
-                access_code: code
-            };
-
-            const { error } = await supabase.from('clients').insert(insertData);
+            const { error } = await supabase.auth.updateUser({ password: adminPasswordForm.newPassword });
             if (error) throw error;
-
-            setClientForm({ email: '', fullName: '', companyName: '', phone: '', address: '' });
-            showToast(`Entity authorized successfully. Deployment Key: ${code}`, 'success');
-            setActiveTab('overview');
-            fetchData();
-        } catch (err: any) {
-            showToast(err.message, 'error');
+            showToast("Admin access updated successfully.", "success");
+            setAdminPasswordForm({ newPassword: '', confirmPassword: '' });
+            setIsSettingsModalOpen(false);
+        } catch (error: any) {
+            showToast(error.message, "error");
         } finally {
-            setLoading(false);
+            setSavingPassword(false);
         }
     };
 
-    const handleDeployProject = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const { error } = await supabase.from('projects').insert({ 
-                client_id: projectForm.clientId, 
-                name: projectForm.name, 
-                budget: projectForm.budget, 
-                deadline: projectForm.deadline || null, 
-                status: projectForm.status, 
-                progress_percent: projectForm.progress 
-            });
-
-            if (error) throw error;
-
-            setProjectForm({ clientId: '', name: '', budget: '', deadline: '', progress: 0, status: 'Planning' });
-            showToast("Project deployment initiated.", 'success');
-            setActiveTab('overview');
-            fetchData();
-        } catch (err: any) {
-            showToast(err.message, 'error');
-        } finally {
-            setLoading(false);
-        }
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/admin/login');
     };
 
-    const handleUpdateShowroomSettings = async () => {
-        setLoading(true);
-        try {
-            const { error } = await supabase
-                .from('showroom_settings')
-                .update({
-                    global_network: demoSettings.globalNetwork,
-                    creative: demoSettings.creative,
-                    fintech: demoSettings.fintech,
-                    logistics: demoSettings.logistics,
-                    quantum: demoSettings.quantum
-                })
-                .eq('id', 1);
-
-            if (error) throw error;
-            showToast("Showroom parameters synchronized globally.", 'success');
-        } catch (err: any) {
-            showToast("Failed to sync settings: " + err.message, 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = seconds % 60;
-        return `${h}h ${m}m ${s}s`;
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    };
-
-    const activeProjects = projects.filter((p: any) => timers[p.id]?.active);
-    const idleProjects = projects.filter((p: any) => !timers[p.id]?.active);
-    const isSystemDown = systemStatuses.some(s => s.status === 'down');
-
-    if (!isAdmin) {
-        return (
-            <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-black uppercase text-xs tracking-widest text-zinc-400">
-                Authenticating...
-            </div>
-        );
-    }
+    if (!isAdmin) return <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center font-bold uppercase text-[10px] tracking-widest text-zinc-400">Authenticating Secure Node...</div>;
 
     return (
-        <div className="flex h-screen w-full bg-zinc-50 text-black font-sans overflow-hidden selection:bg-black selection:text-white relative">
+        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans flex flex-col md:flex-row relative selection:bg-black selection:text-white">
+            
+            {/* GLOBAL TOAST NOTIFICATION */}
+            <AnimatePresence>
+                {toast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3.5 rounded-full shadow-2xl border flex items-center gap-3 backdrop-blur-xl ${
+                            toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                            : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'
+                        }`}
+                    >
+                        {toast.type === 'success' && <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>}
+                        {toast.type === 'error' && <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>}
+                        {toast.type === 'info' && <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                        <span className="text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{toast.message}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {toast && (
-                <div className={`fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-4 rounded-full shadow-2xl z-[9999] animate-in slide-in-from-bottom-5 duration-300 font-black text-[10px] uppercase tracking-widest flex items-center gap-3 border ${
-                    toast.type === 'error' ? 'bg-red-50 text-red-600 border-red-200' :
-                    toast.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                    'bg-zinc-900 text-white border-zinc-800'
-                }`}>
-                    {toast.type === 'success' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
-                    {toast.type === 'error' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-                    {toast.message}
-                </div>
-             )}
-
-            {selectedProjectDetails && (() => {
-                const pId = selectedProjectDetails.id;
-                const timer = timers[pId];
-                const currentProg = localProgress[pId] ?? selectedProjectDetails.progress_percent;
-                const inputs = projectInputs[pId] || { log: '', status: selectedProjectDetails.status || 'Planning' };
-
-                return (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6">
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" onClick={() => setSelectedProjectDetails(null)}></div>
-                        
-                        <div className="bg-[#f8f9fa] w-full max-w-6xl h-[90vh] flex flex-col rounded-[40px] shadow-2xl relative z-10 animate-in zoom-in-95 duration-300 border border-zinc-200 overflow-hidden">
-                            
-                            <div className="px-8 md:px-12 py-8 bg-white border-b border-zinc-200 flex justify-between items-center shrink-0">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-zinc-900 leading-none">{selectedProjectDetails.name}</h2>
-                                        <span className="bg-zinc-100 border border-zinc-200 text-zinc-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase">{selectedProjectDetails.id.split('-')[0]}</span>
-                                    </div>
-                                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                                        {selectedProjectDetails.clients?.full_name} • {selectedProjectDetails.clients?.email}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <select 
-                                        value={inputs.status}
-                                        onChange={(e) => setProjectInputs(prev => ({...prev, [pId]: {...prev[pId], status: e.target.value}}))}
-                                        className="bg-white border border-zinc-200 text-black px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none cursor-pointer shadow-sm hover:border-black transition-colors"
-                                    >
-                                        <option value="Planning">PLANNING</option>
-                                        <option value="Development">DEVELOPMENT</option>
-                                        <option value="Testing">TESTING</option>
-                                        <option value="Deployed">DEPLOYED</option>
-                                    </select>
-                                    <button onClick={() => setSelectedProjectDetails(null)} className="p-3 bg-white border border-zinc-200 hover:bg-zinc-100 text-zinc-500 rounded-xl transition-colors shadow-sm">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                                    
-                                    <div className="space-y-8">
-                                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                                            <div className="flex justify-between items-start mb-6">
-                                                <div>
-                                                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-1 block">Engineering Time</span>
-                                                    <span className={`text-5xl font-black font-mono tracking-tighter ${timer?.active ? 'text-emerald-500' : 'text-black'}`}>
-                                                        {formatTime(timer?.displayTime || 0)}
-                                                    </span>
-                                                </div>
-                                                {timer?.active && <span className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />}
-                                            </div>
-                                            <button 
-                                                onClick={() => toggleTimer(pId)}
-                                                className={`w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border shadow-sm ${timer?.active ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' : 'bg-black text-white hover:bg-zinc-800'}`}
-                                            >
-                                                {timer?.active ? 'TERMINATE SESSION' : 'START ENGINEERING SESSION'}
-                                            </button>
-                                        </div>
-
-                                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                                            <div className="flex justify-between items-end mb-4">
-                                                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">Architecture Load</span>
-                                                <span className="text-3xl font-black font-mono text-black">{currentProg}%</span>
-                                            </div>
-                                            <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden mb-6">
-                                                <div className="h-full bg-black transition-all duration-300" style={{ width: `${currentProg}%` }} />
-                                            </div>
-                                            
-                                            <div className="space-y-3.5 mb-8">
-                                                {[
-                                                    { label: 'Provisioning Servers & Initial Setup', threshold: 20 },
-                                                    { label: 'Building Database & Core Architecture', threshold: 50 },
-                                                    { label: 'Deploying SSL & Security Layers', threshold: 80 },
-                                                    { label: 'Finalizing Operational Node', threshold: 100 }
-                                                ].map((step, idx) => {
-                                                    const isPassed = currentProg >= step.threshold;
-                                                    return (
-                                                        <div key={idx} className="flex items-center gap-3">
-                                                            <div className={`w-4 h-4 rounded-full flex items-center justify-center border transition-colors ${isPassed ? 'bg-emerald-500 border-emerald-500 shadow-sm' : 'border-zinc-200 bg-zinc-50'}`}>
-                                                                {isPassed && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                                                            </div>
-                                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${isPassed ? 'text-black' : 'text-zinc-400'}`}>{step.label}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                            
-                                            <div className="pt-6 border-t border-zinc-100">
-                                                <label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block mb-4">Adjust Load Range</label>
-                                                <input 
-                                                    type="range" 
-                                                    min="0" max="100" 
-                                                    value={currentProg} 
-                                                    onChange={(e) => setLocalProgress({ ...localProgress, [pId]: parseInt(e.target.value) })} 
-                                                    className="w-full accent-black h-1 bg-zinc-200 rounded-full appearance-none cursor-pointer mb-6" 
-                                                />
-                                                <div className="flex gap-3 items-center">
-                                                    <input 
-                                                        type="text" 
-                                                        placeholder="Update ledger/deployment log..." 
-                                                        value={inputs.log}
-                                                        onChange={(e) => setProjectInputs(prev => ({...prev, [pId]: {...prev[pId], log: e.target.value}}))}
-                                                        className="flex-1 bg-zinc-50 border border-zinc-200 px-4 py-4 rounded-xl text-xs font-bold outline-none focus:border-zinc-400 transition-colors placeholder:text-zinc-400"
-                                                    />
-                                                    <button 
-                                                        onClick={() => handleSyncProject(pId)} 
-                                                        disabled={loading} 
-                                                        className="bg-black text-white px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors shadow-sm active:scale-95 whitespace-nowrap"
-                                                    >
-                                                        {loading ? 'SYNCING...' : 'SYNC LOAD'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-8">
-                                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6 flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                                                Deployment Ledger
-                                            </h3>
-                                            <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-                                                {selectedProjectDetails.project_updates?.map((u: any, idx: number) => (
-                                                    <div key={u.id} className={`p-4 rounded-2xl border ${idx === 0 ? 'bg-zinc-50 border-zinc-200' : 'bg-white border-zinc-100 opacity-60'}`}>
-                                                        <p className="text-xs font-bold text-zinc-800 mb-2">{u.message}</p>
-                                                        <div className="flex justify-between items-center text-[9px] font-black font-mono uppercase tracking-widest text-zinc-400">
-                                                            <span>{formatDate(u.created_at)}</span>
-                                                            <span>LOAD: {u.progress_at_time}%</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {(!selectedProjectDetails.project_updates || selectedProjectDetails.project_updates.length === 0) && (
-                                                    <div className="text-center py-6 text-zinc-400 text-[10px] font-bold uppercase tracking-widest border border-dashed border-zinc-200 rounded-2xl">No log entries.</div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6 flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                                Discovery Requirements
-                                            </h3>
-                                            {loadingDetails ? (
-                                                 <div className="flex justify-center py-4"><span className="w-5 h-5 border-2 border-zinc-200 border-t-black rounded-full animate-spin" /></div>
-                                            ) : projectDiscoveryData ? (
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                                                    {projectDiscoveryData.details && Object.entries(projectDiscoveryData.details).map(([key, value]) => {
-                                                        if (key === 'Assets') return null;
-                                                        return (
-                                                            <div key={key} className="py-2 border-b border-zinc-100 last:border-0">
-                                                                <span className="block text-[8px] font-black uppercase text-zinc-400 tracking-widest mb-1">{key}</span>
-                                                                <span className="text-xs font-bold text-zinc-800 leading-snug">{String(value) || 'N/A'}</span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            ) : (
-                                                <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest p-6 text-center border border-zinc-200 border-dashed rounded-2xl">No discovery blueprint.</p>
-                                            )}
-                                        </div>
-
-                                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-6 flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                                Client Vault Assets
-                                            </h3>
-                                            <div className="grid gap-3">
-                                                {projectDiscoveryData?.details?.Assets && projectDiscoveryData.details.Assets.split(' | ').filter(Boolean).map((url: string, i: number) => (
-                                                    <div key={`disc-${i}`} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200 rounded-xl hover:border-black transition-colors group">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 bg-white border border-zinc-200 rounded-lg flex items-center justify-center">
-                                                                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-xs font-bold text-zinc-900">Discovery Asset {i + 1}</p>
-                                                            </div>
-                                                        </div>
-                                                        <a href={url} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase tracking-widest bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">DL</a>
-                                                    </div>
-                                                ))}
-
-                                                {projectFilesData.map((file) => (
-                                                    <div key={file.id} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200 rounded-xl hover:border-black transition-colors group">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 bg-white border border-zinc-200 rounded-lg flex items-center justify-center">
-                                                                <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-xs font-bold text-zinc-900 truncate max-w-[150px]">{file.file_name}</p>
-                                                            </div>
-                                                        </div>
-                                                        <a href={file.file_url} target="_blank" rel="noreferrer" className="text-[9px] font-black uppercase tracking-widest bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-black transition-colors">DL</a>
-                                                    </div>
-                                                ))}
-
-                                                {(!projectDiscoveryData?.details?.Assets && projectFilesData.length === 0) && (
-                                                    <p className="text-[10px] font-bold uppercase text-zinc-400 tracking-widest p-4 text-center border border-zinc-200 border-dashed rounded-2xl">No assets uploaded.</p>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-6">
-                                            <button
-                                                onClick={() => handleDeleteProject(pId)}
-                                                disabled={loadingDetails}
-                                                className="w-full flex items-center justify-center gap-2 px-5 py-4 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-colors"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                Permanently Delete Project
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            })()}
-
-            <div className="md:hidden fixed top-0 w-full bg-white border-b border-zinc-200 z-40 p-4 flex justify-between items-center text-black">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                        <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
-                    </div>
-                    <h2 className="text-xl font-black tracking-tighter uppercase">Novatrum</h2>
-                </div>
-                <div className="flex items-center gap-4">
-                    {(hasAnyUnread || newDiscoveryCount > 0) && (
-                        <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
-                    )}
-                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-zinc-100 hover:bg-zinc-200 transition-colors rounded-lg">
-                        <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
-                    </button>
-                </div>
+            {/* SAF BEYAZ & RASTER ARKA PLAN */}
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.25]">
+                <div className="absolute inset-0 bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_50%,transparent_100%)] bg-[linear-gradient(#d4d4d8_1px,transparent_1px),linear-gradient(90deg,#d4d4d8_1px,transparent_1px)]" />
             </div>
 
-            <aside className={`fixed inset-y-0 left-0 z-50 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 w-64 bg-white border-r border-zinc-200 p-6 flex flex-col h-full shadow-2xl`}>
-                <div className="mb-10 flex flex-col items-center text-center">
-                    <div className="w-16 h-16 mb-4 flex items-center justify-center bg-white border border-zinc-100 p-2 rounded-full shadow-sm">
-                        <img src="/logo.png" alt="Novatrum Logo" className="w-full h-full object-contain" />
-                    </div>
-                    <h2 className="text-2xl font-black tracking-tighter text-zinc-900">NOVATRUM</h2>
-                    <div className="h-0.5 w-8 bg-zinc-200 mx-auto mt-3 rounded-full" />
-                </div>
-                
-                <nav className="flex-1 space-y-1.5 overflow-y-auto no-scrollbar">
-                    {[
-                        { id: 'overview', label: 'Command Center', action: null },
-                        { id: 'ledger', label: 'Financial Ledger', action: () => router.push('/admin/ledger') },
-                        { id: 'discoveries', label: 'Discovery Logs', badgeText: newDiscoveryCount > 0 ? `${newDiscoveryCount} NEW` : null, action: () => router.push('/admin/discoveries') },
-                        { id: 'tickets', label: 'Support Queue', badgeText: hasAnyUnread ? 'NEW' : null, action: () => router.push('/admin/support') },
-                        { id: 'showroom', label: 'Showroom Controls', action: null },
-                        { id: 'status', label: 'Infrastructure', action: () => router.push('/admin/status') },
-                        { id: 'clients', label: 'Active Database', action: () => router.push('/admin/clients') },
-                        { id: 'archive', label: 'Entity Archive', action: () => router.push('/admin/archive') }
-                    ].map((item) => (
-                        <button
-                            key={item.id}
-                            onClick={() => {
-                                if (item.action) { item.action(); } 
-                                else { setActiveTab(item.id); setIsMobileMenuOpen(false); }
-                            }}
-                            className={`relative w-full flex items-center justify-between px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-200 ${activeTab === item.id && !item.action ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}
-                        >
-                            <span>{item.label}</span>
-                            {item.badgeText && (
-                                <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-[8px] font-bold tracking-widest shadow-sm">{item.badgeText}</span>
-                            )}
-                        </button>
-                    ))}
+            {/* MOBİL HEADER */}
+            <div className="md:hidden flex items-center justify-between bg-white border-b border-zinc-200 p-4 sticky top-0 z-50 shadow-sm">
+                <h1 className="text-xl font-light tracking-tight text-black">Novatrum Command</h1>
+                <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 bg-zinc-50 rounded-lg appearance-none">
+                    <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}></path></svg>
+                </button>
+            </div>
 
-                    <div className="pt-4 mt-4 border-t border-zinc-100 space-y-1.5">
-                        <button
-                            onClick={() => router.push('/admin/invoice-generator')}
-                            className="w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all text-zinc-500 hover:bg-zinc-50 hover:text-black"
-                        >
-                            Invoice Generator
-                        </button>
-                        
-                        <button
-                            onClick={() => { setActiveTab('add_client'); setIsMobileMenuOpen(false); }}
-                            className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeTab === 'add_client' ? 'bg-black text-white shadow-md' : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200 hover:border-black hover:text-black'}`}
-                        >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
-                            Register Entity
-                        </button>
-                        <button
-                            onClick={() => { setActiveTab('add_project'); setIsMobileMenuOpen(false); }}
-                            className={`w-full flex items-center gap-2 px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all ${activeTab === 'add_project' ? 'bg-black text-white shadow-md' : 'bg-zinc-50 text-zinc-600 hover:bg-zinc-100 border border-zinc-200 hover:border-black hover:text-black'}`}
-                        >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
-                            Deploy Project
-                        </button>
-                    </div>
+            {/* SIDEBAR (Tüm Linkler Gerçek Route'lara Bağlandı) */}
+            <aside className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block w-full md:w-72 bg-white border-r border-zinc-200 flex flex-col h-[calc(100vh-73px)] md:h-screen sticky top-[73px] md:top-0 z-40 shadow-sm shrink-0`}>
+                <div className="p-8 hidden md:block border-b border-zinc-100">
+                    <h1 className="text-2xl font-light tracking-tight text-black">Novatrum<br/><span className="font-medium text-zinc-400 text-lg">Command</span></h1>
+                </div>
+                <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+                    
+                    {/* OVERVIEW */}
+                    <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'overview' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Overview
+                    </button>
+
+                    {/* SYSTEM STATUS */}
+                    <button onClick={() => router.push('/admin/status')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                        System Status
+                    </button>
+
+                    <div className="pt-4 pb-2"><p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Database</p></div>
+
+                    {/* ACTIVE DATABASE */}
+                    <button onClick={() => router.push('/admin/clients')} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+                            Active Database
+                        </div>
+                        <span className="bg-black text-white text-[9px] px-2 py-0.5 rounded-full shadow-sm">{clients.length}</span>
+                    </button>
+
+                    {/* INTELLIGENCE / DISCOVERIES */}
+                    <button onClick={() => router.push('/admin/discoveries')} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                            Intelligence
+                        </div>
+                        {discoveryCount > 0 && <span className="bg-emerald-500 text-white text-[9px] px-2 py-0.5 rounded-full shadow-sm">{discoveryCount}</span>}
+                    </button>
+
+                    {/* REGISTER ENTITY */}
+                    <button onClick={() => { setActiveTab('create_client'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'create_client' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
+                        Register Entity
+                    </button>
+
+                    {/* ARCHIVED ENTITIES */}
+                    <button onClick={() => router.push('/admin/archive')} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                            Archived Entities
+                        </div>
+                    </button>
+
+                    <div className="pt-4 pb-2"><p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Deployments</p></div>
+
+                    {/* ACTIVE QUEUE */}
+                    <button onClick={() => { setActiveTab('active_queue'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'active_queue' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
+                        <div className="flex items-center gap-3">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            Active Queue
+                        </div>
+                        <span className="bg-black text-white text-[9px] px-2 py-0.5 rounded-full shadow-sm">{projects.length}</span>
+                    </button>
+
+                    {/* DEPLOY PROJECT */}
+                    <button onClick={() => { setActiveTab('create_project'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'create_project' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        Deploy Project
+                    </button>
+
+                    {/* COMPLETED BUILDS */}
+                    <button onClick={() => { setActiveTab('completed_projects'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'completed_projects' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
+                        <div className="flex items-center gap-3">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Completed Builds
+                        </div>
+                        <span className="bg-zinc-200 text-zinc-600 text-[9px] px-2 py-0.5 rounded-full">{completedProjects.length}</span>
+                    </button>
+
+                    <div className="pt-4 pb-2"><p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Financial</p></div>
+
+                    {/* REVENUE LEDGER */}
+                    <button onClick={() => router.push('/admin/ledger')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z"></path></svg>
+                        Revenue Ledger
+                    </button>
+
+                    {/* INVOICE GENERATOR */}
+                    <button onClick={() => router.push('/admin/invoice-generator')} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Invoice Generator
+                    </button>
+
+                    <div className="pt-4 pb-2"><p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Internal</p></div>
+
+                    {/* SUPPORT DESK */}
+                    <button onClick={() => router.push('/admin/support')} className="w-full flex items-center justify-between px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 hover:text-black transition-all appearance-none">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            Support Desk
+                        </div>
+                        {supportTicketsCount > 0 && <span className="bg-emerald-500 text-white text-[9px] px-2 py-0.5 rounded-full shadow-sm">{supportTicketsCount}</span>}
+                    </button>
+
+                    {/* ADMIN SETTINGS */}
+                    <button onClick={() => setIsSettingsModalOpen(true)} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none text-zinc-500 hover:bg-zinc-50 hover:text-black">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        Admin Settings
+                    </button>
+                    
                 </nav>
-                
-                <div className="mt-auto flex flex-col pt-6 border-t border-zinc-100">
-                    <button 
-                        onClick={handleLogout} 
-                        disabled={loading}
-                        className="w-full py-3 px-4 rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest bg-red-50 text-red-600 hover:bg-red-100 active:scale-95 transition-all shadow-sm"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                        {loading ? 'Terminating...' : 'Terminate Session'}
+                <div className="p-4 border-t border-zinc-200 bg-zinc-50 mt-auto">
+                    <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm appearance-none">
+                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7"></path></svg>
+                        Disconnect
                     </button>
                 </div>
             </aside>
 
-            <main className="flex-1 h-full overflow-y-auto md:pl-64 p-6 lg:p-10 relative z-0 mt-16 md:mt-0 bg-[#f8f9fa]">
-
-                {activeTab === 'showroom' && (
-                    <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-6 border-b border-zinc-200">
-                            <div className="flex items-center gap-4">
-                                <h1 className="text-[40px] md:text-[50px] font-black tracking-tighter uppercase text-zinc-900 leading-none">Showroom Controls</h1>
-                            </div>
-                        </div>
-
-                        <div className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-6">Global Network Status</h2>
-                            <select 
-                                value={demoSettings.globalNetwork}
-                                onChange={(e) => setDemoSettings(prev => ({...prev, globalNetwork: e.target.value}))}
-                                className="w-full md:w-1/3 bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold uppercase cursor-pointer focus:border-zinc-400 focus:bg-white transition-colors mb-6"
-                            >
-                                <option value="Active">Network Active</option>
-                                <option value="Maintenance">Maintenance Mode</option>
-                                <option value="Degraded">Degraded Performance</option>
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {[
-                                { key: 'creative', title: 'Aura Creative' },
-                                { key: 'fintech', title: 'Aegis Finance' },
-                                { key: 'logistics', title: 'Node Logistics' },
-                                { key: 'quantum', title: 'Quantum Engine' }
-                            ].map((demo) => (
-                                <div key={demo.key} className="bg-white border border-zinc-200 rounded-[32px] p-8 shadow-sm">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-2xl font-black uppercase tracking-tighter text-zinc-900">{demo.title}</h3>
-                                        <div className={`w-3 h-3 rounded-full ${demoSettings[demo.key as keyof typeof demoSettings] === 'Online' ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
-                                    </div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Module Status</label>
-                                    <select 
-                                        value={demoSettings[demo.key as keyof typeof demoSettings]}
-                                        onChange={(e) => setDemoSettings(prev => ({...prev, [demo.key]: e.target.value}))}
-                                        className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold uppercase cursor-pointer focus:border-zinc-400 focus:bg-white transition-colors"
-                                    >
-                                        <option value="Online">Online / Ready</option>
-                                        <option value="Offline">Offline</option>
-                                        <option value="Maintenance">Under Maintenance</option>
-                                    </select>
-                                </div>
-                            ))}
-                        </div>
-
-                        <button 
-                            onClick={handleUpdateShowroomSettings}
-                            disabled={loading}
-                            className="w-full md:w-auto bg-black text-white px-10 py-5 rounded-xl font-black text-[10px] uppercase tracking-[0.25em] hover:bg-zinc-800 disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all"
-                        >
-                            {loading ? 'Synchronizing...' : 'Sync Showroom Changes'}
-                        </button>
-                    </div>
-                )}
-
+            {/* MAIN CONTENT YÖNETİMİ (Sekmelere Göre İçerik Değişir) */}
+            <main className="flex-1 p-6 md:p-10 lg:p-14 overflow-y-auto w-full relative z-10 custom-scrollbar">
+                
+                {/* 1. OVERVIEW TAB */}
                 {activeTab === 'overview' && (
-                    <div className="w-full max-w-7xl mx-auto animate-in fade-in duration-500 space-y-10 pb-20">
+                    <div className="space-y-12 max-w-7xl mx-auto animate-in fade-in duration-500">
                         
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 pb-6 border-b border-zinc-200">
-                            <div className="flex items-center gap-4">
-                                <h1 className="text-[40px] md:text-[50px] font-black tracking-tighter uppercase text-zinc-900 leading-none">Workspace</h1>
-                                <button onClick={fetchData} className="p-2.5 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm">
-                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                </button>
+                        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-8">
+                            <div>
+                                <h2 className="text-4xl md:text-5xl font-light tracking-tight text-black">{greeting}</h2>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">System metrics are nominal. Ready for commands.</p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <button onClick={() => router.push('/admin/ledger')} className="hidden sm:flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-zinc-800 transition-colors shadow-sm active:scale-95">
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Revenue Ledger
-                                </button>
-                                <div className="flex items-center gap-2 bg-white px-4 py-2 border border-zinc-200 rounded-full shadow-sm">
-                                    <div className={`w-2 h-2 rounded-full ${isSystemDown ? 'bg-red-500 animate-pulse' : 'bg-emerald-500'}`} />
-                                    <span className={`text-[9px] font-black uppercase tracking-widest ${isSystemDown ? 'text-red-500' : 'text-zinc-500'}`}>
-                                        {isSystemDown ? 'SYSTEM OUTAGE' : 'Node Operational'}
-                                    </span>
-                                </div>
+                                <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 shadow-sm">
+                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Core Online</span>
+                                </span>
                             </div>
-                        </div>
+                        </header>
 
-                        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+                        {/* NUMBERS GRID */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                             {[
-                                { l: "Total Registered Clients", v: clients.length, highlight: false },
-                                { l: "Active Deployments", v: projects.filter(p => p.status === 'Development' || p.status === 'Testing').length, highlight: false },
-                                { l: "Support Actions Needed", v: supportTicketsCount + newDiscoveryCount, highlight: (supportTicketsCount + newDiscoveryCount) > 0 },
-                                { l: "Pending Invoices", v: clientInvoices.filter(i => i.status === 'unpaid').length, highlight: false }
+                                { label: 'Active Entities', value: clients.length, icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+                                { label: 'Deployments', value: projects.length, icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
+                                { label: 'Open Tickets', value: supportTicketsCount, icon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z' },
+                                { label: 'Unpaid Invoices', value: clientInvoices.length, icon: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z' }
                             ].map((stat, i) => (
-                                <div key={i} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-colors ${stat.highlight ? 'bg-zinc-900 border-zinc-900 text-white' : 'bg-white border-zinc-200 text-black'}`}>
-                                    <p className={`text-[9px] font-black uppercase tracking-[0.2em] mb-3 leading-tight ${stat.highlight ? 'text-zinc-400' : 'text-zinc-400'}`}>{stat.l}</p>
-                                    <p className="text-5xl md:text-6xl font-black font-mono tracking-tighter">{stat.v}</p>
+                                <div key={i} className="bg-white p-6 rounded-[32px] border border-zinc-200 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="w-8 h-8 rounded-full bg-zinc-50 border border-zinc-100 flex items-center justify-center mb-6">
+                                        <svg className="w-4 h-4 text-black shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}></path></svg>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1">{stat.label}</p>
+                                        <p className="text-3xl md:text-4xl font-light tracking-tight">{stat.value}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
 
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                             
-                            <div className="xl:col-span-2 space-y-10">
-                                
+                            {/* SOL SÜTUN - OVERVIEW PROJECTS */}
+                            <div className="xl:col-span-2 space-y-8">
                                 <div>
-                                    <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-6 flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                                        Active Engineering Sessions
-                                    </h2>
-                                    {activeProjects.length === 0 ? (
-                                        <div className="bg-white border border-zinc-200 border-dashed rounded-[32px] p-10 flex flex-col items-center justify-center min-h-[150px] shadow-sm">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">No active sessions.</p>
-                                            <p className="text-[9px] font-bold text-zinc-400 mt-2">Click a project in the Queue to start a session.</p>
+                                    <h2 className="text-xl md:text-2xl font-light tracking-tight mb-6">Active Overview</h2>
+                                    {projects.length === 0 && clients.length === 0 ? (
+                                        <div className="py-12 text-center border border-dashed border-zinc-200 rounded-[32px] bg-white">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Database is empty.</p>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {activeProjects.map((p: any) => {
-                                                const timer = timers[p.id];
-                                                const currentProg = localProgress[p.id] ?? p.progress_percent;
+                                            {projects.slice(0,4).map((p) => {
+                                                const isRevoked = p.clients?.access_code?.startsWith('REVOKED');
                                                 return (
-                                                    <div key={p.id} onClick={() => handleOpenProjectDetails(p)} className="bg-white p-8 rounded-[32px] border-2 border-zinc-900 shadow-md flex flex-col w-full hover:bg-zinc-50 transition-colors cursor-pointer group">
-                                                        <div className="flex justify-between items-start mb-6">
-                                                            <div className="pr-4">
-                                                                <p className="font-black text-2xl uppercase tracking-tighter text-zinc-900 group-hover:underline decoration-2 underline-offset-4">{p.name}</p>
-                                                                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-1 truncate">{p.clients?.full_name}</p>
+                                                    <div key={p.id} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-all relative group flex flex-col ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-zinc-200'}`}>
+                                                        
+                                                        {/* YENİ: Edit Modal İkonu Eklendi */}
+                                                        <button 
+                                                            onClick={() => openProjectUpdatesModal(p)} 
+                                                            className="absolute top-6 right-6 p-2.5 rounded-xl opacity-0 group-hover:opacity-100 transition-all z-10 appearance-none shadow-sm bg-zinc-50 text-zinc-400 hover:bg-zinc-200 hover:text-black" 
+                                                            title="Manage Timeline"
+                                                        >
+                                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                        </button>
+
+                                                        <div className="flex flex-col mb-6">
+                                                            <div className="flex items-center gap-2 mb-3">
+                                                                {isRevoked ? (
+                                                                    <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-red-100 text-red-600 border border-red-200 animate-pulse shadow-sm">Termination Requested</span>
+                                                                ) : (
+                                                                    <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-zinc-100 text-zinc-600 border border-zinc-200">{p.status}</span>
+                                                                )}
                                                             </div>
-                                                            <span className="bg-zinc-100 border border-zinc-200 text-zinc-700 px-3 py-1 rounded-lg text-[8px] font-black uppercase">{p.status}</span>
+                                                            <h3 className="text-xl font-light tracking-tight text-zinc-900 mb-1 truncate pr-8" title={p.name}>{p.name}</h3>
+                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 truncate">{p.clients?.full_name}</p>
                                                         </div>
-                                                        <div className="mb-6">
-                                                            <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1 block">Session Time</span>
-                                                            <span className="text-3xl font-black font-mono text-emerald-600">{formatTime(timer?.displayTime || 0)}</span>
-                                                        </div>
-                                                        <div className="mt-auto pt-4 border-t border-zinc-100">
-                                                            <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">
-                                                                <span>Load</span><span>{currentProg}%</span>
+                                                        <div className="mt-auto">
+                                                            <div className="flex justify-between items-end mb-2">
+                                                                <span className={`text-[9px] font-bold uppercase tracking-widest ${isRevoked ? 'text-red-500' : 'text-zinc-500'}`}>Load</span>
+                                                                <span className={`text-lg font-light font-mono ${isRevoked ? 'text-red-600' : 'text-black'}`}>{p.progress_percent}%</span>
                                                             </div>
-                                                            <div className="w-full h-1 bg-zinc-100 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-black transition-all duration-300" style={{ width: `${currentProg}%` }} />
+                                                            <div className={`w-full h-1 rounded-full overflow-hidden ${isRevoked ? 'bg-red-200/50' : 'bg-zinc-100'}`}>
+                                                                <motion.div initial={{ width: 0 }} animate={{ width: `${p.progress_percent}%` }} className={`h-full ${isRevoked ? 'bg-red-500' : 'bg-black'}`} transition={{ duration: 1 }} />
                                                             </div>
                                                         </div>
                                                     </div>
@@ -938,160 +704,396 @@ export default function AdminDashboardPage() {
                                             })}
                                         </div>
                                     )}
+                                    <button onClick={() => setActiveTab('active_queue')} className="mt-6 text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-black transition-colors flex items-center gap-2">
+                                        View all deployments <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4-4m4-4H3"></path></svg>
+                                    </button>
                                 </div>
-
-                                {idleProjects.length > 0 && (
-                                    <div>
-                                        <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-zinc-500 mb-6">Queue Status (Idle)</h2>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {idleProjects.map((p: any) => {
-                                                const timer = timers[p.id];
-                                                const currentProg = localProgress[p.id] ?? p.progress_percent;
-                                                return (
-                                                    <div key={p.id} onClick={() => handleOpenProjectDetails(p)} className="bg-white p-8 rounded-[32px] border border-zinc-200 shadow-sm flex flex-col w-full hover:border-black cursor-pointer transition-colors group">
-                                                        <div className="flex justify-between items-start mb-6">
-                                                            <div className="pr-4">
-                                                                <p className="font-black text-2xl uppercase tracking-tighter text-zinc-900 group-hover:underline decoration-2 underline-offset-4">{p.name}</p>
-                                                                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-1 truncate">{p.clients?.full_name}</p>
-                                                            </div>
-                                                            <span className="bg-zinc-100 border border-zinc-200 text-zinc-700 px-3 py-1.5 rounded-lg text-[8px] font-black uppercase">{p.status}</span>
-                                                        </div>
-                                                        <div className="mb-6 opacity-60">
-                                                            <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1 block">Total Time</span>
-                                                            <span className="text-3xl font-black font-mono text-zinc-900">{formatTime(timer?.displayTime || 0)}</span>
-                                                        </div>
-                                                        <div className="mt-auto pt-4 border-t border-zinc-100 opacity-60">
-                                                            <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-zinc-500 mb-2">
-                                                                <span>Load</span><span>{currentProg}%</span>
-                                                            </div>
-                                                            <div className="w-full h-1 bg-zinc-100 rounded-full overflow-hidden">
-                                                                <div className="h-full bg-black transition-all duration-300" style={{ width: `${currentProg}%` }} />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
-                            <div className="xl:col-span-1">
-                                <div className="flex flex-col bg-white border border-zinc-200 rounded-[32px] p-6 md:p-8 shadow-sm h-full max-h-[600px] sticky top-8">
-                                    <p className="text-[10px] font-black uppercase text-zinc-500 tracking-widest mb-6 flex items-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                        Internal Memos
-                                    </p>
-                                    <form onSubmit={addQuickNote} className="mb-6 flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            value={newQuickNote} 
-                                            onChange={(e) => setNewQuickNote(e.target.value)} 
-                                            placeholder="Draft note..." 
-                                            className="flex-1 bg-zinc-50 border border-zinc-200 px-4 py-3.5 rounded-xl text-xs font-bold outline-none focus:border-zinc-400 placeholder:text-zinc-400 transition-colors" 
-                                        />
-                                        <button type="submit" disabled={!newQuickNote.trim()} className="bg-zinc-900 text-white w-12 h-12 flex items-center justify-center rounded-xl hover:bg-black disabled:opacity-50 transition-colors shadow-sm shrink-0">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                                        </button>
-                                    </form>
-                                    <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
-                                        {quickNotes.map(note => (
-                                            <div key={note.id} className="bg-zinc-50 p-4 rounded-xl border border-zinc-100 flex justify-between items-start group transition-colors hover:border-zinc-200">
-                                                <div>
-                                                    <p className="text-xs font-bold text-zinc-700 leading-relaxed">{note.note}</p>
-                                                    <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest mt-2 block">{new Date(note.created_at).toLocaleString()}</span>
-                                                </div>
-                                                <button onClick={() => deleteQuickNote(note.id)} className="text-zinc-300 hover:text-red-500 transition-colors p-1.5 bg-white hover:bg-red-50 border border-zinc-100 rounded-lg ml-3 shadow-sm">
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                </button>
+                            {/* SAĞ SÜTUN - SYSTEM & NOTES */}
+                            <div className="xl:col-span-1 space-y-8">
+                                {/* SYSTEM STATUS */}
+                                <div>
+                                    <h2 className="text-xl md:text-2xl font-light tracking-tight mb-6">System Core</h2>
+                                    <div className="bg-white p-6 md:p-8 rounded-[32px] border border-zinc-200 shadow-sm space-y-4">
+                                        {systemStatuses.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">No nodes running.</p>}
+                                        {systemStatuses.map(sys => (
+                                            <div key={sys.id} className="flex items-center justify-between p-4 bg-zinc-50 border border-zinc-100 rounded-2xl group">
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-700">{sys.label}</span>
+                                                <select 
+                                                    value={sys.status} 
+                                                    onChange={(e) => updateSystemStatus(sys.id, e.target.value)}
+                                                    className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg outline-none cursor-pointer border appearance-none transition-colors ${
+                                                        sys.status === 'operational' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                        sys.status === 'degraded' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                                        'bg-red-50 text-red-600 border-red-200'
+                                                    }`}
+                                                >
+                                                    <option value="operational">Operational</option>
+                                                    <option value="degraded">Degraded</option>
+                                                    <option value="down">Outage</option>
+                                                </select>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* QUICK NOTES */}
+                                <div>
+                                    <h2 className="text-xl md:text-2xl font-light tracking-tight mb-6">Memo Pad</h2>
+                                    <div className="bg-white p-6 md:p-8 rounded-[32px] border border-zinc-200 shadow-sm">
+                                        <form onSubmit={addQuickNote} className="mb-6 flex gap-2">
+                                            <input type="text" value={newQuickNote} onChange={e => setNewQuickNote(e.target.value)} placeholder="Write a quick note..." className="flex-1 bg-zinc-50 border border-zinc-200 px-4 py-3 rounded-xl text-xs font-medium outline-none focus:border-black focus:ring-1 focus:ring-black appearance-none" />
+                                            <button type="submit" className="bg-black text-white px-4 py-3 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-colors shadow-sm appearance-none shrink-0">Add</button>
+                                        </form>
+                                        <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                                            {quickNotes.length === 0 && <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center py-4">No memos yet.</p>}
+                                            {quickNotes.map(note => (
+                                                <div key={note.id} className="group flex justify-between items-start p-4 bg-zinc-50 border border-zinc-100 rounded-2xl">
+                                                    <p className="text-sm font-medium text-zinc-800 pr-4 leading-relaxed">{note.content}</p>
+                                                    <button onClick={() => deleteQuickNote(note.id)} className="text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 shrink-0 appearance-none">
+                                                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {activeTab === 'add_client' && (
-                    <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
-                        <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
-                            <button onClick={() => setActiveTab('overview')} className="p-2 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm">
-                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
-                            </button>
-                            <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Authorize Entity</h1>
-                        </div>
+                {/* 2. ACTIVE QUEUE (PROJECTS) TAB */}
+                {activeTab === 'active_queue' && (
+                    <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
+                        <header className="mb-10">
+                            <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-2">Active Queue</h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Manage all ongoing infrastructure deployments.</p>
+                        </header>
                         
-                        <div className="bg-blue-50 border border-blue-200 p-6 rounded-[24px] mb-6">
-                            <p className="text-xs font-bold text-blue-800 leading-relaxed">
-                                <strong>Note:</strong> We recommend using the "Discovery Logs" page to automatically onboard clients via email. Use this form only if you need to manually register a client and share their Deployment Key yourself.
-                            </p>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            {projects.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10 w-full col-span-full">No active deployments.</p>}
+                            {projects.map((p) => {
+                                const isRevoked = p.clients?.access_code?.startsWith('REVOKED');
+                                return (
+                                    <div key={p.id} className={`p-6 md:p-8 rounded-[32px] border shadow-sm transition-all relative group flex flex-col ${isRevoked ? 'bg-red-50/50 border-red-200' : 'bg-white border-zinc-200'}`}>
+                                        
+                                        <div className="absolute top-6 right-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all z-10">
+                                            <button onClick={() => openProjectUpdatesModal(p)} className={`p-2.5 rounded-xl appearance-none shadow-sm ${isRevoked ? 'bg-red-100 text-red-500 hover:bg-red-200 hover:text-red-700' : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-200 hover:text-black'}`} title="Manage Timeline">
+                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            </button>
+                                            <button onClick={() => deleteProject(p.id)} className={`p-2.5 rounded-xl appearance-none shadow-sm ${isRevoked ? 'bg-red-100 text-red-500 hover:bg-red-200 hover:text-red-700' : 'bg-zinc-50 text-zinc-400 hover:bg-red-50 hover:text-red-500'}`} title="Delete Project">
+                                                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+
+                                        <div className="flex flex-col mb-8 pr-20">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                {isRevoked ? (
+                                                    <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-red-100 text-red-600 border border-red-200 animate-pulse shadow-sm">Termination Requested</span>
+                                                ) : (
+                                                    <span className="px-2.5 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest bg-zinc-100 text-zinc-600 border border-zinc-200">{p.status}</span>
+                                                )}
+                                                <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">ID: {p.id.split('-')[0].toUpperCase()}</span>
+                                            </div>
+                                            <h3 className="text-2xl md:text-3xl font-light tracking-tight text-zinc-900 mb-1 truncate" title={p.name}>{p.name}</h3>
+                                            <p className="text-xs font-medium text-zinc-500 truncate" title={p.clients?.full_name}>{p.clients?.full_name}</p>
+                                        </div>
+
+                                        <div className="mb-8">
+                                            <div className="flex justify-between items-end mb-3">
+                                                <span className={`text-[10px] font-bold uppercase tracking-widest ${isRevoked ? 'text-red-500' : 'text-zinc-500'}`}>Architecture Load</span>
+                                                <span className={`text-2xl font-light font-mono ${isRevoked ? 'text-red-600' : 'text-black'}`}>{p.progress_percent}%</span>
+                                            </div>
+                                            <div className={`w-full h-1.5 rounded-full overflow-hidden ${isRevoked ? 'bg-red-200/50' : 'bg-zinc-100'}`}>
+                                                <motion.div initial={{ width: 0 }} animate={{ width: `${p.progress_percent}%` }} className={`h-full ${isRevoked ? 'bg-red-500' : 'bg-black'}`} transition={{ duration: 1 }} />
+                                            </div>
+                                        </div>
+
+                                        <form onSubmit={(e) => { e.preventDefault(); updateProjectProgress(p.id, parseInt((e.target as any).progress.value), (e.target as any).status.value, (e.target as any).message.value); }} className={`mt-auto pt-6 border-t ${isRevoked ? 'border-red-100' : 'border-zinc-100'}`}>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                                <div className="md:col-span-2">
+                                                    <input type="text" name="message" required placeholder="Log entry / Update message..." className={`w-full p-3.5 rounded-xl text-xs font-medium outline-none focus:ring-1 appearance-none ${isRevoked ? 'bg-red-50/50 border border-red-200 focus:border-red-400 focus:ring-red-400 placeholder-red-300 text-red-900' : 'bg-zinc-50 border border-zinc-200 focus:border-black focus:ring-black placeholder-zinc-400 text-black'}`} />
+                                                </div>
+                                                <div>
+                                                    <select name="status" defaultValue={p.status} className={`w-full p-3.5 rounded-xl text-xs font-medium outline-none focus:ring-1 appearance-none cursor-pointer ${isRevoked ? 'bg-red-50/50 border border-red-200 focus:border-red-400 focus:ring-red-400 text-red-900' : 'bg-zinc-50 border border-zinc-200 focus:border-black focus:ring-black text-black'}`}>
+                                                        <option value="planning">Planning</option>
+                                                        <option value="building">Building</option>
+                                                        <option value="review">Review</option>
+                                                        <option value="deployed">Deployed</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 flex items-center gap-3">
+                                                    <span className={`text-[9px] font-bold uppercase tracking-widest ${isRevoked ? 'text-red-400' : 'text-zinc-400'}`}>Load</span>
+                                                    <input type="range" name="progress" min="0" max="100" defaultValue={p.progress_percent} className={`flex-1 h-1.5 appearance-none cursor-pointer rounded-full ${isRevoked ? 'bg-red-200 accent-red-600' : 'bg-zinc-200 accent-black'}`} />
+                                                </div>
+                                                <button type="submit" disabled={loading} className={`px-5 py-3 rounded-xl text-[9px] font-bold uppercase tracking-widest active:scale-95 transition-all shadow-sm appearance-none shrink-0 ${isRevoked ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-black text-white hover:bg-zinc-800'}`}>
+                                                    Push Update
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                );
+                            })}
                         </div>
+                    </div>
+                )}
+
+                {/* 3. COMPLETED BUILDS TAB */}
+                {activeTab === 'completed_projects' && (
+                    <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
+                        <header className="mb-10">
+                            <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-2">Completed Builds</h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Fully deployed and operational environments.</p>
+                        </header>
                         
-                        <form onSubmit={handleCreateClient} className="bg-white p-8 md:p-10 rounded-[32px] border border-zinc-200 shadow-sm space-y-6">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {completedProjects.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10 w-full col-span-full">No completed deployments.</p>}
+                            {completedProjects.map((p) => {
+                                return (
+                                    <div key={p.id} className="p-6 md:p-8 rounded-[32px] border shadow-sm bg-zinc-50 border-zinc-200 flex flex-col relative group">
+                                        <button onClick={() => deleteProject(p.id)} className="absolute top-4 right-4 p-2 rounded-xl appearance-none shadow-sm opacity-0 group-hover:opacity-100 bg-white text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-all" title="Delete Project">
+                                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        </button>
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Operational</p>
+                                        </div>
+                                        <h3 className="text-xl md:text-2xl font-light tracking-tight text-zinc-900 mb-1 truncate">{p.name}</h3>
+                                        <p className="text-xs font-medium text-zinc-500 truncate">{p.clients?.full_name}</p>
+                                        <div className="mt-6 pt-4 border-t border-zinc-200 flex justify-between items-center">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Load: 100%</span>
+                                            <button onClick={() => openProjectUpdatesModal(p)} className="text-[9px] font-bold uppercase tracking-widest text-black hover:underline appearance-none">View Logs</button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* 4. CREATE CLIENT TAB */}
+                {activeTab === 'create_client' && (
+                    <div className="max-w-2xl mx-auto animate-in fade-in duration-500">
+                        <header className="mb-10">
+                            <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-2">New Entity</h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Register a new client into the secure database.</p>
+                        </header>
+                        <form onSubmit={handleCreateClient} className="bg-white p-8 md:p-12 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Legal Identity *</label>
-                                    <input type="text" required className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={clientForm.fullName} onChange={(e) => setClientForm({ ...clientForm, fullName: e.target.value })} />
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Full Name</label>
+                                    <input type="text" required value={clientForm.fullName} onChange={(e) => setClientForm({ ...clientForm, fullName: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                                 <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Primary Email *</label>
-                                    <input type="email" required className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={clientForm.email} onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })} />
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Email Address</label>
+                                    <input type="email" required value={clientForm.email} onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Company</label>
+                                    <input type="text" value={clientForm.companyName} onChange={(e) => setClientForm({ ...clientForm, companyName: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Phone</label>
+                                    <input type="text" value={clientForm.phone} onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Company / Incorporation</label>
-                                    <input type="text" className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={clientForm.companyName} onChange={(e) => setClientForm({ ...clientForm, companyName: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Phone</label>
-                                    <input type="tel" className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={clientForm.phone} onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Billing Address</label>
-                                    <input type="text" className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={clientForm.address} onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })} />
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Billing Address</label>
+                                    <textarea value={clientForm.address} onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all h-24 resize-none appearance-none" />
                                 </div>
                             </div>
-                            <button type="submit" disabled={loading} className="w-full bg-zinc-900 text-white py-5 rounded-xl font-black text-[10px] uppercase tracking-[0.25em] hover:bg-black disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all">Initiate Authorization</button>
+                            <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all appearance-none flex items-center justify-center gap-3">
+                                {loading ? <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : 'Register Entity'}
+                            </button>
                         </form>
                     </div>
                 )}
 
-                {activeTab === 'add_project' && (
-                    <div className="max-w-3xl mx-auto animate-in fade-in duration-500 pb-20">
-                        <div className="flex items-center gap-4 pb-6 border-b border-zinc-200 mb-8">
-                            <button onClick={() => setActiveTab('overview')} className="p-2 bg-white border border-zinc-200 hover:bg-zinc-100 rounded-lg transition-all active:scale-95 text-zinc-500 hover:text-zinc-900 shadow-sm">
-                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
+                {/* 5. CREATE PROJECT TAB */}
+                {activeTab === 'create_project' && (
+                    <div className="max-w-xl mx-auto animate-in fade-in duration-500">
+                        <header className="mb-10">
+                            <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-2">Deploy Project</h2>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Initialize a new infrastructure environment for a client.</p>
+                        </header>
+                        <form onSubmit={handleCreateProject} className="bg-white p-8 md:p-12 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
+                            <div>
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Select Owner Entity</label>
+                                <select required value={projectForm.clientId} onChange={(e) => setProjectForm({ ...projectForm, clientId: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer">
+                                    <option value="" disabled>Select a client...</option>
+                                    {clients.map(c => <option key={c.id} value={c.id}>{c.full_name} ({c.email})</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Project Name</label>
+                                <input type="text" required placeholder="e.g. E-Commerce Backend" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                            </div>
+                            <div className="space-y-4 pt-4 border-t border-zinc-100">
+                                <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                                    <span>Initial Load Architecture</span>
+                                    <span className="text-black text-xs font-mono">{projectForm.progress}%</span>
+                                </div>
+                                <input type="range" min="0" max="100" value={projectForm.progress} onChange={(e) => setProjectForm({ ...projectForm, progress: parseInt(e.target.value) })} className="w-full accent-black h-1.5 bg-zinc-200 appearance-none cursor-pointer rounded-full" />
+                            </div>
+                            <button type="submit" disabled={loading} className="w-full bg-black text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all appearance-none flex items-center justify-center gap-3">
+                                {loading ? <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : 'Initiate Deployment'}
                             </button>
-                            <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Push Deployment</h1>
-                        </div>
-                        
-                        <form onSubmit={handleDeployProject} className="bg-white p-8 md:p-10 rounded-[32px] border border-zinc-200 shadow-sm space-y-6">
-                            <div>
-                                <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Select Entity *</label>
-                                <select required className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold uppercase cursor-pointer focus:border-zinc-400 focus:bg-white transition-colors" value={projectForm.clientId} onChange={(e) => setProjectForm({ ...projectForm, clientId: e.target.value })}>
-                                    <option value="">Choose Binding...</option>
-                                    {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
-                                 </select>
-                            </div>
-                            <div>
-                                 <label className="text-[9px] font-bold uppercase text-zinc-500 tracking-widest block mb-2">Architecture Nomenclature *</label>
-                                 <input type="text" required className="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-xl outline-none text-xs font-bold focus:border-zinc-400 focus:bg-white transition-colors" value={projectForm.name} onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })} />
-                            </div>
-                            <div className="space-y-3 pt-2">
-                                <div className="flex justify-between font-black uppercase text-[9px] text-zinc-500 tracking-widest"><span>Initial Load</span><span>%{projectForm.progress}</span></div>
-                                <input type="range" min="0" max="100" value={projectForm.progress} onChange={(e) => setProjectForm({ ...projectForm, progress: parseInt(e.target.value) })} className="w-full accent-zinc-900 h-1.5 bg-zinc-200 appearance-none cursor-pointer rounded-full" />
-                            </div>
-                            <button type="submit" disabled={loading} className="w-full bg-zinc-900 text-white py-5 rounded-xl font-black text-[10px] uppercase tracking-[0.25em] hover:bg-black disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all">Initiate Deployment</button>
                         </form>
                     </div>
                 )}
             </main>
-            
-            <style dangerouslySetInnerHTML={{ __html: `
-                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e4e4e7; border-radius: 20px; }
-            `}} />
+
+            {/* ========================================================================= */}
+            {/* ============================== MODALS ================================= */}
+            {/* ========================================================================= */}
+
+            {/* PROJECT TIMELINE MODAL */}
+            <AnimatePresence>
+                {selectedProjectUpdates && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
+                        <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-white border border-zinc-200 shadow-2xl rounded-[40px] w-full max-w-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                            
+                            <div className="px-8 py-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                                <div>
+                                    <h2 className="text-2xl font-light tracking-tight text-zinc-900 truncate max-w-sm">{selectedProjectUpdates.name}</h2>
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mt-1">Timeline Management</p>
+                                </div>
+                                <button onClick={() => setSelectedProjectUpdates(null)} className="p-2 text-zinc-400 hover:text-black transition-colors rounded-full hover:bg-zinc-100 appearance-none">
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+
+                            {/* PROJECT COMPLETION BUTTON (Yeni) */}
+                            {selectedProjectUpdates.progress_percent < 100 && (
+                                <div className="px-8 py-5 border-b border-zinc-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Ready for Production?</p>
+                                    <button 
+                                        onClick={() => markProjectAsCompleted(selectedProjectUpdates)}
+                                        className="px-6 py-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all shadow-sm flex items-center justify-center gap-2 active:scale-95"
+                                    >
+                                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                        Complete Deployment (100%)
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="p-8 overflow-y-auto custom-scrollbar flex-1 bg-zinc-50/30">
+                                <form onSubmit={handleAddUpdate} className="bg-white p-6 rounded-3xl border border-zinc-200 mb-8 shadow-sm">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-4">Push New Update</h3>
+                                    <textarea required value={newUpdateMessage} onChange={e => setNewUpdateMessage(e.target.value)} placeholder="Describe the deployment milestone..." className="w-full bg-zinc-50 border border-zinc-200 px-4 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all h-24 resize-none mb-4 appearance-none" />
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex-1 flex items-center gap-3">
+                                            <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Load</span>
+                                            <input type="range" min="0" max="100" value={newUpdateProgress} onChange={e => setNewUpdateProgress(parseInt(e.target.value))} className="flex-1 h-1.5 bg-zinc-200 accent-black rounded-full appearance-none cursor-pointer" />
+                                            <span className="text-xs font-mono font-bold w-8 text-right">{newUpdateProgress}%</span>
+                                        </div>
+                                        <button type="submit" disabled={savingUpdate} className="px-6 py-3 bg-black text-white rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 transition-colors shadow-sm appearance-none">{savingUpdate ? 'Pushing...' : 'Push Log'}</button>
+                                    </div>
+                                </form>
+                                <div className="space-y-4">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mb-4 ml-1">Update History</h3>
+                                    {selectedProjectUpdates.updatesList?.map((u: any) => (
+                                        <div key={u.id} className="p-5 bg-white border border-zinc-200 rounded-2xl flex flex-col gap-3 group shadow-sm">
+                                            <div className="flex justify-between items-start">
+                                                <p className="text-sm font-medium text-zinc-800 leading-relaxed pr-8">{u.message}</p>
+                                                <button onClick={() => deleteUpdate(u.id)} className="text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1 appearance-none shrink-0" title="Delete Log">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-widest text-zinc-400 pt-3 border-t border-zinc-100">
+                                                <span>Load: {u.progress_at_time}%</span>
+                                                <span>•</span>
+                                                <span>{new Date(u.created_at).toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {(!selectedProjectUpdates.updatesList || selectedProjectUpdates.updatesList.length === 0) && (
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-8">No updates recorded.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ADMIN SETTINGS MODAL */}
+            <AnimatePresence>
+                {isSettingsModalOpen && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
+                        <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }} className="bg-white border border-zinc-200 shadow-2xl rounded-[40px] w-full max-w-md overflow-hidden flex flex-col">
+                            <div className="px-8 py-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                                <div>
+                                    <h2 className="text-2xl font-light tracking-tight text-zinc-900">Admin Settings</h2>
+                                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mt-1">Security Node</p>
+                                </div>
+                                <button onClick={() => setIsSettingsModalOpen(false)} className="p-2 text-zinc-400 hover:text-black transition-colors rounded-full hover:bg-zinc-100 appearance-none">
+                                    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div className="p-8">
+                                <form onSubmit={handleUpdateAdminPassword} className="space-y-5">
+                                    <div>
+                                        <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">New Password</label>
+                                        <div className="relative">
+                                            <input 
+                                                type={showNewPassword ? "text" : "password"} 
+                                                required 
+                                                minLength={6} 
+                                                value={adminPasswordForm.newPassword} 
+                                                onChange={e => setAdminPasswordForm({...adminPasswordForm, newPassword: e.target.value})} 
+                                                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors focus:outline-none"
+                                            >
+                                                {showNewPassword ? (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                ) : (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Confirm Password</label>
+                                        <div className="relative">
+                                            <input 
+                                                type={showConfirmPassword ? "text" : "password"} 
+                                                required 
+                                                minLength={6} 
+                                                value={adminPasswordForm.confirmPassword} 
+                                                onChange={e => setAdminPasswordForm({...adminPasswordForm, confirmPassword: e.target.value})} 
+                                                className="w-full bg-zinc-50 border border-zinc-200 pl-4 pr-12 py-3.5 rounded-xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-black transition-colors focus:outline-none"
+                                            >
+                                                {showConfirmPassword ? (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                ) : (
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                                                )}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="submit" disabled={savingPassword} className="w-full bg-black text-white py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all appearance-none flex items-center justify-center gap-3">
+                                        {savingPassword ? <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : 'Update Password'}
+                                    </button>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 }
