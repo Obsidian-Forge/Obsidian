@@ -12,11 +12,13 @@ export default function EmailMakerPage() {
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     
-    // CUSTOM POPUP (TOAST & MODAL) STATES
+    // YENİ: VIEW MODAL (ÖNİZLEME) VE EXPORT STATES
+    const [viewEmail, setViewEmail] = useState<any | null>(null);
+    const [exportOpen, setExportOpen] = useState(false);
+
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
 
-    // Dil ve Autocomplete State'leri
     const [lang, setLang] = useState('EN');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
@@ -35,7 +37,6 @@ export default function EmailMakerPage() {
 
     useEffect(() => { fetchHistory(); }, []);
 
-    // --- POPUP FONKSİYONLARI ---
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
@@ -46,7 +47,6 @@ export default function EmailMakerPage() {
         if (data) setEmails(data);
     }
 
-    // --- AUTOCOMPLETE MANTIĞI ---
     const allHistoricalEmails = Array.from(new Set(emails.flatMap(e => e.to_emails || [])));
 
     const handleToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +74,6 @@ export default function EmailMakerPage() {
         setShowSuggestions(false);
     };
 
-    // --- DİL DEĞİŞTİRİCİ ---
     const handleLangChange = (newLang: string) => {
         setLang(newLang);
         let newSignature = '';
@@ -86,7 +85,6 @@ export default function EmailMakerPage() {
         setFormData(prev => ({ ...prev, signature: newSignature }));
     };
 
-    // --- DOSYA YÜKLEME VE SİLME ---
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         setUploading(true);
@@ -112,12 +110,10 @@ export default function EmailMakerPage() {
         setFormData(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
     };
 
-    // --- GÖNDERME VE LOG SİLME ---
     async function handleSend() {
         if (!formData.to || !formData.subject || !formData.content) return showToast("To, Subject and Message are required!", "error");
         
         setLoading(true);
-        // Boş dizileri (.filter(Boolean)) temizleyerek 400 hatasını engelliyoruz
         const toArray = formData.to.split(',').map(e => e.trim()).filter(Boolean);
         const ccArray = formData.cc ? formData.cc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
         const bccArray = formData.bcc ? formData.bcc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
@@ -144,11 +140,75 @@ export default function EmailMakerPage() {
         if (!error) {
             setEmails(emails.filter(e => e.id !== deleteModalId));
             showToast("Log deleted successfully.", "success");
+            if (viewEmail && viewEmail.id === deleteModalId) setViewEmail(null); // Açıkken silinirse kapat
         } else {
             showToast("Error deleting log.", "error");
         }
         setDeleteModalId(null);
     }
+
+    // YENİ: DOSYA İNDİRME / EXPORT FONKSİYONLARI
+    const handleExport = (format: 'txt' | 'html' | 'pdf') => {
+        if (!viewEmail) return;
+
+        if (format === 'txt') {
+            const textContent = `Date: ${new Date(viewEmail.created_at).toLocaleString()}\nFrom: ${viewEmail.from_email}\nTo: ${viewEmail.to_emails?.join(', ')}\nSubject: ${viewEmail.subject}\n\n${viewEmail.content}\n\n${viewEmail.signature}`;
+            const blob = new Blob([textContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Novatrum_Email_${viewEmail.id.slice(0,6)}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        if (format === 'html' || format === 'pdf') {
+            const htmlContent = `
+                <html>
+                <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #18181b; max-width: 700px; margin: 0 auto;">
+                    <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e4e4e7;">
+                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>Date:</strong> ${new Date(viewEmail.created_at).toLocaleString()}</p>
+                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>From:</strong> ${viewEmail.from_email}</p>
+                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>To:</strong> ${viewEmail.to_emails?.join(', ')}</p>
+                        <h2 style="margin: 15px 0 0 0; font-size: 20px;">Subject: ${viewEmail.subject}</h2>
+                    </div>
+                    <div style="text-align: center; margin-bottom: 40px;">
+                        <h1 style="font-size: 26px; letter-spacing: -0.05em; margin: 0; font-weight: 600; color: #000;">NOVATRUM</h1>
+                    </div>
+                    <div style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;">
+                        ${viewEmail.content}
+                        <br/><br/>
+                        <span style="font-style: italic; color: #71717a;">${viewEmail.signature}</span>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            if (format === 'html') {
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Novatrum_Email_${viewEmail.id.slice(0,6)}.html`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            if (format === 'pdf') {
+                const printWin = window.open('', '', 'width=800,height=800');
+                if (printWin) {
+                    printWin.document.write(htmlContent);
+                    printWin.document.close();
+                    printWin.focus();
+                    setTimeout(() => {
+                        printWin.print();
+                        printWin.close();
+                    }, 250);
+                }
+            }
+        }
+        setExportOpen(false);
+    };
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans relative selection:bg-black selection:text-white pb-20">
@@ -170,7 +230,7 @@ export default function EmailMakerPage() {
             {/* DELETE CONFIRMATION MODAL */}
             <AnimatePresence>
                 {deleteModalId && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
                         <motion.div initial={{ scale: 0.95, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 20, opacity: 0 }} className="bg-white border border-zinc-200 shadow-2xl rounded-3xl w-full max-w-sm overflow-hidden flex flex-col">
                             <div className="p-6 text-center">
                                 <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 mx-auto flex items-center justify-center mb-4">
@@ -183,6 +243,75 @@ export default function EmailMakerPage() {
                                 <button onClick={() => setDeleteModalId(null)} className="flex-1 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest hover:bg-zinc-50 transition-colors border-r border-zinc-100">Cancel</button>
                                 <button onClick={confirmDelete} className="flex-1 py-4 text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 transition-colors">Delete</button>
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* YENİ: EMAIL PREVIEW (ÖNİZLEME) MODAL */}
+            <AnimatePresence>
+                {viewEmail && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-zinc-900/30 backdrop-blur-sm">
+                        <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }} className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative">
+                            
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-zinc-50/50">
+                                <div className="flex flex-col">
+                                    <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject}</h2>
+                                    <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join(', ')}</p>
+                                </div>
+                                
+                                <div className="flex items-center gap-3">
+                                    {/* Custom Dropdown for Downloads */}
+                                    <div className="relative">
+                                        <button onClick={() => setExportOpen(!exportOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-black hover:border-black transition-all shadow-sm">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            Export
+                                        </button>
+                                        <AnimatePresence>
+                                            {exportOpen && (
+                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute right-0 top-full mt-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-xl overflow-hidden z-50">
+                                                    <button onClick={() => handleExport('pdf')} className="w-full text-left px-5 py-3.5 text-xs font-bold text-zinc-600 hover:bg-zinc-50 hover:text-black transition-colors border-b border-zinc-100">Save as PDF</button>
+                                                    <button onClick={() => handleExport('html')} className="w-full text-left px-5 py-3.5 text-xs font-bold text-zinc-600 hover:bg-zinc-50 hover:text-black transition-colors border-b border-zinc-100">Download .HTML</button>
+                                                    <button onClick={() => handleExport('txt')} className="w-full text-left px-5 py-3.5 text-xs font-bold text-zinc-600 hover:bg-zinc-50 hover:text-black transition-colors">Download .TXT</button>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                    
+                                    <button onClick={() => setViewEmail(null)} className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 rounded-xl text-zinc-400 hover:text-black hover:border-black transition-all shadow-sm">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Email Visual Preview (Resend Style) */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 bg-white">
+                                <div className="max-w-[600px] mx-auto text-[#18181b] font-sans">
+                                    
+                                    <div className="py-10 border-b border-zinc-200 text-center flex justify-center items-center gap-5">
+                                        <img src="https://novatrum.eu/logo.png" alt="N." className="h-9 pointer-events-none opacity-90" />
+                                        <h1 className="text-[28px] tracking-[-0.05em] m-0 font-semibold text-black leading-none">NOVATRUM</h1>
+                                    </div>
+                                    
+                                    <div className="py-10 text-[15px] leading-[1.8] whitespace-pre-wrap text-zinc-800">
+                                        {viewEmail.content}
+                                        <p className="mt-10 italic text-zinc-500 whitespace-pre-wrap">{viewEmail.signature}</p>
+                                    </div>
+                                    
+                                    <div className="p-6 mt-6 bg-[#fafafa] rounded-2xl text-xs text-zinc-500 border border-zinc-100">
+                                        <p className="m-0 font-bold text-[#18181b] tracking-[0.05em] uppercase">NOVATRUM ENGINEERING</p>
+                                        <p className="my-1.5">Scalable Web Infrastructure & Systems Architecture</p>
+                                        <p className="mt-3 flex items-center gap-2">
+                                            <span className="text-black border-b border-zinc-200 pb-0.5">novatrum.eu</span>
+                                            <span className="text-zinc-300">|</span>
+                                            <span className="text-black border-b border-zinc-200 pb-0.5">LinkedIn</span>
+                                        </p>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+
                         </motion.div>
                     </div>
                 )}
@@ -207,6 +336,7 @@ export default function EmailMakerPage() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
                     
+                    {/* Compose Bölümü */}
                     <div className="lg:col-span-3 space-y-8">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
                             
@@ -220,7 +350,6 @@ export default function EmailMakerPage() {
                                     <input value={formData.from} onChange={e => setFormData({...formData, from: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
 
-                                {/* AUTOCOMPLETE RECIPIENT INPUT */}
                                 <div className="md:col-span-2 relative">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Recipient (To)</label>
                                     <input 
@@ -316,6 +445,7 @@ export default function EmailMakerPage() {
                         </div>
                     </div>
 
+                    {/* Sent Log Bölümü */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm h-full max-h-[1000px] flex flex-col">
                             <h2 className="text-xl font-light tracking-tight mb-6">Sent Log</h2>
@@ -324,10 +454,18 @@ export default function EmailMakerPage() {
                                 {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
                                 
                                 {emails.map((email) => (
-                                    <motion.div key={email.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm">
+                                    <motion.div 
+                                        key={email.id} 
+                                        initial={{ opacity: 0 }} 
+                                        animate={{ opacity: 1 }} 
+                                        // YENİ: Tıklandığında Modal'ı Aç
+                                        onClick={() => setViewEmail(email)}
+                                        className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer"
+                                    >
                                         <div className="flex justify-between items-start mb-3">
                                             <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">{new Date(email.created_at).toLocaleDateString()}</span>
-                                            <button onClick={() => setDeleteModalId(email.id)} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
+                                            {/* YENİ: e.stopPropagation() eklendi ki çöpe basınca Modal açılmasın */}
+                                            <button onClick={(e) => { e.stopPropagation(); setDeleteModalId(email.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                             </button>
                                         </div>
