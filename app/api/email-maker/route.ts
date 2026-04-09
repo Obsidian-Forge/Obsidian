@@ -16,7 +16,7 @@ export async function POST(req: Request) {
 
     const mailOptions: any = {
       // Varsayılan gönderici ismini 'Novatrum Engineering' olarak sabitledik
-      from: `${senderName || 'Novatrum Engineering'} <${from || 'info@novatrum.eu'}>`,
+      from: `${senderName || 'Novatrum Engineering'} <${from || 'yasin@novatrum.eu'}>`,
       to: to,
       subject: subject,
       html: `
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
     await supabase.from('sent_emails').insert([{
-      from_email: `${senderName || 'Novatrum Engineering'} <${from || 'info@novatrum.eu'}>`,
+      from_email: `${senderName || 'Novatrum Engineering'} <${from || 'yasin@novatrum.eu'}>`,
       to_emails: to,
       cc: cc && cc.length > 0 ? cc : null,
       bcc: bcc && bcc.length > 0 ? bcc : null,

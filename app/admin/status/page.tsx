@@ -11,6 +11,9 @@ export default function AdminInfrastructurePage() {
     const [initializing, setInitializing] = useState(false);
     const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
     
+    // YENİ: SHOWROOM SETTINGS STATE
+    const [showroomSettings, setShowroomSettings] = useState<any>(null);
+
     // MODAL İÇİN STATELER
     const [selectedNode, setSelectedNode] = useState<any | null>(null);
     const [nodeLogs, setNodeLogs] = useState<any[]>([]);
@@ -27,11 +30,16 @@ export default function AdminInfrastructurePage() {
 
         checkAdmin();
         fetchSystemStatus();
+        fetchShowroomSettings(); // YENİ: Showroom ayarlarını çek
 
         const statusChannel = supabase.channel('admin-status-page-sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, () => {
                 fetchSystemStatus();
-            }).subscribe();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'showroom_settings' }, () => {
+                fetchShowroomSettings(); // YENİ: Başka yerden değişirse anında güncelle
+            })
+            .subscribe();
 
         return () => {
             supabase.removeChannel(statusChannel);
@@ -44,6 +52,28 @@ export default function AdminInfrastructurePage() {
         setLoading(false);
     };
 
+    // YENİ: SHOWROOM VERİSİNİ ÇEKME FONKSİYONU
+    const fetchShowroomSettings = async () => {
+        const { data, error } = await supabase.from('showroom_settings').select('*').eq('id', 1).single();
+        if (data) setShowroomSettings(data);
+    };
+
+    // YENİ: SHOWROOM MODÜL GÜNCELLEME
+    const updateShowroomModule = async (module: string, status: string) => {
+        // Hızlı arayüz güncellemesi
+        setShowroomSettings((prev: any) => ({ ...prev, [module]: status }));
+        // Veritabanı güncellemesi
+        const { error } = await supabase.from('showroom_settings').update({ [module]: status }).eq('id', 1);
+        if (error) alert("Error updating module: " + error.message);
+    };
+
+    // YENİ: SHOWROOM GLOBAL NETWORK GÜNCELLEME
+    const updateGlobalNetwork = async (status: string) => {
+        setShowroomSettings((prev: any) => ({ ...prev, global_network: status }));
+        const { error } = await supabase.from('showroom_settings').update({ global_network: status }).eq('id', 1);
+        if (error) alert("Error updating network: " + error.message);
+    };
+
     const openHealthReport = async (node: any) => {
         setSelectedNode(node);
         setLoadingLogs(true);
@@ -53,12 +83,10 @@ export default function AdminInfrastructurePage() {
             .eq('node_id', node.id)
             .order('created_at', { ascending: false })
             .limit(10);
-            
         if (data) setNodeLogs(data);
         setLoadingLogs(false);
     };
 
-    // YENİ: OTOMATİK OLAY RAPORU OLUŞTURUCU (AI-LIKE)
     const generateIncidentReport = () => {
         if (!nodeLogs || nodeLogs.length === 0) {
             alert("No logs available to generate a report.");
@@ -78,10 +106,9 @@ export default function AdminInfrastructurePage() {
             report += `Status: 🟢 100% OPERATIONAL\n`;
             report += `Analysis: No outages detected in the recent monitoring window. Systems are running optimally with an average latency of ${avgLatency}ms.\n`;
         } else {
-            const firstDown = downLogs[downLogs.length - 1]; // En eski hata
+            const firstDown = downLogs[downLogs.length - 1]; 
             report += `Status: ${isCurrentlyDown ? '🔴 ONGOING OUTAGE' : '🟢 RESOLVED'}\n`;
             report += `Incident Detected: ${new Date(firstDown.created_at).toLocaleString()}\n`;
-            
             if (!isCurrentlyDown) {
                 report += `Incident Resolved: ${new Date(latestLog.created_at).toLocaleString()}\n`;
             }
@@ -93,7 +120,6 @@ export default function AdminInfrastructurePage() {
                 : `Service has been successfully restored, and stable connections have been verified across all nodes.`;
         }
 
-        // Panoya kopyala
         navigator.clipboard.writeText(report);
         alert("✅ Professional Incident Report copied to clipboard!\nYou can paste it directly in WhatsApp, Telegram, or Email.");
     };
@@ -143,11 +169,11 @@ export default function AdminInfrastructurePage() {
         let nodeUrl = prompt("Enter target URL to monitor (e.g., https://...):");
         if (nodeUrl && !nodeUrl.startsWith('http')) nodeUrl = 'https://' + nodeUrl;
         
-        const nodeId = (isCore ? "node-" : "client-") + Date.now(); 
+        const nodeId = (isCore ? "node-" : "client-") + Date.now();
         const { error } = await supabase.from('system_status').insert([{ 
             id: nodeId, label: nodeName.trim(), status: 'operational', target_url: nodeUrl ? nodeUrl.trim() : null
         }]);
-        
+
         if (!error) fetchSystemStatus();
         else alert("Error adding node: " + error.message);
     };
@@ -202,12 +228,13 @@ export default function AdminInfrastructurePage() {
         <div className="flex flex-col min-h-screen bg-zinc-50 text-black font-sans relative overflow-x-hidden selection:bg-black selection:text-white">
             <main className="flex-1 p-6 md:p-10 lg:p-14 overflow-y-auto max-w-7xl mx-auto w-full relative z-10">
                 
-                <button onClick={() => router.push('/admin/dashboard')} className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors w-fit">
+                <button onClick={() => router.push('/admin/dashboard')} className="mb-8 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-black transition-colors w-fit appearance-none">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     Back to Workspace
                 </button>
 
                 <div className="w-full animate-in fade-in duration-500">
+                   
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-zinc-200 mb-10">
                         <div>
                             <h1 className="text-3xl md:text-5xl font-black tracking-tighter uppercase text-zinc-900">Infrastructure</h1>
@@ -217,11 +244,11 @@ export default function AdminInfrastructurePage() {
                         </div>
                         
                         <div className="flex flex-col sm:flex-row items-center gap-3">
-                            <button onClick={() => addNewNode(true)} className="w-full sm:w-auto bg-white border border-zinc-200 hover:border-black text-zinc-900 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2">
+                            <button onClick={() => addNewNode(true)} className="w-full sm:w-auto bg-white border border-zinc-200 hover:border-black text-zinc-900 px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2 appearance-none">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5v14"></path></svg>
                                 Add Core Node
                             </button>
-                            <button onClick={() => addNewNode(false)} className="w-full sm:w-auto bg-zinc-900 hover:bg-black text-white px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2">
+                            <button onClick={() => addNewNode(false)} className="w-full sm:w-auto bg-zinc-900 hover:bg-black text-white px-6 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2 appearance-none">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
                                 Register Client Endpoint
                             </button>
@@ -236,7 +263,7 @@ export default function AdminInfrastructurePage() {
                     ) : systemStatuses.length === 0 ? (
                         <div className="py-20 border border-dashed border-zinc-200 rounded-[32px] bg-white flex flex-col items-center justify-center text-center p-8 shadow-sm">
                             <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-8">No infrastructure components configured yet.</p>
-                            <button onClick={initializeDefaultNodes} disabled={initializing} className="bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-3 shadow-sm">
+                            <button onClick={initializeDefaultNodes} disabled={initializing} className="bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-3 shadow-sm appearance-none">
                                 {initializing ? <span className="w-4 h-4 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" /> : null}
                                 {initializing ? 'INITIALIZING...' : 'INITIALIZE DEFAULT SYSTEM NODES'}
                             </button>
@@ -244,6 +271,61 @@ export default function AdminInfrastructurePage() {
                     ) : (
                         <div className="space-y-16">
                             
+                            {/* 1. YENİ BÖLÜM: SHOWROOM KONTROLLERİ */}
+                            {showroomSettings && (
+                                <section>
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-zinc-400">Simulation Hub Controls</h2>
+                                        <div className="h-px bg-zinc-200 flex-1"></div>
+                                    </div>
+                                    
+                                    <div className="bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm mb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                        <div>
+                                            <h3 className="text-lg font-black uppercase tracking-tight text-zinc-900 mb-1">Global Network Status</h3>
+                                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">Master Switch for the entire Showroom page.</p>
+                                        </div>
+                                        <div className="bg-zinc-100 p-1.5 rounded-2xl flex items-center gap-1 min-w-[300px]">
+                                            {['Active', 'Maintenance', 'Degraded'].map(status => (
+                                                <button
+                                                    key={status}
+                                                    onClick={() => updateGlobalNetwork(status)}
+                                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 appearance-none ${showroomSettings.global_network === status ? (status === 'Active' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : status === 'Maintenance' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-red-500 text-white shadow-lg shadow-red-500/30') : 'text-zinc-400 hover:text-zinc-600'}`}
+                                                >
+                                                    {status}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {[
+                                            { id: 'creative', label: 'Aura Creative', cat: 'Module 01' },
+                                            { id: 'fintech', label: 'Aegis Finance', cat: 'Module 02' },
+                                            { id: 'logistics', label: 'Node Logistics', cat: 'Module 03' },
+                                            { id: 'quantum', label: 'Quantum Engine', cat: 'Module 04' }
+                                        ].map(demo => (
+                                            <div key={demo.id} className="bg-white border border-zinc-200 p-6 md:p-8 rounded-[32px] shadow-sm flex flex-col justify-between">
+                                                <div className="mb-6">
+                                                    <h3 className="text-xl font-black uppercase tracking-tight text-zinc-900 mb-1">{demo.label}</h3>
+                                                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{demo.cat}</p>
+                                                </div>
+                                                <div className="bg-zinc-100 p-1.5 rounded-2xl flex items-center gap-1 mt-auto">
+                                                    {['Online', 'Offline', 'Maintenance'].map(status => (
+                                                        <button
+                                                            key={status}
+                                                            onClick={() => updateShowroomModule(demo.id, status)}
+                                                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 appearance-none ${showroomSettings[demo.id] === status ? (status === 'Online' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : status === 'Maintenance' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-red-500 text-white shadow-lg shadow-red-500/30') : 'text-zinc-400 hover:text-zinc-600'}`}
+                                                        >
+                                                            {status}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
                             {coreNodes.length > 0 && (
                                 <section>
                                     <div className="flex items-center gap-4 mb-6">
@@ -279,7 +361,7 @@ export default function AdminInfrastructurePage() {
 
             {/* HEALTH REPORT MODAL */}
             {selectedNode && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
                     <div className="absolute inset-0 bg-zinc-900/40 backdrop-blur-sm" onClick={() => setSelectedNode(null)}></div>
                     <div className="relative bg-white w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
                         <div className="p-6 md:p-8 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
@@ -288,23 +370,22 @@ export default function AdminInfrastructurePage() {
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-1">Diagnostic Report & Logs</p>
                             </div>
                             
-                            {/* SAĞ ÜST BUTON GRUBU */}
                             <div className="flex items-center gap-3">
                                 <button 
                                     onClick={generateIncidentReport}
                                     disabled={loadingLogs || nodeLogs.length === 0}
-                                    className="bg-zinc-900 hover:bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-2"
+                                    className="bg-zinc-900 hover:bg-black text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-2 appearance-none"
                                 >
                                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
                                     Copy Report
                                 </button>
-                                <button onClick={() => setSelectedNode(null)} className="p-2 bg-white border border-zinc-200 rounded-full hover:bg-zinc-100 transition-colors">
+                                <button onClick={() => setSelectedNode(null)} className="p-2 bg-white border border-zinc-200 rounded-full hover:bg-zinc-100 transition-colors appearance-none">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
                             </div>
                         </div>
                         
-                        <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white">
+                        <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-white custom-scrollbar">
                             {loadingLogs ? (
                                 <div className="py-12 flex justify-center"><span className="w-8 h-8 border-2 border-zinc-200 border-t-zinc-900 rounded-full animate-spin" /></div>
                             ) : nodeLogs.length === 0 ? (
@@ -326,7 +407,7 @@ export default function AdminInfrastructurePage() {
                                                     <span className="text-zinc-400 block mb-1 text-[9px] font-sans font-bold uppercase tracking-widest">Latency</span>
                                                     {log.latency ? `${log.latency}ms` : 'N/A'}
                                                 </div>
-                                                <div className="p-3 bg-white border border-zinc-100 rounded-xl">
+                                                <div className="p-3 bg-white border border-zinc-100 rounded-xl overflow-hidden text-ellipsis">
                                                     <span className="text-zinc-400 block mb-1 text-[9px] font-sans font-bold uppercase tracking-widest">Details</span>
                                                     <span className={log.details?.error ? 'text-red-500' : 'text-zinc-700'}>
                                                         {log.details ? JSON.stringify(log.details) : 'Clean Ping'}

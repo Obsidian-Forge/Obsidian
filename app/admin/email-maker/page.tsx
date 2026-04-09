@@ -25,7 +25,7 @@ export default function EmailMakerPage() {
 
     const [formData, setFormData] = useState({
         senderName: 'Novatrum Engineering',
-        from: 'info@novatrum.eu',
+        from: 'yasin@novatrum.eu',
         to: '',
         cc: '',
         bcc: '',

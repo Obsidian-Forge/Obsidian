@@ -455,7 +455,7 @@ export default function AdminDashboardPage() {
     if (!isAdmin) return <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center font-bold uppercase text-[10px] tracking-widest text-zinc-400">Authenticating Secure Node...</div>;
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans flex flex-col md:flex-row relative selection:bg-black selection:text-white">
+        <div className="h-screen overflow-hidden bg-[#FAFAFA] text-zinc-900 font-sans flex flex-col md:flex-row relative selection:bg-black selection:text-white">
 
             {/* GLOBAL TOAST NOTIFICATION */}
             <AnimatePresence>
@@ -465,7 +465,7 @@ export default function AdminDashboardPage() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
                         className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3.5 rounded-full shadow-2xl border flex items-center gap-3 backdrop-blur-xl ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-                                : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'
+                            : toast.type === 'error' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-200 text-blue-600'
                             }`}
                     >
                         {toast.type === 'success' && <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>}
@@ -490,11 +490,15 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* SIDEBAR (Tüm Linkler Gerçek Route'lara Bağlandı) */}
-            <aside className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:block w-full md:w-72 bg-white border-r border-zinc-200 flex flex-col h-[calc(100vh-73px)] md:h-screen sticky top-[73px] md:top-0 z-40 shadow-sm shrink-0`}>
-                <div className="p-8 hidden md:block border-b border-zinc-100">
+            <aside className={`${isMobileMenuOpen ? 'flex' : 'hidden'} md:flex w-full md:w-72 bg-white border-r border-zinc-200 flex-col h-full z-40 shadow-sm shrink-0`}>
+                
+                {/* 1. LOGO ALANI - shrink-0 (Sıkışmayı önler, yüksekliği sabitler) */}
+                <div className="p-8 hidden md:block border-b border-zinc-100 shrink-0">
                     <h1 className="text-2xl font-light tracking-tight text-black">Novatrum<br /><span className="font-medium text-zinc-400 text-lg">Command</span></h1>
                 </div>
-                <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+
+                {/* 2. SCROLL LİNKLERİ - flex-1, overflow-y-auto ve min-h-0 (Kalan alanı doldurur ve scroll olur) */}
+                <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar min-h-0">
 
                     {/* OVERVIEW */}
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all appearance-none ${activeTab === 'overview' ? 'bg-zinc-100 text-black shadow-sm' : 'text-zinc-500 hover:bg-zinc-50 hover:text-black'}`}>
@@ -606,12 +610,15 @@ export default function AdminDashboardPage() {
                     </button>
 
                 </nav>
-                <div className="p-4 border-t border-zinc-200 bg-zinc-50 mt-auto">
+
+                {/* 3. FOOTER ALANI - shrink-0 eklendi (Sıkışmayı önler, en altta sabit durmasını sağlar) */}
+                <div className="p-4 border-t border-zinc-200 bg-zinc-50 shrink-0">
                     <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-colors shadow-sm appearance-none">
                         <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7"></path></svg>
                         Disconnect
                     </button>
                 </div>
+                
             </aside>
 
             {/* MAIN CONTENT YÖNETİMİ (Sekmelere Göre İçerik Değişir) */}
@@ -725,8 +732,8 @@ export default function AdminDashboardPage() {
                                                     value={sys.status}
                                                     onChange={(e) => updateSystemStatus(sys.id, e.target.value)}
                                                     className={`text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg outline-none cursor-pointer border appearance-none transition-colors ${sys.status === 'operational' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                            sys.status === 'degraded' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                                                                'bg-red-50 text-red-600 border-red-200'
+                                                        sys.status === 'degraded' ? 'bg-amber-50 text-amber-600 border-amber-200' :
+                                                            'bg-red-50 text-red-600 border-red-200'
                                                         }`}
                                                 >
                                                     <option value="operational">Operational</option>
