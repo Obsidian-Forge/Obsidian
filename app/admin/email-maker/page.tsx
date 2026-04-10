@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function EmailMakerPage() {
+
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [emails, setEmails] = useState<any[]>([]);
@@ -23,8 +24,17 @@ export default function EmailMakerPage() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
 
+    const SENDER_OPTIONS = [
+        "Yasin Can Koç | Novatrum",
+        "Novatrum Engineering",
+        "Novatrum Support",
+        "Novatrum Billing",
+        "Novatrum Administration",
+        "Novatrum Infrastructure"
+    ];
+
     const [formData, setFormData] = useState({
-        senderName: 'Novatrum Engineering',
+        senderName: 'Yasin Can Koç | Novatrum',
         from: 'yasin@novatrum.eu',
         to: '',
         cc: '',
@@ -386,9 +396,21 @@ export default function EmailMakerPage() {
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
+                                <div className="relative">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Sender Name</label>
-                                    <input value={formData.senderName} onChange={e => setFormData({ ...formData, senderName: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <select
+                                        value={formData.senderName}
+                                        onChange={e => setFormData({ ...formData, senderName: e.target.value })}
+                                        className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer"
+                                    >
+                                        {SENDER_OPTIONS.map((option, idx) => (
+                                            <option key={idx} value={option}>{option}</option>
+                                        ))}
+                                    </select>
+                                    {/* Özel Dropdown Oku */}
+                                    <div className="absolute right-5 top-[38px] pointer-events-none text-zinc-400">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">From Email</label>
