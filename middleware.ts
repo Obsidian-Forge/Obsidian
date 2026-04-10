@@ -37,6 +37,13 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const clientKey = request.cookies.get('novatrum_client_key')?.value
 
+  // --- ROOT (ANA DİZİN) YÖNLENDİRMESİ ---
+  // Eğer biri doğrudan "novatrum.eu/admin" adresine giderse, onu hemen dashboard'a yönlendir.
+  // (Eğer girişi yoksa, hemen altındaki Admin Koruması onu yakalayıp Login'e atacaktır).
+  if (request.nextUrl.pathname === '/admin') {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  }
+
   // --- ADMIN KORUMASI ---
   if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
     if (!user) {
