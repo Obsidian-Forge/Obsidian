@@ -11,7 +11,7 @@ export default function EmailMakerPage() {
     const [emails, setEmails] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
-    
+
     // YENİ: VIEW MODAL (ÖNİZLEME) VE EXPORT STATES
     const [viewEmail, setViewEmail] = useState<any | null>(null);
     const [exportOpen, setExportOpen] = useState(false);
@@ -31,7 +31,7 @@ export default function EmailMakerPage() {
         bcc: '',
         subject: '',
         content: '',
-        signature: 'Best regards,\nYasin Can Koc | Novatrum',
+        signature: 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum',
         attachments: [] as { name: string, url: string }[]
     });
 
@@ -77,11 +77,12 @@ export default function EmailMakerPage() {
     const handleLangChange = (newLang: string) => {
         setLang(newLang);
         let newSignature = '';
-        if (newLang === 'EN') newSignature = 'Best regards,\nYasin Can Koc | Novatrum';
-        if (newLang === 'FR') newSignature = 'Cordialement,\nYasin Can Koc | Novatrum';
-        if (newLang === 'NL') newSignature = 'Met vriendelijke groet,\nYasin Can Koc | Novatrum';
-        if (newLang === 'TR') newSignature = 'Saygılarımla,\nYasin Can Koc | Novatrum';
-        
+
+        if (newLang === 'EN') newSignature = 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum';
+        if (newLang === 'FR') newSignature = 'Cordialement,\n\nYasin Can Koç | Fondateur & Architecte Digital chez Novatrum';
+        if (newLang === 'NL') newSignature = 'Met vriendelijke groet,\n\nYasin Can Koç | Oprichter & Digitaal Architect bij Novatrum';
+        if (newLang === 'TR') newSignature = 'Saygılarımla,\n\nYasin Can Koç | Kurucu & Dijital Mimar, Novatrum';
+
         setFormData(prev => ({ ...prev, signature: newSignature }));
     };
 
@@ -96,7 +97,7 @@ export default function EmailMakerPage() {
         try {
             const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
             if (uploadError) throw uploadError;
-            
+
             const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filePath);
             setFormData(prev => ({ ...prev, attachments: [...prev.attachments, { name: file.name, url: publicUrl }] }));
         } catch (error: any) {
@@ -106,13 +107,57 @@ export default function EmailMakerPage() {
         }
     };
 
+    // YENİ: Akıllı Yapıştırma (Gemini/ChatGPT format koruyucu)
+    const handleMessagePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const html = e.clipboardData.getData('text/html');
+
+        // Eğer kopyalanan metin HTML barındırıyorsa (Yapay zeka araçları vs.)
+        if (html) {
+            e.preventDefault(); // Tarayıcının metni sıkıştırmasını engelle
+
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // 1. Paragrafların sonuna çift satır boşluğu (\n\n) ekle
+            doc.body.querySelectorAll('p').forEach(p => {
+                p.appendChild(document.createTextNode('\n\n'));
+            });
+
+            // 2. Madde işaretlerinin sonuna tek boşluk (\n) ekle (araları gereksiz açılmasın)
+            doc.body.querySelectorAll('li').forEach(li => {
+                li.appendChild(document.createTextNode('\n'));
+            });
+
+            // 3. Standart <br> etiketlerini satır atlamaya çevir
+            doc.body.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+
+            // Metni temizle: Art arda gelen 3'ten fazla boş satırı 2'ye düşür
+            let formattedText = doc.body.innerText.replace(/\n{3,}/g, '\n\n').trim();
+
+            // Metni tam olarak imlecin (cursor) olduğu noktaya yapıştır
+            const target = e.target as HTMLTextAreaElement;
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            const currentContent = formData.content;
+
+            const newContent = currentContent.substring(0, start) + formattedText + currentContent.substring(end);
+
+            setFormData(prev => ({ ...prev, content: newContent }));
+
+            // İmleci yapıştırılan metnin sonuna taşı
+            setTimeout(() => {
+                target.selectionStart = target.selectionEnd = start + formattedText.length;
+            }, 0);
+        }
+    };
+
     const removeAttachment = (index: number) => {
         setFormData(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
     };
 
     async function handleSend() {
         if (!formData.to || !formData.subject || !formData.content) return showToast("To, Subject and Message are required!", "error");
-        
+
         setLoading(true);
         const toArray = formData.to.split(',').map(e => e.trim()).filter(Boolean);
         const ccArray = formData.cc ? formData.cc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
@@ -157,7 +202,7 @@ export default function EmailMakerPage() {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Novatrum_Email_${viewEmail.id.slice(0,6)}.txt`;
+            a.download = `Novatrum_Email_${viewEmail.id.slice(0, 6)}.txt`;
             a.click();
             URL.revokeObjectURL(url);
         }
@@ -189,7 +234,7 @@ export default function EmailMakerPage() {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Novatrum_Email_${viewEmail.id.slice(0,6)}.html`;
+                a.download = `Novatrum_Email_${viewEmail.id.slice(0, 6)}.html`;
                 a.click();
                 URL.revokeObjectURL(url);
             }
@@ -212,7 +257,7 @@ export default function EmailMakerPage() {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans relative selection:bg-black selection:text-white pb-20">
-            
+
             {/* TOAST NOTIFICATION */}
             <AnimatePresence>
                 {toast && (
@@ -253,14 +298,14 @@ export default function EmailMakerPage() {
                 {viewEmail && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-zinc-900/30 backdrop-blur-sm">
                         <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }} className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative">
-                            
+
                             {/* Modal Header */}
                             <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-zinc-50/50">
                                 <div className="flex flex-col">
                                     <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject}</h2>
                                     <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join(', ')}</p>
                                 </div>
-                                
+
                                 <div className="flex items-center gap-3">
                                     {/* Custom Dropdown for Downloads */}
                                     <div className="relative">
@@ -278,7 +323,7 @@ export default function EmailMakerPage() {
                                             )}
                                         </AnimatePresence>
                                     </div>
-                                    
+
                                     <button onClick={() => setViewEmail(null)} className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 rounded-xl text-zinc-400 hover:text-black hover:border-black transition-all shadow-sm">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                     </button>
@@ -288,17 +333,17 @@ export default function EmailMakerPage() {
                             {/* Email Visual Preview (Resend Style) */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 bg-white">
                                 <div className="max-w-[600px] mx-auto text-[#18181b] font-sans">
-                                    
+
                                     <div className="py-10 border-b border-zinc-200 text-center flex justify-center items-center gap-5">
                                         <img src="https://novatrum.eu/logo.png" alt="N." className="h-9 pointer-events-none opacity-90" />
                                         <h1 className="text-[28px] tracking-[-0.05em] m-0 font-semibold text-black leading-none">NOVATRUM</h1>
                                     </div>
-                                    
+
                                     <div className="py-10 text-[15px] leading-[1.8] whitespace-pre-wrap text-zinc-800">
                                         {viewEmail.content}
                                         <p className="mt-10 italic text-zinc-500 whitespace-pre-wrap">{viewEmail.signature}</p>
                                     </div>
-                                    
+
                                     <div className="p-6 mt-6 bg-[#fafafa] rounded-2xl text-xs text-zinc-500 border border-zinc-100">
                                         <p className="m-0 font-bold text-[#18181b] tracking-[0.05em] uppercase">NOVATRUM ENGINEERING</p>
                                         <p className="my-1.5">Scalable Web Infrastructure & Systems Architecture</p>
@@ -308,7 +353,7 @@ export default function EmailMakerPage() {
                                             <span className="text-black border-b border-zinc-200 pb-0.5">LinkedIn</span>
                                         </p>
                                     </div>
-                                    
+
                                 </div>
                             </div>
 
@@ -322,7 +367,7 @@ export default function EmailMakerPage() {
             </div>
 
             <div className="max-w-7xl mx-auto p-6 md:p-12 relative z-10">
-                
+
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-zinc-200 pb-8">
                     <div>
                         <h1 className="text-4xl md:text-5xl font-light tracking-tight text-black">Email Maker</h1>
@@ -335,37 +380,37 @@ export default function EmailMakerPage() {
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-                    
+
                     {/* Compose Bölümü */}
                     <div className="lg:col-span-3 space-y-8">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Sender Name</label>
-                                    <input value={formData.senderName} onChange={e => setFormData({...formData, senderName: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input value={formData.senderName} onChange={e => setFormData({ ...formData, senderName: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">From Email</label>
-                                    <input value={formData.from} onChange={e => setFormData({...formData, from: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input value={formData.from} onChange={e => setFormData({ ...formData, from: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
 
                                 <div className="md:col-span-2 relative">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Recipient (To)</label>
-                                    <input 
-                                        value={formData.to} 
-                                        onChange={handleToChange} 
-                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} 
-                                        placeholder="email1@test.com, email2@test.com" 
-                                        className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" 
+                                    <input
+                                        value={formData.to}
+                                        onChange={handleToChange}
+                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                        placeholder="email1@test.com, email2@test.com"
+                                        className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none"
                                     />
                                     <AnimatePresence>
                                         {showSuggestions && (
                                             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar overflow-hidden">
                                                 {emailSuggestions.map(sug => (
-                                                    <div 
-                                                        key={sug} 
-                                                        onMouseDown={(e) => { e.preventDefault(); acceptSuggestion(sug); }} 
+                                                    <div
+                                                        key={sug}
+                                                        onMouseDown={(e) => { e.preventDefault(); acceptSuggestion(sug); }}
                                                         className="px-5 py-3.5 hover:bg-zinc-50 cursor-pointer text-sm font-medium transition-colors border-b border-zinc-50 last:border-0 text-zinc-700 hover:text-black flex items-center gap-3"
                                                     >
                                                         <svg className="w-4 h-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
@@ -376,33 +421,38 @@ export default function EmailMakerPage() {
                                         )}
                                     </AnimatePresence>
                                 </div>
-                                
+
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">CC</label>
-                                    <input value={formData.cc} onChange={e => setFormData({...formData, cc: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input value={formData.cc} onChange={e => setFormData({ ...formData, cc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">BCC</label>
-                                    <input value={formData.bcc} onChange={e => setFormData({...formData, bcc: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input value={formData.bcc} onChange={e => setFormData({ ...formData, bcc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Subject</label>
-                                <input value={formData.subject} onChange={e => setFormData({...formData, subject: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                <input value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                             </div>
 
                             <div>
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Message</label>
-                                <textarea rows={10} value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all resize-none appearance-none" />
-                            </div>
+                                <textarea
+                                    rows={10}
+                                    value={formData.content}
+                                    onChange={e => setFormData({ ...formData, content: e.target.value })}
+                                    onPaste={handleMessagePaste}
+                                    className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all resize-none appearance-none"
+                                />                            </div>
 
                             <div>
                                 <div className="flex justify-between items-center mb-2 ml-1">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Signature</label>
                                     <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg">
                                         {['EN', 'NL', 'FR', 'TR'].map(l => (
-                                            <button 
+                                            <button
                                                 key={l}
                                                 onClick={() => handleLangChange(l)}
                                                 className={`text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md transition-all ${lang === l ? 'bg-white text-black shadow-sm' : 'text-zinc-400 hover:text-black'}`}
@@ -412,8 +462,7 @@ export default function EmailMakerPage() {
                                         ))}
                                     </div>
                                 </div>
-                                <textarea rows={2} value={formData.signature} onChange={e => setFormData({...formData, signature: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm text-zinc-500 italic outline-none focus:border-black transition-all resize-none appearance-none" />
-                            </div>
+                                <textarea rows={4} value={formData.signature} onChange={e => setFormData({ ...formData, signature: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm text-zinc-500 italic outline-none focus:border-black transition-all resize-none appearance-none" />                            </div>
 
                             <div className="pt-4 border-t border-zinc-100">
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-3 ml-1">Attachments</label>
@@ -449,15 +498,15 @@ export default function EmailMakerPage() {
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm h-full max-h-[1000px] flex flex-col">
                             <h2 className="text-xl font-light tracking-tight mb-6">Sent Log</h2>
-                            
+
                             <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
                                 {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
-                                
+
                                 {emails.map((email) => (
-                                    <motion.div 
-                                        key={email.id} 
-                                        initial={{ opacity: 0 }} 
-                                        animate={{ opacity: 1 }} 
+                                    <motion.div
+                                        key={email.id}
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
                                         // YENİ: Tıklandığında Modal'ı Aç
                                         onClick={() => setViewEmail(email)}
                                         className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer"
