@@ -9,20 +9,26 @@ export default function EmailMakerPage() {
 
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // STATES
     const [emails, setEmails] = useState<any[]>([]);
+    const [drafts, setDrafts] = useState<any[]>([]);
+    const [activeRightTab, setActiveRightTab] = useState<'sent' | 'drafts'>('sent');
+    
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
-    // YENİ: VIEW MODAL (ÖNİZLEME) VE EXPORT STATES
     const [viewEmail, setViewEmail] = useState<any | null>(null);
     const [exportOpen, setExportOpen] = useState(false);
-
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
     const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
+    const [deleteType, setDeleteType] = useState<'sent' | 'draft'>('sent');
 
     const [lang, setLang] = useState('EN');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
+
+    const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
 
     const SENDER_OPTIONS = [
         "Yasin Can Koç | Novatrum",
@@ -53,8 +59,11 @@ export default function EmailMakerPage() {
     };
 
     async function fetchHistory() {
-        const { data } = await supabase.from('sent_emails').select('*').order('created_at', { ascending: false });
-        if (data) setEmails(data);
+        const { data: sentData } = await supabase.from('sent_emails').select('*').order('created_at', { ascending: false });
+        if (sentData) setEmails(sentData);
+
+        const { data: draftData } = await supabase.from('email_drafts').select('*').order('created_at', { ascending: false });
+        if (draftData) setDrafts(draftData);
     }
 
     const allHistoricalEmails = Array.from(new Set(emails.flatMap(e => e.to_emails || [])));
@@ -87,7 +96,6 @@ export default function EmailMakerPage() {
     const handleLangChange = (newLang: string) => {
         setLang(newLang);
         let newSignature = '';
-
         if (newLang === 'EN') newSignature = 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum';
         if (newLang === 'FR') newSignature = 'Cordialement,\n\nYasin Can Koç | Fondateur & Architecte Digital chez Novatrum';
         if (newLang === 'NL') newSignature = 'Met vriendelijke groet,\n\nYasin Can Koç | Oprichter & Digitaal Architect bij Novatrum';
@@ -117,44 +125,27 @@ export default function EmailMakerPage() {
         }
     };
 
-    // YENİ: Akıllı Yapıştırma (Gemini/ChatGPT format koruyucu)
     const handleMessagePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
         const html = e.clipboardData.getData('text/html');
-
-        // Eğer kopyalanan metin HTML barındırıyorsa (Yapay zeka araçları vs.)
         if (html) {
-            e.preventDefault(); // Tarayıcının metni sıkıştırmasını engelle
-
+            e.preventDefault();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
 
-            // 1. Paragrafların sonuna çift satır boşluğu (\n\n) ekle
-            doc.body.querySelectorAll('p').forEach(p => {
-                p.appendChild(document.createTextNode('\n\n'));
-            });
-
-            // 2. Madde işaretlerinin sonuna tek boşluk (\n) ekle (araları gereksiz açılmasın)
-            doc.body.querySelectorAll('li').forEach(li => {
-                li.appendChild(document.createTextNode('\n'));
-            });
-
-            // 3. Standart <br> etiketlerini satır atlamaya çevir
+            doc.body.querySelectorAll('p').forEach(p => { p.appendChild(document.createTextNode('\n\n')); });
+            doc.body.querySelectorAll('li').forEach(li => { li.appendChild(document.createTextNode('\n')); });
             doc.body.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
 
-            // Metni temizle: Art arda gelen 3'ten fazla boş satırı 2'ye düşür
             let formattedText = doc.body.innerText.replace(/\n{3,}/g, '\n\n').trim();
 
-            // Metni tam olarak imlecin (cursor) olduğu noktaya yapıştır
             const target = e.target as HTMLTextAreaElement;
             const start = target.selectionStart;
             const end = target.selectionEnd;
             const currentContent = formData.content;
 
             const newContent = currentContent.substring(0, start) + formattedText + currentContent.substring(end);
-
             setFormData(prev => ({ ...prev, content: newContent }));
 
-            // İmleci yapıştırılan metnin sonuna taşı
             setTimeout(() => {
                 target.selectionStart = target.selectionEnd = start + formattedText.length;
             }, 0);
@@ -165,9 +156,75 @@ export default function EmailMakerPage() {
         setFormData(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
     };
 
+    // FORM TEMİZLEME YARDIMCI FONKSİYONU
+    const clearForm = () => {
+        setEditingDraftId(null);
+        setFormData({ 
+            senderName: 'Yasin Can Koç | Novatrum', 
+            from: 'yasin@novatrum.eu', 
+            to: '', cc: '', bcc: '', subject: '', content: '', 
+            signature: formData.signature, 
+            attachments: [] 
+        });
+    };
+
+    // TASLAK (DRAFT) KAYDETME VE FORMU TEMİZLEME
+    async function handleSaveDraft() {
+        setLoading(true);
+        const draftPayload = {
+            sender_name: formData.senderName,
+            from_email: formData.from,
+            to_emails: formData.to,
+            cc: formData.cc,
+            bcc: formData.bcc,
+            subject: formData.subject,
+            content: formData.content,
+            signature: formData.signature,
+            attachments: formData.attachments
+        };
+
+        if (editingDraftId) {
+            const { error } = await supabase.from('email_drafts').update(draftPayload).eq('id', editingDraftId);
+            if (error) showToast("DB Error: " + error.message, "error");
+            else {
+                showToast("Draft successfully updated!", "success");
+                clearForm(); // Güncelleyip formu temizler
+            }
+        } else {
+            const { data, error } = await supabase.from('email_drafts').insert([draftPayload]).select().single();
+            if (error) showToast("DB Error: " + error.message, "error");
+            else {
+                showToast("Saved to Drafts!", "success");
+                clearForm(); // Yeni kaydedip formu temizler
+            }
+        }
+
+        fetchHistory();
+        setLoading(false);
+    }
+
+    // DRAFT YÜKLEME
+    function loadDraft(draft: any) {
+        setFormData({
+            senderName: draft.sender_name || 'Yasin Can Koç | Novatrum',
+            from: draft.from_email || 'yasin@novatrum.eu',
+            to: draft.to_emails || '',
+            cc: draft.cc || '',
+            bcc: draft.bcc || '',
+            subject: draft.subject || '',
+            content: draft.content || '',
+            signature: draft.signature || 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum',
+            attachments: draft.attachments || [] 
+        });
+        
+        setEditingDraftId(draft.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    }
+
+    // ANINDA GÖNDERME
     async function handleSend() {
         if (!formData.to || !formData.subject || !formData.content) return showToast("To, Subject and Message are required!", "error");
-
+        
         setLoading(true);
         const toArray = formData.to.split(',').map(e => e.trim()).filter(Boolean);
         const ccArray = formData.cc ? formData.cc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
@@ -180,8 +237,14 @@ export default function EmailMakerPage() {
 
         if (res.ok) {
             showToast("Email Transmitted Successfully!", "success");
-            setFormData({ ...formData, to: '', subject: '', content: '', attachments: [] });
+            
+            if (editingDraftId) {
+                await supabase.from('email_drafts').delete().eq('id', editingDraftId);
+            }
+            
+            clearForm();
             fetchHistory();
+            setActiveRightTab('sent');
         } else {
             const errData = await res.json();
             showToast("Error: " + (errData.error || "Failed to send email."), "error");
@@ -191,21 +254,27 @@ export default function EmailMakerPage() {
 
     async function confirmDelete() {
         if (!deleteModalId) return;
-        const { error } = await supabase.from('sent_emails').delete().eq('id', deleteModalId);
+        const table = deleteType === 'sent' ? 'sent_emails' : 'email_drafts';
+        const { error } = await supabase.from(table).delete().eq('id', deleteModalId);
+        
         if (!error) {
-            setEmails(emails.filter(e => e.id !== deleteModalId));
+            if (deleteType === 'sent') setEmails(emails.filter(e => e.id !== deleteModalId));
+            else setDrafts(drafts.filter(d => d.id !== deleteModalId));
+            
             showToast("Log deleted successfully.", "success");
-            if (viewEmail && viewEmail.id === deleteModalId) setViewEmail(null); // Açıkken silinirse kapat
+            if (viewEmail && viewEmail.id === deleteModalId) setViewEmail(null);
+            if (editingDraftId === deleteModalId) {
+                clearForm();
+            }
         } else {
             showToast("Error deleting log.", "error");
         }
         setDeleteModalId(null);
     }
 
-    // YENİ: DOSYA İNDİRME / EXPORT FONKSİYONLARI
     const handleExport = (format: 'txt' | 'html' | 'pdf') => {
         if (!viewEmail) return;
-
+        
         if (format === 'txt') {
             const textContent = `Date: ${new Date(viewEmail.created_at).toLocaleString()}\nFrom: ${viewEmail.from_email}\nTo: ${viewEmail.to_emails?.join(', ')}\nSubject: ${viewEmail.subject}\n\n${viewEmail.content}\n\n${viewEmail.signature}`;
             const blob = new Blob([textContent], { type: 'text/plain' });
@@ -223,8 +292,8 @@ export default function EmailMakerPage() {
                 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #18181b; max-width: 700px; margin: 0 auto;">
                     <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e4e4e7;">
                         <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>Date:</strong> ${new Date(viewEmail.created_at).toLocaleString()}</p>
-                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>From:</strong> ${viewEmail.from_email}</p>
-                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>To:</strong> ${viewEmail.to_emails?.join(', ')}</p>
+                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>From:</strong> ${viewEmail.from_email || viewEmail.sender_name}</p>
+                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>To:</strong> ${viewEmail.to_emails?.join(', ') || viewEmail.to_emails}</p>
                         <h2 style="margin: 15px 0 0 0; font-size: 20px;">Subject: ${viewEmail.subject}</h2>
                     </div>
                     <div style="text-align: center; margin-bottom: 40px;">
@@ -291,7 +360,7 @@ export default function EmailMakerPage() {
                                 <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 mx-auto flex items-center justify-center mb-4">
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                 </div>
-                                <h3 className="text-lg font-bold text-zinc-900 mb-2">Delete Log Entry?</h3>
+                                <h3 className="text-lg font-bold text-zinc-900 mb-2">Delete Entry?</h3>
                                 <p className="text-xs font-medium text-zinc-500">This action cannot be undone. It will permanently remove this record from the database.</p>
                             </div>
                             <div className="flex border-t border-zinc-100">
@@ -303,21 +372,19 @@ export default function EmailMakerPage() {
                 )}
             </AnimatePresence>
 
-            {/* YENİ: EMAIL PREVIEW (ÖNİZLEME) MODAL */}
+            {/* EMAIL PREVIEW MODAL */}
             <AnimatePresence>
                 {viewEmail && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-zinc-900/30 backdrop-blur-sm">
                         <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }} className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative">
 
-                            {/* Modal Header */}
                             <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-zinc-50/50">
                                 <div className="flex flex-col">
-                                    <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject}</h2>
-                                    <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join(', ')}</p>
+                                    <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject || '(No Subject)'}</h2>
+                                    <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join ? viewEmail.to_emails?.join(', ') : viewEmail.to_emails}</p>
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    {/* Custom Dropdown for Downloads */}
                                     <div className="relative">
                                         <button onClick={() => setExportOpen(!exportOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-black hover:border-black transition-all shadow-sm">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -340,30 +407,20 @@ export default function EmailMakerPage() {
                                 </div>
                             </div>
 
-                            {/* Email Visual Preview (Resend Style) */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 bg-white">
                                 <div className="max-w-[600px] mx-auto text-[#18181b] font-sans">
-
                                     <div className="py-10 border-b border-zinc-200 text-center flex justify-center items-center gap-5">
                                         <img src="https://novatrum.eu/logo.png" alt="N." className="h-9 pointer-events-none opacity-90" />
                                         <h1 className="text-[28px] tracking-[-0.05em] m-0 font-semibold text-black leading-none">NOVATRUM</h1>
                                     </div>
-
                                     <div className="py-10 text-[15px] leading-[1.8] whitespace-pre-wrap text-zinc-800">
                                         {viewEmail.content}
                                         <p className="mt-10 italic text-zinc-500 whitespace-pre-wrap">{viewEmail.signature}</p>
                                     </div>
-
                                     <div className="p-6 mt-6 bg-[#fafafa] rounded-2xl text-xs text-zinc-500 border border-zinc-100">
-                                        <p className="m-0 font-bold text-[#18181b] tracking-[0.05em] uppercase">NOVATRUM ENGINEERING</p>
-                                        <p className="my-1.5">Scalable Web Infrastructure & Systems Architecture</p>
-                                        <p className="mt-3 flex items-center gap-2">
-                                            <span className="text-black border-b border-zinc-200 pb-0.5">novatrum.eu</span>
-                                            <span className="text-zinc-300">|</span>
-                                            <span className="text-black border-b border-zinc-200 pb-0.5">LinkedIn</span>
-                                        </p>
+                                        <p className="m-0 font-bold text-[#18181b] tracking-[0.05em] uppercase">NOVATRUM CORE</p>
+                                        <p className="my-1.5">Engineering Digital Excellence</p>
                                     </div>
-
                                 </div>
                             </div>
 
@@ -395,10 +452,23 @@ export default function EmailMakerPage() {
                     <div className="lg:col-span-3 space-y-8">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
 
+                            {/* Üst Kısım: Başlık ve Temizle Butonu */}
+                            <div className="flex justify-between items-center pb-4 border-b border-zinc-100 mb-6">
+                                <h2 className="text-xl font-bold tracking-tight text-zinc-900">
+                                    {editingDraftId ? 'Editing Draft' : 'Compose'}
+                                </h2>
+                                <div className="flex gap-3">
+                                    {editingDraftId && (
+                                        <button onClick={clearForm} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">Clear Form</button>
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="relative">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Sender Name</label>
                                     <select
+                                        suppressHydrationWarning
                                         value={formData.senderName}
                                         onChange={e => setFormData({ ...formData, senderName: e.target.value })}
                                         className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer"
@@ -407,19 +477,19 @@ export default function EmailMakerPage() {
                                             <option key={idx} value={option}>{option}</option>
                                         ))}
                                     </select>
-                                    {/* Özel Dropdown Oku */}
                                     <div className="absolute right-5 top-[38px] pointer-events-none text-zinc-400">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </div>
                                 </div>
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">From Email</label>
-                                    <input value={formData.from} onChange={e => setFormData({ ...formData, from: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input suppressHydrationWarning value={formData.from} onChange={e => setFormData({ ...formData, from: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
 
                                 <div className="md:col-span-2 relative">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Recipient (To)</label>
                                     <input
+                                        suppressHydrationWarning
                                         value={formData.to}
                                         onChange={handleToChange}
                                         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
@@ -446,28 +516,30 @@ export default function EmailMakerPage() {
 
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">CC</label>
-                                    <input value={formData.cc} onChange={e => setFormData({ ...formData, cc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input suppressHydrationWarning value={formData.cc} onChange={e => setFormData({ ...formData, cc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                                 <div>
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">BCC</label>
-                                    <input value={formData.bcc} onChange={e => setFormData({ ...formData, bcc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                    <input suppressHydrationWarning value={formData.bcc} onChange={e => setFormData({ ...formData, bcc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Subject</label>
-                                <input value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                <input suppressHydrationWarning value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
                             </div>
 
                             <div>
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Message</label>
                                 <textarea
+                                    suppressHydrationWarning
                                     rows={10}
                                     value={formData.content}
                                     onChange={e => setFormData({ ...formData, content: e.target.value })}
                                     onPaste={handleMessagePaste}
                                     className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all resize-none appearance-none"
-                                />                            </div>
+                                />                        
+                            </div>
 
                             <div>
                                 <div className="flex justify-between items-center mb-2 ml-1">
@@ -484,7 +556,7 @@ export default function EmailMakerPage() {
                                         ))}
                                     </div>
                                 </div>
-                                <textarea rows={4} value={formData.signature} onChange={e => setFormData({ ...formData, signature: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm text-zinc-500 italic outline-none focus:border-black transition-all resize-none appearance-none" />                            </div>
+                                <textarea suppressHydrationWarning rows={4} value={formData.signature} onChange={e => setFormData({ ...formData, signature: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm text-zinc-500 italic outline-none focus:border-black transition-all resize-none appearance-none" />                            </div>
 
                             <div className="pt-4 border-t border-zinc-100">
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-3 ml-1">Attachments</label>
@@ -510,40 +582,84 @@ export default function EmailMakerPage() {
                                 </div>
                             </div>
 
-                            <button onClick={handleSend} disabled={loading} className="w-full bg-black text-white py-5 rounded-2xl font-bold uppercase text-[10px] tracking-widest hover:bg-zinc-800 disabled:opacity-50 mt-4 shadow-md active:scale-95 transition-all appearance-none flex items-center justify-center gap-3">
-                                {loading ? <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "Transmit Professional Email"}
-                            </button>
+                            <div className="flex w-full flex-col sm:flex-row gap-4 pt-6 border-t border-zinc-100">
+                                <button onClick={handleSaveDraft} disabled={loading} className="flex-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 py-4 md:py-5 rounded-2xl font-bold uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 appearance-none">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                    {editingDraftId ? "Update Draft" : "Save as Draft"}
+                                </button>
+                                <button onClick={handleSend} disabled={loading} className="flex-[2] text-white py-4 md:py-5 rounded-2xl font-bold uppercase text-[10px] tracking-widest disabled:opacity-50 shadow-md active:scale-95 transition-all appearance-none flex items-center justify-center bg-black hover:bg-zinc-800">
+                                    {loading ? <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "Transmit Professional Email NOW"}
+                                </button>
+                            </div>
+
                         </div>
                     </div>
 
-                    {/* Sent Log Bölümü */}
+                    {/* Sağ Panel: Sent Log & Drafts */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm h-full max-h-[1000px] flex flex-col">
-                            <h2 className="text-xl font-light tracking-tight mb-6">Sent Log</h2>
+                            
+                            <div className="flex gap-6 mb-8 border-b border-zinc-100 pb-4">
+                                <button 
+                                    onClick={() => setActiveRightTab('sent')} 
+                                    className={`text-sm font-bold uppercase tracking-widest transition-colors ${activeRightTab === 'sent' ? 'text-black border-b-2 border-black pb-1 -mb-[17px]' : 'text-zinc-400 hover:text-zinc-600'}`}
+                                >
+                                    Sent Log
+                                </button>
+                                <button 
+                                    onClick={() => setActiveRightTab('drafts')} 
+                                    className={`text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${activeRightTab === 'drafts' ? 'text-black border-b-2 border-black pb-1 -mb-[17px]' : 'text-zinc-400 hover:text-zinc-600'}`}
+                                >
+                                    Drafts
+                                    {drafts.length > 0 && (
+                                        <span className={`px-2 py-0.5 rounded-full text-[9px] ${activeRightTab === 'drafts' ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-500'}`}>
+                                            {drafts.length}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
 
                             <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                                {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
+                                
+                                {activeRightTab === 'sent' && (
+                                    <>
+                                        {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
+                                        {emails.map((email) => (
+                                            <motion.div key={email.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setViewEmail(email)} className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">{new Date(email.created_at).toLocaleDateString()}</span>
+                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteType('sent'); setDeleteModalId(email.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
+                                                <h3 className="font-bold text-sm text-zinc-900 truncate mb-1">{email.subject}</h3>
+                                                <p className="text-[10px] text-zinc-500 font-mono truncate">To: {email.to_emails?.join ? email.to_emails?.join(', ') : email.to_emails}</p>
+                                            </motion.div>
+                                        ))}
+                                    </>
+                                )}
 
-                                {emails.map((email) => (
-                                    <motion.div
-                                        key={email.id}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        // YENİ: Tıklandığında Modal'ı Aç
-                                        onClick={() => setViewEmail(email)}
-                                        className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer"
-                                    >
-                                        <div className="flex justify-between items-start mb-3">
-                                            <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">{new Date(email.created_at).toLocaleDateString()}</span>
-                                            {/* YENİ: e.stopPropagation() eklendi ki çöpe basınca Modal açılmasın */}
-                                            <button onClick={(e) => { e.stopPropagation(); setDeleteModalId(email.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                            </button>
-                                        </div>
-                                        <h3 className="font-bold text-sm text-zinc-900 truncate mb-1">{email.subject}</h3>
-                                        <p className="text-[10px] text-zinc-500 font-mono truncate">To: {email.to_emails?.join(', ')}</p>
-                                    </motion.div>
-                                ))}
+                                {activeRightTab === 'drafts' && (
+                                    <>
+                                        {drafts.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No saved drafts.</p>}
+                                        {drafts.map((draft) => (
+                                            <motion.div key={draft.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => loadDraft(draft)} className={`group border p-5 rounded-3xl transition-all relative shadow-sm cursor-pointer ${editingDraftId === draft.id ? 'bg-black border-black text-white' : 'bg-white border-zinc-200 hover:border-black text-zinc-900'}`}>
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <span className={`text-[8px] font-bold px-2 py-1 rounded-md shadow-sm ${editingDraftId === draft.id ? 'bg-zinc-800 text-zinc-300 border border-zinc-700' : 'bg-zinc-100 border border-zinc-200 text-zinc-500'}`}>DRAFT</span>
+                                                    
+                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteType('draft'); setDeleteModalId(draft.id); }} className={`transition-colors p-1.5 rounded-lg shadow-sm border ${editingDraftId === draft.id ? 'text-zinc-400 hover:text-red-400 bg-zinc-800 border-zinc-700' : 'text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 bg-white border-zinc-200'}`}>
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                    </button>
+                                                </div>
+                                                <h3 className={`font-bold text-sm truncate mb-1 ${editingDraftId === draft.id ? 'text-white' : 'text-zinc-900'}`}>{draft.subject || '(No Subject)'}</h3>
+                                                <p className={`text-[10px] font-mono truncate ${editingDraftId === draft.id ? 'text-zinc-400' : 'text-zinc-500'}`}>To: {draft.to_emails || '(Empty)'}</p>
+                                                {draft.attachments?.length > 0 && (
+                                                    <p className={`text-[9px] mt-2 font-bold uppercase tracking-widest ${editingDraftId === draft.id ? 'text-indigo-300' : 'text-indigo-600'}`}>📎 {draft.attachments.length} Attachment(s)</p>
+                                                )}
+                                            </motion.div>
+                                        ))}
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

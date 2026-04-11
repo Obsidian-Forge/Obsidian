@@ -15,8 +15,7 @@ export async function POST(req: Request) {
     })) || [];
 
     const mailOptions: any = {
-      // Varsayılan gönderici ismini 'Novatrum Engineering' olarak sabitledik
-      from: `${senderName || 'Novatrum Engineering'} <${from || 'yasin@novatrum.eu'}>`,
+      from: `${senderName || 'Yasin Can Koç | Novatrum'} <${from || 'yasin@novatrum.eu'}>`,
       to: to,
       subject: subject,
       html: `
@@ -26,25 +25,26 @@ export async function POST(req: Request) {
             <div style="display: inline-block; vertical-align: middle;">
               <img 
                 src="https://novatrum.eu/logo.png" 
-                alt="N." 
-                height="36" 
-                style="height: 36px; vertical-align: middle; display: inline-block; -webkit-user-drag: none; user-select: none; pointer-events: none; margin-right: 14px;" 
-                oncontextmenu="return false;"
+                alt="Novatrum Logo" 
+                style="height: 36px; display: block;"
               />
-              <h1 style="font-size: 26px; letter-spacing: -0.05em; margin: 0; font-weight: 600; color: #000; line-height: 36px; display: inline-block; vertical-align: middle;">NOVATRUM</h1>
+            </div>
+            <div style="display: inline-block; vertical-align: middle; margin-left: 16px;">
+              <h1 style="font-size: 24px; letter-spacing: -0.05em; margin: 0; font-weight: 600; color: #000;">NOVATRUM</h1>
             </div>
           </div>
-          
-          <div style="padding: 40px 0; line-height: 1.7; font-size: 15px;">
-            ${content.replace(/\n/g, '<br>')}
-            <p style="margin-top: 40px; font-style: italic; color: #71717a;">
-              ${signature.replace(/\n/g, '<br>')}
-            </p>
+
+          <div style="padding: 40px 0; line-height: 1.7; font-size: 15px; white-space: pre-wrap;">
+            ${content}
           </div>
-          
-          <div style="padding: 24px; background-color: #fafafa; border-radius: 12px; font-size: 12px; color: #71717a; border: 1px solid #f4f4f5;">
-            <p style="margin: 0; font-weight: 700; color: #18181b; letter-spacing: 0.05em;">NOVATRUM ENGINEERING</p>
-            <p style="margin: 6px 0;">Scalable Web Infrastructure & Systems Architecture</p>
+
+          <div style="padding-bottom: 40px;">
+            <p style="margin: 0; color: #52525b; font-style: italic; white-space: pre-wrap;">${signature}</p>
+          </div>
+
+          <div style="padding: 30px; background-color: #fafafa; border-radius: 12px; border: 1px solid #f4f4f5; text-align: left;">
+            <p style="margin: 0; font-weight: 700; letter-spacing: 0.05em; font-size: 12px;">NOVATRUM CORE</p>
+            <p style="color: #a1a1aa; font-size: 11px; margin: 6px 0;">Scalable Infrastructure & Bespoke Engineering</p>
             <p style="margin: 14px 0 0 0; display: flex; align-items: center;">
               <a href="https://novatrum.eu" style="color: #000; text-decoration: none; border-bottom: 1px solid #e4e4e7; padding-bottom: 2px;">novatrum.eu</a>
               <span style="color: #d4d4d8; margin: 0 8px;">|</span>
@@ -67,15 +67,16 @@ export async function POST(req: Request) {
     await supabase.from('sent_emails').insert([{
       from_email: `${senderName || 'Novatrum Engineering'} <${from || 'yasin@novatrum.eu'}>`,
       to_emails: to,
-      cc: cc && cc.length > 0 ? cc : null,
-      bcc: bcc && bcc.length > 0 ? bcc : null,
+      cc: cc,
+      bcc: bcc,
       subject: subject,
       content: content,
       signature: signature
     }]);
 
-    return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Server Error' }, { status: 500 });
+    return NextResponse.json({ success: true, data });
+
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
