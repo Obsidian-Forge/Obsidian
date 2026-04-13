@@ -63,7 +63,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // KRİTİK DEĞİŞİKLİK: "/api" yollarını buradan tamamen sildik. 
-  // Artık Middleware API rotalarına (ve Resend Webhook'larına) KESİNLİKLE karışamaz!
   matcher: ['/admin/:path*', '/client/dashboard/:path*'],
 }

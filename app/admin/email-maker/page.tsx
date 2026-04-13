@@ -51,37 +51,7 @@ export default function EmailMakerPage() {
         attachments: [] as { name: string, url: string }[]
     });
 
-    useEffect(() => {
-        // 1. Sayfa açıldığında mevcut verileri çek
-        fetchHistory();
-
-        // 2. Supabase Realtime Soketini Kur (Canlı Dinleme)
-        const channel = supabase
-            .channel('realtime:sent_emails')
-            .on(
-                'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'sent_emails' },
-                (payload) => {
-                    // Veritabanında bir mailin statüsü güncellendiğinde arayüzü anında güncelle
-                    setEmails((currentEmails) =>
-                        currentEmails.map((email) =>
-                            email.id === payload.new.id ? payload.new : email
-                        )
-                    );
-
-                    // Eğer güncellenen mail o an ekranda (Modal'da) açıksa, onu da güncelle
-                    setViewEmail((currentView: any) =>
-                        currentView?.id === payload.new.id ? payload.new : currentView
-                    );
-                }
-            )
-            .subscribe();
-
-        // Sayfadan çıkıldığında dinlemeyi durdur (Performans için)
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+    useEffect(() => { fetchHistory(); }, []);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ message, type });
@@ -423,38 +393,15 @@ export default function EmailMakerPage() {
             <AnimatePresence>
                 {viewEmail && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-zinc-900/30 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, y: 40, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 40, scale: 0.98 }}
-                            className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative"
-                        >
-                            {/* HEADER SECTION */}
+                        <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }} className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative">
+
                             <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-zinc-50/50">
-                                <div className="flex flex-col max-w-[70%]">
-                                    {/* Subject: Uzun olduğunda aşağı kayar, tasarımı bozmaz */}
-                                    <h2 className="text-xl font-bold text-zinc-900 whitespace-normal break-words leading-tight pr-4">
-                                        {viewEmail.subject || '(No Subject)'}
-                                    </h2>
-
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <p className="text-xs font-mono text-zinc-500">
-                                            To: {viewEmail.to_emails?.join ? viewEmail.to_emails?.join(', ') : viewEmail.to_emails}
-                                        </p>
-
-                                        {/* DİNAMİK STATUS ROZETİ */}
-                                        {viewEmail.status && (
-                                            <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border shadow-sm ${viewEmail.status === 'opened' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                viewEmail.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                                                    'bg-zinc-100 text-zinc-500 border-zinc-200'
-                                                }`}>
-                                                {viewEmail.status === 'opened' ? '● Opened' : viewEmail.status === 'delivered' ? '● Delivered' : '○ Sent'}
-                                            </span>
-                                        )}
-                                    </div>
+                                <div className="flex flex-col">
+                                    <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject || '(No Subject)'}</h2>
+                                    <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join ? viewEmail.to_emails?.join(', ') : viewEmail.to_emails}</p>
                                 </div>
 
-                                <div className="flex items-center gap-3 self-start">
+                                <div className="flex items-center gap-3">
                                     <div className="relative">
                                         <button onClick={() => setExportOpen(!exportOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-black hover:border-black transition-all shadow-sm">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -477,7 +424,6 @@ export default function EmailMakerPage() {
                                 </div>
                             </div>
 
-                            {/* CONTENT SECTION */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 bg-white">
                                 <div className="max-w-[600px] mx-auto text-[#18181b] font-sans">
                                     <div className="py-10 border-b border-zinc-200 text-center flex justify-center items-center gap-5">
@@ -698,32 +644,26 @@ export default function EmailMakerPage() {
                                 </button>
                             </div>
 
-                            <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                            <div className="space-y-4 overflow-y-auto pr-2 custom-scrolzlbar flex-1">
 
                                 {activeRightTab === 'sent' && (
                                     <>
                                         {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
                                         {emails.map((email) => (
                                             <motion.div key={email.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setViewEmail(email)} className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer">
+                                                
+                                                {/* ÜST KISIM: Sadece Tarih ve Çöp Kutusu (Sent rozeti silindi) */}
                                                 <div className="flex justify-between items-start mb-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">
-                                                            {new Date(email.created_at).toLocaleDateString()}
-                                                        </span>
-
-                                                        {/* YENİ: DİNAMİK STATUS ROZETİ */}
-                                                        <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border shadow-sm flex items-center gap-1 ${email.status === 'opened' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                            email.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                                                                'bg-zinc-100 text-zinc-500 border-zinc-200'
-                                                            }`}>
-                                                            {email.status === 'opened' ? '👁 Opened' : email.status === 'delivered' ? '✓ Delivered' : '↗ Sent'}
-                                                        </span>
-                                                    </div>
-
+                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">
+                                                        {new Date(email.created_at).toLocaleDateString()}
+                                                    </span>
+                                                    
                                                     <button onClick={(e) => { e.stopPropagation(); setDeleteType('sent'); setDeleteModalId(email.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>
                                                 </div>
+
+                                                {/* ALT KISIM: Konu ve Alıcı */}
                                                 <h3 className="font-bold text-sm text-zinc-900 truncate mb-1">{email.subject}</h3>
                                                 <p className="text-[10px] text-zinc-500 font-mono truncate">To: {email.to_emails?.join ? email.to_emails?.join(', ') : email.to_emails}</p>
                                             </motion.div>
@@ -736,13 +676,18 @@ export default function EmailMakerPage() {
                                         {drafts.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No saved drafts.</p>}
                                         {drafts.map((draft) => (
                                             <motion.div key={draft.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => loadDraft(draft)} className={`group border p-5 rounded-3xl transition-all relative shadow-sm cursor-pointer ${editingDraftId === draft.id ? 'bg-black border-black text-white' : 'bg-white border-zinc-200 hover:border-black text-zinc-900'}`}>
+                                                
                                                 <div className="flex justify-between items-start mb-3">
-                                                    <span className={`text-[8px] font-bold px-2 py-1 rounded-md shadow-sm ${editingDraftId === draft.id ? 'bg-zinc-800 text-zinc-300 border border-zinc-700' : 'bg-zinc-100 border border-zinc-200 text-zinc-500'}`}>DRAFT</span>
+                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">
+                                                        {new Date(draft.created_at).toLocaleDateString()}
+                                                    </span>
 
-                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteType('draft'); setDeleteModalId(draft.id); }} className={`transition-colors p-1.5 rounded-lg shadow-sm border ${editingDraftId === draft.id ? 'text-zinc-400 hover:text-red-400 bg-zinc-800 border-zinc-700' : 'text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 bg-white border-zinc-200'}`}>
+                                                    {/* BURADAKİ email YAZILARI draft OLARAK DEĞİŞTİRİLDİ */}
+                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteType('draft'); setDeleteModalId(draft.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>
                                                 </div>
+                                                
                                                 <h3 className={`font-bold text-sm truncate mb-1 ${editingDraftId === draft.id ? 'text-white' : 'text-zinc-900'}`}>{draft.subject || '(No Subject)'}</h3>
                                                 <p className={`text-[10px] font-mono truncate ${editingDraftId === draft.id ? 'text-zinc-400' : 'text-zinc-500'}`}>To: {draft.to_emails || '(Empty)'}</p>
                                                 {draft.attachments?.length > 0 && (
