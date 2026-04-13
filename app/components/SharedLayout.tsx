@@ -16,7 +16,8 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         pathname?.startsWith('/demo') ||
         pathname?.startsWith('/showroom') || 
         pathname?.startsWith('/admin') || 
-        pathname?.startsWith('/client');
+        pathname?.startsWith('/client') ||
+        pathname?.startsWith('/v');
 
     const navLinks = [
         { name: t.nav.home, href: "/" },

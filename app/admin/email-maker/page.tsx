@@ -14,7 +14,7 @@ export default function EmailMakerPage() {
     const [emails, setEmails] = useState<any[]>([]);
     const [drafts, setDrafts] = useState<any[]>([]);
     const [activeRightTab, setActiveRightTab] = useState<'sent' | 'drafts'>('sent');
-    
+
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
 
@@ -58,12 +58,29 @@ export default function EmailMakerPage() {
         setTimeout(() => setToast(null), 4000);
     };
 
+    // fetchHistory fonksiyonunu tamamen bununla değiştirin
     async function fetchHistory() {
-        const { data: sentData } = await supabase.from('sent_emails').select('*').order('created_at', { ascending: false });
-        if (sentData) setEmails(sentData);
+        setLoading(true);
 
-        const { data: draftData } = await supabase.from('email_drafts').select('*').order('created_at', { ascending: false });
-        if (draftData) setDrafts(draftData);
+        // 1. Gönderilen Mailleri Çek
+        const { data: sentData, error: sentError } = await supabase
+            .from('sent_emails')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        // 2. Taslakları Çek
+        const { data: draftData, error: draftError } = await supabase
+            .from('email_drafts')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (sentError) console.error("Sent Log RLS Hatası:", sentError.message);
+        else setEmails(sentData || []); // emails state'ini günceller
+
+        if (draftError) console.error("Drafts RLS Hatası:", draftError.message);
+        else setDrafts(draftData || []); // drafts state'ini günceller
+
+        setLoading(false);
     }
 
     const allHistoricalEmails = Array.from(new Set(emails.flatMap(e => e.to_emails || [])));
@@ -159,12 +176,12 @@ export default function EmailMakerPage() {
     // FORM TEMİZLEME YARDIMCI FONKSİYONU
     const clearForm = () => {
         setEditingDraftId(null);
-        setFormData({ 
-            senderName: 'Yasin Can Koç | Novatrum', 
-            from: 'yasin@novatrum.eu', 
-            to: '', cc: '', bcc: '', subject: '', content: '', 
-            signature: formData.signature, 
-            attachments: [] 
+        setFormData({
+            senderName: 'Yasin Can Koç | Novatrum',
+            from: 'yasin@novatrum.eu',
+            to: '', cc: '', bcc: '', subject: '', content: '',
+            signature: formData.signature,
+            attachments: []
         });
     };
 
@@ -214,17 +231,17 @@ export default function EmailMakerPage() {
             subject: draft.subject || '',
             content: draft.content || '',
             signature: draft.signature || 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum',
-            attachments: draft.attachments || [] 
+            attachments: draft.attachments || []
         });
-        
+
         setEditingDraftId(draft.id);
-        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ANINDA GÖNDERME
     async function handleSend() {
         if (!formData.to || !formData.subject || !formData.content) return showToast("To, Subject and Message are required!", "error");
-        
+
         setLoading(true);
         const toArray = formData.to.split(',').map(e => e.trim()).filter(Boolean);
         const ccArray = formData.cc ? formData.cc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
@@ -237,11 +254,11 @@ export default function EmailMakerPage() {
 
         if (res.ok) {
             showToast("Email Transmitted Successfully!", "success");
-            
+
             if (editingDraftId) {
                 await supabase.from('email_drafts').delete().eq('id', editingDraftId);
             }
-            
+
             clearForm();
             fetchHistory();
             setActiveRightTab('sent');
@@ -256,11 +273,11 @@ export default function EmailMakerPage() {
         if (!deleteModalId) return;
         const table = deleteType === 'sent' ? 'sent_emails' : 'email_drafts';
         const { error } = await supabase.from(table).delete().eq('id', deleteModalId);
-        
+
         if (!error) {
             if (deleteType === 'sent') setEmails(emails.filter(e => e.id !== deleteModalId));
             else setDrafts(drafts.filter(d => d.id !== deleteModalId));
-            
+
             showToast("Log deleted successfully.", "success");
             if (viewEmail && viewEmail.id === deleteModalId) setViewEmail(null);
             if (editingDraftId === deleteModalId) {
@@ -274,7 +291,7 @@ export default function EmailMakerPage() {
 
     const handleExport = (format: 'txt' | 'html' | 'pdf') => {
         if (!viewEmail) return;
-        
+
         if (format === 'txt') {
             const textContent = `Date: ${new Date(viewEmail.created_at).toLocaleString()}\nFrom: ${viewEmail.from_email}\nTo: ${viewEmail.to_emails?.join(', ')}\nSubject: ${viewEmail.subject}\n\n${viewEmail.content}\n\n${viewEmail.signature}`;
             const blob = new Blob([textContent], { type: 'text/plain' });
@@ -376,15 +393,38 @@ export default function EmailMakerPage() {
             <AnimatePresence>
                 {viewEmail && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-zinc-900/30 backdrop-blur-sm">
-                        <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }} className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative">
-
+                        <motion.div
+                            initial={{ opacity: 0, y: 40, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 40, scale: 0.98 }}
+                            className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative"
+                        >
+                            {/* HEADER SECTION */}
                             <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-zinc-50/50">
-                                <div className="flex flex-col">
-                                    <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject || '(No Subject)'}</h2>
-                                    <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join ? viewEmail.to_emails?.join(', ') : viewEmail.to_emails}</p>
+                                <div className="flex flex-col max-w-[70%]">
+                                    {/* Subject: Uzun olduğunda aşağı kayar, tasarımı bozmaz */}
+                                    <h2 className="text-xl font-bold text-zinc-900 whitespace-normal break-words leading-tight pr-4">
+                                        {viewEmail.subject || '(No Subject)'}
+                                    </h2>
+
+                                    <div className="flex items-center gap-3 mt-2">
+                                        <p className="text-xs font-mono text-zinc-500">
+                                            To: {viewEmail.to_emails?.join ? viewEmail.to_emails?.join(', ') : viewEmail.to_emails}
+                                        </p>
+
+                                        {/* DİNAMİK STATUS ROZETİ */}
+                                        {viewEmail.status && (
+                                            <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border shadow-sm ${viewEmail.status === 'opened' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                    viewEmail.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                                        'bg-zinc-100 text-zinc-500 border-zinc-200'
+                                                }`}>
+                                                {viewEmail.status === 'opened' ? '● Opened' : viewEmail.status === 'delivered' ? '● Delivered' : '○ Sent'}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 self-start">
                                     <div className="relative">
                                         <button onClick={() => setExportOpen(!exportOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-black hover:border-black transition-all shadow-sm">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -407,6 +447,7 @@ export default function EmailMakerPage() {
                                 </div>
                             </div>
 
+                            {/* CONTENT SECTION */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 bg-white">
                                 <div className="max-w-[600px] mx-auto text-[#18181b] font-sans">
                                     <div className="py-10 border-b border-zinc-200 text-center flex justify-center items-center gap-5">
@@ -440,10 +481,18 @@ export default function EmailMakerPage() {
                         <h1 className="text-4xl md:text-5xl font-light tracking-tight text-black">Email Maker</h1>
                         <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">Professional Outreach System</p>
                     </div>
-                    <button onClick={() => router.push('/admin/dashboard')} className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-black hover:border-black transition-all shadow-sm">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Back to Workspace
-                    </button>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                        <button onClick={() => router.push('/admin/audit-maker')} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md active:scale-95 appearance-none">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Open Audit Maker
+                        </button>
+
+                        <button onClick={() => router.push('/admin/dashboard')} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-black hover:border-black transition-all shadow-sm active:scale-95 appearance-none">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                            Back to Workspace
+                        </button>
+                    </div>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
@@ -538,7 +587,7 @@ export default function EmailMakerPage() {
                                     onChange={e => setFormData({ ...formData, content: e.target.value })}
                                     onPaste={handleMessagePaste}
                                     className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all resize-none appearance-none"
-                                />                        
+                                />
                             </div>
 
                             <div>
@@ -598,16 +647,16 @@ export default function EmailMakerPage() {
                     {/* Sağ Panel: Sent Log & Drafts */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm h-full max-h-[1000px] flex flex-col">
-                            
+
                             <div className="flex gap-6 mb-8 border-b border-zinc-100 pb-4">
-                                <button 
-                                    onClick={() => setActiveRightTab('sent')} 
+                                <button
+                                    onClick={() => setActiveRightTab('sent')}
                                     className={`text-sm font-bold uppercase tracking-widest transition-colors ${activeRightTab === 'sent' ? 'text-black border-b-2 border-black pb-1 -mb-[17px]' : 'text-zinc-400 hover:text-zinc-600'}`}
                                 >
                                     Sent Log
                                 </button>
-                                <button 
-                                    onClick={() => setActiveRightTab('drafts')} 
+                                <button
+                                    onClick={() => setActiveRightTab('drafts')}
                                     className={`text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${activeRightTab === 'drafts' ? 'text-black border-b-2 border-black pb-1 -mb-[17px]' : 'text-zinc-400 hover:text-zinc-600'}`}
                                 >
                                     Drafts
@@ -620,14 +669,27 @@ export default function EmailMakerPage() {
                             </div>
 
                             <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
-                                
+
                                 {activeRightTab === 'sent' && (
                                     <>
                                         {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
                                         {emails.map((email) => (
                                             <motion.div key={email.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setViewEmail(email)} className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer">
                                                 <div className="flex justify-between items-start mb-3">
-                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">{new Date(email.created_at).toLocaleDateString()}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">
+                                                            {new Date(email.created_at).toLocaleDateString()}
+                                                        </span>
+
+                                                        {/* YENİ: DİNAMİK STATUS ROZETİ */}
+                                                        <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border shadow-sm flex items-center gap-1 ${email.status === 'opened' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
+                                                                email.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                                                    'bg-zinc-100 text-zinc-500 border-zinc-200'
+                                                            }`}>
+                                                            {email.status === 'opened' ? '👁 Opened' : email.status === 'delivered' ? '✓ Delivered' : '↗ Sent'}
+                                                        </span>
+                                                    </div>
+
                                                     <button onClick={(e) => { e.stopPropagation(); setDeleteType('sent'); setDeleteModalId(email.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>
@@ -646,7 +708,7 @@ export default function EmailMakerPage() {
                                             <motion.div key={draft.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => loadDraft(draft)} className={`group border p-5 rounded-3xl transition-all relative shadow-sm cursor-pointer ${editingDraftId === draft.id ? 'bg-black border-black text-white' : 'bg-white border-zinc-200 hover:border-black text-zinc-900'}`}>
                                                 <div className="flex justify-between items-start mb-3">
                                                     <span className={`text-[8px] font-bold px-2 py-1 rounded-md shadow-sm ${editingDraftId === draft.id ? 'bg-zinc-800 text-zinc-300 border border-zinc-700' : 'bg-zinc-100 border border-zinc-200 text-zinc-500'}`}>DRAFT</span>
-                                                    
+
                                                     <button onClick={(e) => { e.stopPropagation(); setDeleteType('draft'); setDeleteModalId(draft.id); }} className={`transition-colors p-1.5 rounded-lg shadow-sm border ${editingDraftId === draft.id ? 'text-zinc-400 hover:text-red-400 bg-zinc-800 border-zinc-700' : 'text-zinc-300 hover:text-red-500 opacity-0 group-hover:opacity-100 bg-white border-zinc-200'}`}>
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                                     </button>

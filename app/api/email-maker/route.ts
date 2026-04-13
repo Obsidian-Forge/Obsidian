@@ -64,15 +64,24 @@ export async function POST(req: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-    await supabase.from('sent_emails').insert([{
-      from_email: `${senderName || 'Novatrum Engineering'} <${from || 'yasin@novatrum.eu'}>`,
-      to_emails: to,
-      cc: cc,
-      bcc: bcc,
-      subject: subject,
-      content: content,
-      signature: signature
-    }]);
+    // YENİ EKLENEN KISIM: Mail başarıyla gittiyse, dönen data.id ile birlikte Supabase'e kaydet
+    if (data && data.id) {
+        const { error: dbError } = await supabase.from('sent_emails').insert([{
+          from_email: `${senderName || 'Novatrum Engineering'} <${from || 'yasin@novatrum.eu'}>`,
+          to_emails: to,
+          cc: cc,
+          bcc: bcc,
+          subject: subject,
+          content: content,
+          signature: signature,
+          resend_id: data.id, // Resend'in atadığı eşsiz ID (Webhook bu sayede maili bulacak)
+          status: 'sent'      // İlk gönderimde durum her zaman "sent" (Gönderildi)
+        }]);
+
+        if (dbError) {
+           console.error("Database Save Error:", dbError);
+        }
+    }
 
     return NextResponse.json({ success: true, data });
 
