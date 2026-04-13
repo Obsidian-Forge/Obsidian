@@ -70,9 +70,9 @@ export default function EmailMakerPage() {
                 );
                 
                 // Eğer güncellenen mail o an ekranda (Modal'da) açıksa, onu da güncelle
-                setViewEmail((currentView) => 
-                    currentView?.id === payload.new.id ? payload.new : currentView
-                );
+                setViewEmail((currentView: any) => 
+    currentView?.id === payload.new.id ? payload.new : currentView
+);
             }
         )
         .subscribe();
