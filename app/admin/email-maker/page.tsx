@@ -52,36 +52,36 @@ export default function EmailMakerPage() {
     });
 
     useEffect(() => {
-    // 1. Sayfa açıldığında mevcut verileri çek
-    fetchHistory();
+        // 1. Sayfa açıldığında mevcut verileri çek
+        fetchHistory();
 
-    // 2. Supabase Realtime Soketini Kur (Canlı Dinleme)
-    const channel = supabase
-        .channel('realtime:sent_emails')
-        .on(
-            'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'sent_emails' },
-            (payload) => {
-                // Veritabanında bir mailin statüsü güncellendiğinde arayüzü anında güncelle
-                setEmails((currentEmails) =>
-                    currentEmails.map((email) =>
-                        email.id === payload.new.id ? payload.new : email
-                    )
-                );
-                
-                // Eğer güncellenen mail o an ekranda (Modal'da) açıksa, onu da güncelle
-                setViewEmail((currentView: any) => 
-    currentView?.id === payload.new.id ? payload.new : currentView
-);
-            }
-        )
-        .subscribe();
+        // 2. Supabase Realtime Soketini Kur (Canlı Dinleme)
+        const channel = supabase
+            .channel('realtime:sent_emails')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'sent_emails' },
+                (payload) => {
+                    // Veritabanında bir mailin statüsü güncellendiğinde arayüzü anında güncelle
+                    setEmails((currentEmails) =>
+                        currentEmails.map((email) =>
+                            email.id === payload.new.id ? payload.new : email
+                        )
+                    );
 
-    // Sayfadan çıkıldığında dinlemeyi durdur (Performans için)
-    return () => {
-        supabase.removeChannel(channel);
-    };
-}, []);
+                    // Eğer güncellenen mail o an ekranda (Modal'da) açıksa, onu da güncelle
+                    setViewEmail((currentView: any) =>
+                        currentView?.id === payload.new.id ? payload.new : currentView
+                    );
+                }
+            )
+            .subscribe();
+
+        // Sayfadan çıkıldığında dinlemeyi durdur (Performans için)
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ message, type });
@@ -445,8 +445,8 @@ export default function EmailMakerPage() {
                                         {/* DİNAMİK STATUS ROZETİ */}
                                         {viewEmail.status && (
                                             <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md border shadow-sm ${viewEmail.status === 'opened' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                    viewEmail.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                                                        'bg-zinc-100 text-zinc-500 border-zinc-200'
+                                                viewEmail.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                                    'bg-zinc-100 text-zinc-500 border-zinc-200'
                                                 }`}>
                                                 {viewEmail.status === 'opened' ? '● Opened' : viewEmail.status === 'delivered' ? '● Delivered' : '○ Sent'}
                                             </span>
@@ -713,8 +713,8 @@ export default function EmailMakerPage() {
 
                                                         {/* YENİ: DİNAMİK STATUS ROZETİ */}
                                                         <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border shadow-sm flex items-center gap-1 ${email.status === 'opened' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                                                email.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
-                                                                    'bg-zinc-100 text-zinc-500 border-zinc-200'
+                                                            email.status === 'delivered' ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                                                                'bg-zinc-100 text-zinc-500 border-zinc-200'
                                                             }`}>
                                                             {email.status === 'opened' ? '👁 Opened' : email.status === 'delivered' ? '✓ Delivered' : '↗ Sent'}
                                                         </span>
