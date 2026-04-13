@@ -2,6 +2,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // --- 1. WEBHOOK İSTİSNASI (BYPASS) ---
+  // Resend'den gelen sinyallerin (teslim edildi, açıldı vb.) giriş yapmadan (anonim) 
+  // API'ye ulaşabilmesi için onları güvenlik duvarından doğrudan geçiriyoruz.
+  if (request.nextUrl.pathname.startsWith('/api/webhooks')) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -38,8 +45,6 @@ export async function middleware(request: NextRequest) {
   const clientKey = request.cookies.get('novatrum_client_key')?.value
 
   // --- ROOT (ANA DİZİN) YÖNLENDİRMESİ ---
-  // Eğer biri doğrudan "novatrum.eu/admin" adresine giderse, onu hemen dashboard'a yönlendir.
-  // (Eğer girişi yoksa, hemen altındaki Admin Koruması onu yakalayıp Login'e atacaktır).
   if (request.nextUrl.pathname === '/admin') {
     return NextResponse.redirect(new URL('/admin/dashboard', request.url))
   }
@@ -72,5 +77,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/client/dashboard/:path*'],
+  // Matcher'a api/webhooks yolunu da ekledik ki middleware bu yolda da çalışıp istisna kuralını (en üstteki bypass) işletebilsin.
+  matcher: ['/admin/:path*', '/client/dashboard/:path*', '/api/webhooks/:path*'],
 }

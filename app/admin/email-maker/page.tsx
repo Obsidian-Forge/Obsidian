@@ -51,7 +51,37 @@ export default function EmailMakerPage() {
         attachments: [] as { name: string, url: string }[]
     });
 
-    useEffect(() => { fetchHistory(); }, []);
+    useEffect(() => {
+    // 1. Sayfa açıldığında mevcut verileri çek
+    fetchHistory();
+
+    // 2. Supabase Realtime Soketini Kur (Canlı Dinleme)
+    const channel = supabase
+        .channel('realtime:sent_emails')
+        .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'sent_emails' },
+            (payload) => {
+                // Veritabanında bir mailin statüsü güncellendiğinde arayüzü anında güncelle
+                setEmails((currentEmails) =>
+                    currentEmails.map((email) =>
+                        email.id === payload.new.id ? payload.new : email
+                    )
+                );
+                
+                // Eğer güncellenen mail o an ekranda (Modal'da) açıksa, onu da güncelle
+                setViewEmail((currentView) => 
+                    currentView?.id === payload.new.id ? payload.new : currentView
+                );
+            }
+        )
+        .subscribe();
+
+    // Sayfadan çıkıldığında dinlemeyi durdur (Performans için)
+    return () => {
+        supabase.removeChannel(channel);
+    };
+}, []);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
         setToast({ message, type });
