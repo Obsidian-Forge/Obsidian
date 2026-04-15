@@ -3,535 +3,271 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { ShieldCheck, Activity, ChevronRight, Download, FileText, Box, Clock } from 'lucide-react';
 
 export default function ClientDashboardPage() {
-    const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [clientId, setClientId] = useState<string | null>(null);
     const [projects, setProjects] = useState<any[]>([]);
-    const [systemStatuses, setSystemStatuses] = useState<any[]>([]);
     const [systemLogs, setSystemLogs] = useState<any[]>([]);
     const [clientProfile, setClientProfile] = useState<any>(null);
     const [clientFiles, setClientFiles] = useState<any[]>([]);
     const [clientInvoices, setClientInvoices] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isSlaExpanded, setIsSlaExpanded] = useState(false);
+    const [isDark, setIsDark] = useState(false);
     const [liveLatency, setLiveLatency] = useState<number>(0);
+    const [uptimePercentage, setUptimePercentage] = useState("100.00");
 
     const router = useRouter();
-    const isDark = theme === 'dark';
 
-    // 1. DATA FETCHING (MERKEZİ VERİ ÇEKME)
+    const measureRealLatency = useCallback(async () => {
+        const start = performance.now();
+        try {
+            await supabase.from('system_status').select('id').limit(1);
+            const end = performance.now();
+            setLiveLatency(Math.round(end - start));
+        } catch (e) {
+            console.error("Latency measurement failed");
+        }
+    }, []);
+
+    const generateSlaPdf = () => {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return alert("Please allow pop-ups for reports.");
+
+        const htmlContent = `
+            <html>
+            <head>
+                <title>Novatrum SLA Report - ${clientProfile?.company_name}</title>
+                <style>
+                    body { font-family: sans-serif; padding: 50px; color: #000; line-height: 1.6; }
+                    .header { border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 40px; }
+                    .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+                    .metric-box { border: 1px solid #eee; padding: 20px; border-radius: 12px; }
+                    .value { font-size: 24px; font-weight: bold; color: #10b981; }
+                </style>
+            </head>
+            <body>
+                <div class="header"><h1>NOVATRUM</h1><p>Infrastructure Diagnostics // ${new Date().toLocaleString()}</p></div>
+                <div class="metric-grid">
+                    <div class="metric-box"><div class="value">${uptimePercentage}%</div><div>Uptime</div></div>
+                    <div class="metric-box"><div class="value">${liveLatency}ms</div><div>Latency</div></div>
+                    <div class="metric-box"><div class="value">Stable</div><div>Status</div></div>
+                </div>
+            </body>
+            </html>
+        `;
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        setTimeout(() => printWindow.print(), 500);
+    };
+
     const fetchData = useCallback(async (cId: string) => {
         try {
-            const [profileRes, projectsRes, statusRes, filesRes, invRes, logsRes] = await Promise.all([
+            const [profileRes, projectsRes, filesRes, invRes, logsRes] = await Promise.all([
                 supabase.from('clients').select('*').eq('id', cId).single(),
                 supabase.from('projects').select('*, project_updates(*)').eq('client_id', cId).order('created_at', { ascending: false }),
-                supabase.from('system_status').select('*').order('label'),
                 supabase.from('client_files').select('*').eq('client_id', cId).order('created_at', { ascending: false }),
-                
-                // GÜNCELLEME BURADA: status'ü 'draft' olanları müşteriden tamamen gizliyoruz!
                 supabase.from('client_invoices').select('*').eq('client_id', cId).neq('status', 'draft').order('created_at', { ascending: false }),
-                
                 supabase.from('incident_logs').select('*').order('created_at', { ascending: false }).limit(60)
             ]);
 
             if (profileRes.data) setClientProfile(profileRes.data);
-            
             if (projectsRes.data) {
-                const sortedProjects = projectsRes.data.map(p => ({
+                setProjects(projectsRes.data.map(p => ({
                     ...p,
-                    project_updates: p.project_updates ? p.project_updates.sort((a:any, b:any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) : []
-                }));
-                setProjects(sortedProjects);
+                    project_updates: p.project_updates ? p.project_updates.sort((a:any, b:any) => 
+                        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                    ) : []
+                })));
             }
-
-            if (statusRes.data) setSystemStatuses(statusRes.data);
             if (filesRes.data) setClientFiles(filesRes.data);
             if (invRes.data) setClientInvoices(invRes.data);
-            
             if (logsRes.data) {
                 setSystemLogs(logsRes.data);
-                const avg = Math.round(logsRes.data.reduce((acc: number, curr: any) => acc + (curr.latency || 0), 0) / logsRes.data.length);
-                setLiveLatency(avg || 135);
+                const upCount = logsRes.data.filter((l:any) => l.status === 'operational').length;
+                setUptimePercentage(((upCount / logsRes.data.length) * 100).toFixed(2));
             }
         } catch (err) {
-            console.error("Fetch Error:", err);
+            console.error(err);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // 2. AUTH, POLLING & REALTIME ENTEGRASYONU
     useEffect(() => {
         const storedId = localStorage.getItem('novatrum_client_id');
-        if (!storedId) {
-            router.push('/client/login');
-            return;
-        }
+        if (!storedId) return router.push('/client/login');
         setClientId(storedId);
-        
-        // İlk yükleme
         fetchData(storedId);
+        measureRealLatency();
+        const pingInterval = setInterval(measureRealLatency, 5000);
+        const channel = supabase.channel('dashboard_sync').on('postgres_changes', { event: '*', schema: 'public', table: 'project_updates' }, () => fetchData(storedId)).subscribe();
+        return () => { clearInterval(pingInterval); supabase.removeChannel(channel); };
+    }, [fetchData, measureRealLatency, router]);
 
-        // Arka plan yedeklemesi (Polling)
-        const pollInterval = setInterval(() => {
-            fetchData(storedId);
-        }, 15000); 
-
-        // --- SUPABASE REALTIME (Anında Canlı Güncelleme) ---
-        const channel = supabase
-            .channel('client_live_updates')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'projects', filter: `client_id=eq.${storedId}` },
-                (payload) => {
-                    fetchData(storedId);
-                }
-            )
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'project_updates' },
-                () => fetchData(storedId)
-            )
-            .subscribe();
-
-        return () => {
-            clearInterval(pollInterval);
-            supabase.removeChannel(channel);
-        };
-    }, [fetchData, router]);
-
-    // 3. CANLI GECİKME EFEKTİ
     useEffect(() => {
-        const latencyInterval = setInterval(() => {
-            setLiveLatency(prev => {
-                if (prev === 0) return 0;
-                const jitter = Math.floor(Math.random() * 5) - 2; 
-                return Math.max(15, prev + jitter); 
-            });
-        }, 3000);
-        return () => clearInterval(latencyInterval);
+        const checkTheme = () => setIsDark(localStorage.getItem('novatrum_theme') === 'dark');
+        checkTheme();
+        window.addEventListener('theme-changed', checkTheme);
+        return () => window.removeEventListener('theme-changed', checkTheme);
     }, []);
 
-    const handleLogout = () => {
-        document.cookie = "novatrum_client_key=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Strict";
-        localStorage.removeItem('novatrum_client_id');
-        localStorage.removeItem('novatrum_client_name');
-        router.push('/client/login');
-    };
-
-    const toggleTheme = () => {
-        const newTheme = theme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-        localStorage.setItem('novatrum_theme', newTheme);
-        document.documentElement.classList.toggle('dark');
-    };
-
-    const formatDate = (dateString: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    };
-
-    // İSTATİSTİKLER VE GRAFİK VERİLERİ
-    const chartLogs = [...systemLogs].reverse().slice(-40);
-    const maxLatency = chartLogs.length > 0 ? Math.max(...chartLogs.map(l => l.latency || 100), 200) : 200;
-    const avgLatency = systemLogs.length > 0 ? Math.round(systemLogs.reduce((acc, curr) => acc + (curr.latency || 0), 0) / systemLogs.length) : 0;
-    const uptimePercentage = systemLogs.length > 0 
-        ? ((systemLogs.filter(l => l.status === 'operational').length / systemLogs.length) * 100).toFixed(2) 
-        : "100.00";
-    const isSystemDown = systemStatuses.some(s => s.status === 'down');
-
-    // SLA PDF OLUŞTURUCU
-    const generateSlaPdf = () => {
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-            alert("Please allow pop-ups to generate the PDF report.");
-            return;
-        }
-
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Novatrum SLA Report - ${clientProfile?.company_name || 'Client'}</title>
-                <style>
-                    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 40px; color: #000; max-width: 800px; margin: 0 auto; }
-                    .header { border-bottom: 2px solid #000; padding-bottom: 20px; margin-bottom: 40px; }
-                    .logo { font-size: 24px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase; }
-                    .title { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #666; margin-top: 10px; }
-                    .metrics-grid { display: flex; justify-content: space-between; margin-bottom: 40px; border: 1px solid #eaeaea; border-radius: 16px; padding: 24px; }
-                    .metric-box { text-align: left; }
-                    .metric-value { font-size: 36px; font-weight: 300; color: #10b981; }
-                    .metric-value.down { color: #ef4444; }
-                    .metric-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #666; margin-top: 8px; }
-                    .log-table { width: 100%; text-align: left; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-                    .log-table th { padding: 12px 8px; border-bottom: 1px solid #000; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-                    .log-table td { padding: 12px 8px; border-bottom: 1px solid #eaeaea; }
-                    .status-operational { color: #10b981; font-weight: 700; }
-                    .status-degraded { color: #f59e0b; font-weight: 700; }
-                    .status-down { color: #ef4444; font-weight: 700; }
-                    .footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid #eaeaea; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div class="logo">NOVATRUM</div>
-                    <div class="title">Infrastructure Health & SLA Report // ${clientProfile?.company_name || 'Client Workspace'}</div>
-                </div>
-
-                <div class="metrics-grid">
-                    <div class="metric-box">
-                        <div class="metric-value ${parseFloat(uptimePercentage) < 99 ? 'down' : ''}">${uptimePercentage}%</div>
-                        <div class="metric-label">SLA Uptime Guarantee</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-value" style="color: #000;">${avgLatency}ms</div>
-                        <div class="metric-label">Average Latency</div>
-                    </div>
-                    <div class="metric-box">
-                        <div class="metric-value ${isSystemDown ? 'down' : ''}" style="font-size: 18px; margin-top: 12px;">
-                            ${isSystemDown ? 'MAJOR OUTAGE' : 'STABLE'}
-                        </div>
-                        <div class="metric-label">Current Status</div>
-                    </div>
-                </div>
-
-                <h3 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Recent Incident Logs (Last 40 Checks)</h3>
-                <table class="log-table">
-                    <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Status</th>
-                            <th>Latency</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${chartLogs.length > 0 ? chartLogs.map(log => `
-                            <tr>
-                                <td>${new Date(log.created_at).toLocaleString()}</td>
-                                <td class="status-${log.status}">${log.status.toUpperCase()}</td>
-                                <td>${log.latency}ms</td>
-                            </tr>
-                        `).join('') : '<tr><td colspan="3">No logs available.</td></tr>'}
-                    </tbody>
-                </table>
-
-                <div class="footer">
-                    Generated automatically by Novatrum Infrastructure Systems on ${new Date().toLocaleString()}
-                </div>
-            </body>
-            </html>
-        `;
-
-        printWindow.document.open();
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
-    };
-
-    if (loading) return (
-        <div className={`min-h-screen flex flex-col items-center justify-center ${isDark ? 'bg-zinc-950 text-white' : 'bg-white text-black'}`}>
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-zinc-400 mt-6">Synchronizing Infrastructure...</p>
-        </div>
-    );
+    if (loading) return null;
 
     return (
-        <div className={`min-h-screen font-sans transition-colors duration-500 selection:bg-emerald-500/30 relative overflow-x-hidden ${isDark ? 'bg-zinc-950 text-white' : 'bg-white text-black'}`}>
+        <div className="w-full max-w-[1400px] mx-auto pb-20 animate-in fade-in duration-700">
             
-            {/* FÜTÜRİSTİK BLUEPRINT (TEKNİK ÇİZİM) ARKA PLANI */}
-            <div className={`fixed inset-0 z-0 pointer-events-none transition-opacity duration-500 ${isDark ? 'opacity-10' : 'opacity-40'}`}>
-                <div className={`absolute inset-0 bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_50%,transparent_100%)] ${isDark ? 'bg-[linear-gradient(#3f3f46_1px,transparent_1px),linear-gradient(90deg,#3f3f46_1px,transparent_1px)]' : 'bg-[linear-gradient(#e5e7eb_1px,transparent_1px),linear-gradient(90deg,#e5e7eb_1px,transparent_1px)]'}`} />
-            </div>
+            {/* WELCOME HEADER */}
+            <header className="mb-10 lg:mb-16">
+                <p className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.4em] mb-3 ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                    Authorization Node // {clientProfile?.company_name}
+                </p>
+                <h1 className={`text-3xl lg:text-6xl font-light tracking-tighter leading-tight ${isDark ? 'text-white' : 'text-black'}`}>
+                    Hello, <span className="font-medium">{clientProfile?.full_name.split(' ')[0]}</span>.
+                </h1>
+            </header>
 
-            {/* FLOATING ISLAND: Mobilde en altta yatay, PC'de sağda dikey */}
-            <div className={`fixed bottom-6 md:bottom-auto left-6 right-6 md:left-auto md:right-6 md:top-1/2 md:-translate-y-1/2 z-[100] backdrop-blur-xl border shadow-2xl rounded-full py-3 px-6 md:py-8 md:px-3 flex flex-row md:flex-col items-center justify-between md:justify-center gap-4 md:gap-6 transition-all duration-500 ${isDark ? 'bg-zinc-900/80 border-zinc-800' : 'bg-white/90 border-zinc-200'}`}>
+            <div className="grid grid-cols-12 gap-6 lg:gap-10">
                 
-                {/* Node Status */}
-                <div className="relative group cursor-pointer flex items-center gap-3 md:flex-col">
-                    <span className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse shrink-0" />
-                    <span className={`text-[10px] font-bold uppercase tracking-widest md:hidden ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>System Secure</span>
-                    <div className={`absolute bottom-full mb-4 md:mb-0 md:bottom-auto md:right-full md:mr-4 md:top-1/2 md:-translate-y-1/2 px-4 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none flex items-center gap-2 shadow-xl ${isDark ? 'bg-white text-black' : 'bg-zinc-900 text-white'}`}>
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                        Connection: Secure
-                    </div>
-                </div>
-
-                <div className={`hidden md:block w-4 h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-black/10'}`} />
-
-                {/* Buton Grubu: Mobilde yan yana, PC'de alt alta */}
-                <div className="flex items-center gap-3 md:gap-6 md:flex-col">
-                    {/* SUPPORT BUTONU */}
-                    <button onClick={() => router.push('/client/support')} className="group flex flex-col items-center gap-4 outline-none">
-                        <div className={`w-10 h-10 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${isDark ? 'bg-zinc-800 text-zinc-300 group-hover:bg-white group-hover:text-black' : 'bg-white border border-zinc-200 text-black group-hover:bg-black group-hover:text-white'}`}>
-                            <svg className="w-4 h-4 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                        </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 pt-2 hidden md:block ${isDark ? 'text-zinc-500 group-hover:text-white' : 'text-zinc-500 group-hover:text-black'}`} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                            Support
-                        </span>
-                    </button>
-
-                    <div className={`w-[1px] h-4 md:w-4 md:h-[1px] ${isDark ? 'bg-zinc-800' : 'bg-black/10'}`} />
-
-                    {/* DISCONNECT BUTONU */}
-                    <button onClick={handleLogout} className="group flex flex-col items-center gap-4 outline-none">
-                        <div className={`w-10 h-10 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${isDark ? 'bg-red-500/20 text-red-500 group-hover:bg-red-500 group-hover:text-white' : 'bg-red-50 text-red-600 border border-red-100 group-hover:bg-red-600 group-hover:text-white'}`}>
-                            <svg className="w-4 h-4 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7"></path></svg>
-                        </div>
-                        <span className={`text-[9px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 pt-2 hidden md:block ${isDark ? 'text-zinc-600 group-hover:text-red-500' : 'text-zinc-400 group-hover:text-red-600'}`} style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                            Disconnect
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            {/* ANA İÇERİK - Mobilde Alt Dock için pb-32 eklendi */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 lg:pr-32 pt-10 pb-32 md:py-16">
-                
-                {/* HEADER BÖLÜMÜ */}
-                <div className="flex items-center justify-between mb-16 md:mb-20 gap-4">
-                    <img src="/logo.png" alt="Logo" className={`h-8 w-auto object-contain transition-all duration-300 ${isDark ? 'invert' : ''}`} />
-                    <div className="flex items-center gap-4">
-                        <button onClick={toggleTheme} className={`p-3 rounded-2xl transition-all shadow-sm border ${isDark ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white' : 'bg-white border-zinc-200 text-zinc-500 hover:text-black'}`}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isDark ? "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" : "M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"}></path></svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mb-12">
-                    <p className={`text-[9px] font-bold uppercase tracking-[0.4em] mb-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Authorized Entity</p>
-                    <h2 className="text-4xl md:text-6xl font-light uppercase tracking-tighter mb-4">{clientProfile?.full_name.split(' ')[0]}</h2>
-                    <div className={`inline-flex items-center gap-3 px-4 py-2 rounded-full border transition-colors ${isDark ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200 shadow-sm'}`}>
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        <span className={`text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>{clientProfile?.company_name || 'Secure Workspace'}</span>
-                    </div>
-                </div>
-
-                {/* İSTATİSTİKLER VE SLA BÖLÜMÜ */}
-                <div className={`transition-all duration-500 rounded-[32px] md:rounded-[40px] border mb-16 shadow-sm relative overflow-hidden ${isDark ? 'bg-zinc-900/90 backdrop-blur-xl border-zinc-800' : 'bg-white/90 backdrop-blur-xl border-zinc-200'} ${isSlaExpanded ? 'p-6 md:p-10' : 'p-0'}`}>
+                {/* LEFT COLUMN: SENTINEL & LEDGER */}
+                <div className="col-span-12 lg:col-span-8 space-y-8 lg:space-y-12">
                     
-                    {!isSlaExpanded && (
-                        <div className="flex items-center justify-between gap-4 h-16 px-6 md:px-8 cursor-pointer hover:bg-zinc-50/50 dark:hover:bg-zinc-800/50 transition-colors" onClick={() => setIsSlaExpanded(true)}>
-                            <div className="flex items-center gap-3 shrink-0">
-                                <div className={`w-2 h-2 rounded-full ${isSystemDown ? 'bg-red-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'}`} />
-                                <span className={`text-[11px] font-bold uppercase tracking-widest ${parseFloat(uptimePercentage) < 99 ? 'text-amber-500' : 'text-emerald-500'}`}>{uptimePercentage}% UPTIME</span>
+                    {/* SENTINEL PANEL */}
+                    <section className={`p-6 lg:p-10 rounded-[32px] lg:rounded-[40px] border transition-all duration-500 relative overflow-hidden
+                        ${isDark ? 'bg-zinc-900/50 border-white/5 shadow-2xl' : 'bg-white border-black/[0.03] shadow-sm'}`}>
+                        
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10 relative z-10">
+                            <div className="flex items-center gap-4 lg:gap-5">
+    <div className={`w-12 h-12 lg:w-14 lg:h-14 rounded-2xl flex items-center justify-center shadow-xl
+        ${isDark ? 'bg-white text-black' : 'bg-black text-white'}`}>
+        {/* Responsive boyutu className ile verdik */}
+        <ShieldCheck className="w-6 h-6 lg:w-7 lg:h-7" strokeWidth={1.5} />
+    </div>
+    <div>
+        <h2 className={`text-xl lg:text-2xl font-medium tracking-tight ${isDark ? 'text-white' : 'text-black'}`}>
+            Novatrum Sentinel
+        </h2>
+        <p className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
+            Active Infrastructure Guard
+        </p>
+    </div>
+</div>
+                            <div className="text-left md:text-right">
+                                <div className="flex items-baseline gap-2 justify-start md:justify-end">
+                                    <span className={`text-3xl lg:text-5xl font-light tracking-tighter font-mono ${isDark ? 'text-white' : 'text-black'}`}>{liveLatency}</span>
+                                    <span className="text-[10px] font-bold text-zinc-400 uppercase">ms</span>
+                                </div>
+                                <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-widest text-emerald-500 mt-1">Real-time Ping</p>
                             </div>
-                            <div className="flex items-center gap-0.5 flex-1 h-3.5 relative hidden sm:flex">
-                                {chartLogs.length === 0 ? (
-                                    <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold uppercase tracking-widest text-zinc-400">Loading Data...</div>
-                                ) : (
-                                    chartLogs.map((log, i) => (
-                                        <div key={i} className={`h-full flex-1 rounded-sm ${log.status === 'down' ? 'bg-red-500' : log.status === 'degraded' || (log.latency && log.latency > 500) ? 'bg-amber-400' : 'bg-emerald-400'}`} title={`Latency: ${log.latency}ms`} />
-                                    ))
-                                )}
+                        </div>
+
+                        {/* Canlı Grafik - Mobilde daha az bar gösterimi */}
+                        <div className="flex items-end gap-1 h-16 lg:h-20 w-full mb-8">
+                            {systemLogs.slice(0, typeof window !== 'undefined' && window.innerWidth < 768 ? 25 : 50).reverse().map((log, i) => (
+                                <div 
+                                    key={i} 
+                                    className={`flex-1 rounded-full ${log.status === 'operational' ? (isDark ? 'bg-zinc-800 hover:bg-emerald-500' : 'bg-zinc-100 hover:bg-emerald-400') : 'bg-red-500'} transition-all`}
+                                    style={{ height: `${Math.max(10, (log.latency / 300) * 100)}%` }}
+                                />
+                            ))}
+                        </div>
+
+                        <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 border-t ${isDark ? 'border-white/5' : 'border-black/[0.02]'}`}>
+                            <div className="flex items-center gap-4 lg:gap-6">
+                                <div className="flex flex-col">
+                                    <span className={`text-[8px] lg:text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>Uptime</span>
+                                    <span className="text-[10px] lg:text-[11px] font-bold text-emerald-500">{uptimePercentage}%</span>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className={`text-[8px] lg:text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>Protocol</span>
+                                    <span className={`text-[10px] lg:text-[11px] font-bold ${isDark ? 'text-white' : 'text-black'}`}>TLS 1.3 / Neural</span>
+                                </div>
                             </div>
-                            <button className={`flex items-center gap-2 p-2 rounded-xl transition-colors shrink-0 ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-500 hover:text-black'}`}>
-                                <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">Diagnostics</span>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            <button onClick={generateSlaPdf} className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 group transition-all ${isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-500 hover:text-black'}`}>
+                                Diagnostics Report <ChevronRight size={12} className="group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>
-                    )}
+                    </section>
 
-                    <AnimatePresence>
-                        {isSlaExpanded && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }} className="overflow-hidden">
-                                <div className="flex flex-col lg:flex-row justify-between lg:items-start gap-8 mb-10">
-                                    <div>
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Infrastructure Health Report</h3>
-                                            <div className={`px-4 py-1.5 rounded-full border flex items-center gap-2.5 ${isSystemDown ? 'bg-red-500/10 border-red-500/20' : (isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-100')}`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full ${isSystemDown ? 'bg-red-500 animate-pulse' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]'}`} />
-                                                <span className={`text-[9px] font-bold uppercase tracking-widest ${isSystemDown ? 'text-red-500' : (isDark ? 'text-zinc-300' : 'text-zinc-700')}`}>{isSystemDown ? 'Major Outage' : 'Stable'}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
-                                            <div>
-                                                <span className={`text-5xl md:text-6xl font-light tracking-tighter ${parseFloat(uptimePercentage) < 99 ? 'text-amber-500' : 'text-emerald-500'}`}>{uptimePercentage}%</span>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-2">SLA Uptime Guarantee</p>
-                                            </div>
-                                            <div>
-                                                <span className={`text-3xl md:text-4xl font-light tracking-tighter font-mono ${isDark ? 'text-white' : 'text-black'}`}>{liveLatency}ms</span>
-                                                <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-2">Live Latency</p>
-                                            </div>
+                    {/* DEPLOYMENT LEDGER */}
+                    <div className="space-y-6">
+                        <h3 className={`text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.3em] px-4 ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Deployment Ledger</h3>
+                        {projects.map(project => (
+                            <section key={project.id} className={`p-6 lg:p-10 rounded-[32px] lg:rounded-[40px] border transition-all duration-500
+                                ${isDark ? 'bg-zinc-900/30 border-white/5' : 'bg-white border-black/[0.03] shadow-sm'}`}>
+                                <div className="flex justify-between items-start mb-8">
+                                    <div className="max-w-[70%]">
+                                        <h4 className={`text-2xl lg:text-3xl font-light tracking-tighter mb-2 ${isDark ? 'text-white' : 'text-black'}`}>{project.name}</h4>
+                                        <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+                                            <span className={`text-[8px] lg:text-[9px] font-bold font-mono tracking-widest ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>REF: {project.id.slice(0,8).toUpperCase()}</span>
+                                            <span className="text-[9px] lg:text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{project.status}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-3 items-start md:items-end">
-                                        <button onClick={generateSlaPdf} className={`flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 rounded-2xl text-[9px] font-bold uppercase tracking-widest transition-colors bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100`}>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                            Download SLA PDF
-                                        </button>
-                                        <button onClick={() => setIsSlaExpanded(false)} className={`flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 rounded-2xl text-[9px] font-bold uppercase tracking-widest border transition-colors ${isDark ? 'bg-zinc-950 hover:bg-zinc-800 border-zinc-800 text-zinc-400' : 'bg-white hover:bg-zinc-100 border-zinc-200 text-zinc-500'}`}>
-                                            Hide Details
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7"></path></svg>
-                                        </button>
+                                    <div className="text-right">
+                                        <span className={`text-2xl lg:text-4xl font-light font-mono ${isDark ? 'text-zinc-300' : 'text-black'}`}>{project.progress_percent}%</span>
                                     </div>
                                 </div>
-
-                                <div>
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-4">Network Latency & Incident Timeline (Last Checks)</p>
-                                    <div className="flex items-end gap-1 md:gap-1.5 h-32 w-full pt-4 border-b border-dashed border-zinc-200 dark:border-zinc-800 relative">
-                                        {chartLogs.length === 0 ? (
-                                            <div className="absolute inset-0 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-zinc-400">Awaiting Log Data...</div>
-                                        ) : (
-                                            chartLogs.map((log, i) => {
-                                                const heightPercentage = Math.max(10, ((log.latency || 10) / maxLatency) * 100);
-                                                let barColor = 'bg-emerald-400 dark:bg-emerald-500/80';
-                                                if (log.status === 'degraded' || (log.latency && log.latency > 500)) barColor = 'bg-amber-400 dark:bg-amber-500/80';
-                                                if (log.status === 'down') barColor = 'bg-red-500 dark:bg-red-500/80';
-                                                return (
-                                                    <div key={i} title={`Time: ${new Date(log.created_at).toLocaleTimeString()} | Latency: ${log.latency}ms | Status: ${log.status.toUpperCase()}`} className={`flex-1 rounded-t-sm hover:opacity-70 transition-opacity cursor-crosshair ${barColor}`} style={{ height: `${heightPercentage}%` }} />
-                                                );
-                                            })
-                                        )}
-                                    </div>
+                                <div className={`w-full h-[2px] rounded-full overflow-hidden mb-8 ${isDark ? 'bg-zinc-800' : 'bg-zinc-50'}`}>
+                                    <motion.div initial={{ width: 0 }} animate={{ width: `${project.progress_percent}%` }} transition={{ duration: 1.5 }} className={`h-full ${isDark ? 'bg-white' : 'bg-black'}`} />
                                 </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
-                    
-                    {/* SOL SÜTUN: INVOICES & VAULT */}
-                    <div className="lg:col-span-1 space-y-8 order-2 lg:order-1">
-                        <div className={`p-6 md:p-8 rounded-[32px] border transition-colors ${isDark ? 'bg-zinc-900/90 backdrop-blur-xl border-zinc-800' : 'bg-white/90 backdrop-blur-xl border-zinc-200 shadow-sm'}`}>
-                            <div className="flex justify-between items-center mb-8">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Ledger & Invoices</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {clientInvoices.length === 0 ? (
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 py-8 text-center border border-dashed rounded-2xl border-zinc-200 dark:border-zinc-800">No invoices generated.</p>
-                                ) : (
-                                    clientInvoices.map(inv => (
-                                        <div key={inv.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all hover:scale-[1.02] ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
-                                            <div className="flex items-center">
-                                                <span className={`px-2 py-1 rounded-md text-[8px] font-bold uppercase tracking-widest mr-3 border ${inv.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>{inv.status}</span>
-                                                <span className={`text-[10px] font-bold truncate max-w-[80px] md:max-w-[100px] ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>{inv.file_name}</span>
-                                            </div>
-                                            <a href={inv.file_url} target="_blank" rel="noreferrer" className={`text-[9px] font-bold uppercase hover:underline ${isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-400 hover:text-black'}`}>View</a>
+                                <div className="space-y-3 lg:space-y-4">
+                                    <p className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-600' : 'text-zinc-400'}`}>Latest Activity</p>
+                                    {project.project_updates?.slice(0, 3).map((u: any) => (
+                                        <div key={u.id} className={`p-4 lg:p-6 rounded-2xl border flex flex-col sm:flex-row sm:items-start justify-between gap-3
+                                            ${isDark ? 'bg-black/20 border-white/5' : 'bg-zinc-50/50 border-black/[0.01]'}`}>
+                                            <p className={`text-[12px] lg:text-[13px] font-medium leading-relaxed ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>{u.message}</p>
+                                            <span className="text-[9px] font-bold font-mono text-zinc-400 shrink-0 uppercase">{new Date(u.created_at).toLocaleDateString()}</span>
                                         </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        <div className={`p-6 md:p-8 rounded-[32px] border transition-colors ${isDark ? 'bg-zinc-900/90 backdrop-blur-xl border-zinc-800' : 'bg-white/90 backdrop-blur-xl border-zinc-200 shadow-sm'}`}>
-                            <div className="flex justify-between items-center mb-8">
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Secure Vault</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {clientFiles.length === 0 ? (
-                                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 py-8 text-center border border-dashed rounded-2xl border-zinc-200 dark:border-zinc-800">Vault is empty.</p>
-                                ) : (
-                                    clientFiles.map(file => (
-                                        <div key={file.id} className={`flex items-center justify-between p-4 rounded-2xl border transition-all hover:scale-[1.02] ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'}`}>
-                                            <span className={`text-[10px] font-bold truncate max-w-[120px] md:max-w-[150px] ${isDark ? 'text-zinc-300' : 'text-zinc-700'}`}>{file.file_name}</span>
-                                            <a href={file.file_url} target="_blank" rel="noreferrer" className={`text-[9px] font-bold uppercase hover:underline ${isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-400 hover:text-black'}`}>Download</a>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* SAĞ SÜTUN: PROJECT TRACKING (REALTIME) */}
-                    <div className="lg:col-span-2 space-y-8 order-1 lg:order-2">
-                        {projects.length === 0 ? (
-                            <div className={`p-10 md:p-14 rounded-[40px] border border-dashed text-center flex flex-col items-center justify-center min-h-[500px] ${isDark ? 'bg-zinc-900/30 backdrop-blur-xl border-zinc-800' : 'bg-white/50 backdrop-blur-xl border-zinc-200'}`}>
-                                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse mb-6" />
-                                <h3 className="text-2xl font-light uppercase tracking-tighter mb-4">Environment Initializing</h3>
-                                <p className={`text-xs font-medium leading-relaxed max-w-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                                    Your dedicated workspace has been authorized. Our engineering team is currently provisioning your project architecture. Updates will appear here shortly.
-                                </p>
-                            </div>
-                        ) : (
-                            projects.map(project => {
-                                return (
-                                    <div key={project.id} className={`p-6 md:p-12 rounded-[40px] border transition-colors ${isDark ? 'bg-zinc-900/90 backdrop-blur-xl border-zinc-800' : 'bg-white/90 backdrop-blur-xl border-zinc-200 shadow-sm'}`}>
-                                        
-                                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-12 border-b pb-8 border-zinc-200 dark:border-zinc-800">
-                                            <div>
-                                                <h3 className="text-3xl md:text-4xl font-light uppercase tracking-tighter mb-2">{project.name}</h3>
-                                                <p className={`text-[10px] font-bold font-mono uppercase tracking-[0.3em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Ref: {project.id.split('-')[0].toUpperCase()}</p>
-                                            </div>
-                                            <div className="text-left md:text-right">
-                                                <div className={`inline-block px-5 py-2.5 rounded-full text-[9px] font-bold uppercase tracking-widest border ${isDark ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-white border-zinc-200 text-black shadow-sm'}`}>
-                                                    Phase: {project.status}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className={`p-6 md:p-8 rounded-[32px] border mb-12 ${isDark ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-100 shadow-sm'}`}>
-                                            <div className="flex justify-between mb-4 items-end">
-                                                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Architecture Load</span>
-                                                <span className="text-3xl font-light font-mono">{project.progress_percent}%</span>
-                                            </div>
-                                            <div className={`w-full h-1.5 rounded-full overflow-hidden mb-8 ${isDark ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
-                                                <motion.div initial={{ width: 0 }} animate={{ width: `${project.progress_percent}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className={`h-full ${isDark ? 'bg-white' : 'bg-black'}`} />
-                                            </div>
-                                            
-                                            <div className="space-y-4">
-                                                {[
-                                                    { label: 'Provisioning Servers & Initial Setup', threshold: 20 },
-                                                    { label: 'Building Database & Core Architecture', threshold: 50 },
-                                                    { label: 'Deploying SSL & Security Layers', threshold: 80 },
-                                                    { label: 'Finalizing Operational Node', threshold: 100 }
-                                                ].map((step, idx) => (
-                                                    <div key={idx} className="flex items-center gap-4">
-                                                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 border transition-colors duration-500 ${project.progress_percent >= step.threshold ? 'bg-emerald-500 border-emerald-500' : isDark ? 'bg-zinc-900 border-zinc-700' : 'bg-zinc-50 border-zinc-200'}`}>
-                                                            {project.progress_percent >= step.threshold && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                                                        </div>
-                                                        <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest ${project.progress_percent >= step.threshold ? isDark ? 'text-white' : 'text-black' : 'text-zinc-400'}`}>{step.label}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <div className="flex items-center justify-between mb-8">
-                                                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Deployment Ledger</h4>
-                                                <span className="text-[9px] text-zinc-400 font-mono tracking-widest uppercase">System Logs</span>
-                                            </div>
-                                            <div className="space-y-4 max-h-96 overflow-y-auto pr-2 md:pr-4 custom-scrollbar">
-                                                {project.project_updates?.map((u: any, index: number) => (
-                                                    <div key={u.id} className={`p-5 md:p-6 rounded-[24px] border transition-colors shrink-0 ${index === 0 ? (isDark ? 'bg-zinc-950 border-zinc-700' : 'bg-white border-zinc-200 shadow-sm') : (isDark ? 'bg-zinc-950 border-zinc-800 opacity-60' : 'bg-white border-zinc-100 opacity-70')}`}>
-                                                        <div className="flex flex-col gap-3">
-                                                            <p className={`text-sm font-medium leading-relaxed ${u.message.includes('APPROVED') ? 'text-emerald-500' : isDark ? 'text-zinc-300' : 'text-zinc-800'}`}>{u.message}</p>
-                                                            <div className="flex justify-between items-center pt-4 border-t border-zinc-100 dark:border-zinc-800">
-                                                                <span className="text-[9px] font-bold font-mono uppercase tracking-widest text-zinc-400">{formatDate(u.created_at)}</span>
-                                                                <span className="text-[9px] font-bold font-mono uppercase tracking-widest text-zinc-500">Load: {u.progress_at_time}%</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {(!project.project_updates || project.project_updates.length === 0) && (
-                                                    <div className="py-10 text-center border border-dashed rounded-[24px] border-zinc-200 dark:border-zinc-800">
-                                                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Waiting for initial log entry...</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                );
-                            })
-                        )}
+                                    ))}
+                                </div>
+                            </section>
+                        ))}
                     </div>
                 </div>
 
-                <footer className="mt-32 text-center text-[9px] font-bold uppercase tracking-[0.5em] text-zinc-400 pb-10">
-                    Novatrum // Infrastructure Operational
-                </footer>
-            </motion.div>
+                {/* RIGHT COLUMN: VAULT & BILLING (Mobilde en alta kayar) */}
+                <div className="col-span-12 lg:col-span-4 space-y-6 lg:space-y-10">
+                    <section className={`p-6 lg:p-8 rounded-[24px] lg:rounded-[32px] border transition-all duration-500
+                        ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-black/[0.03] shadow-sm'}`}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Secure Vault</h3>
+                            <Box size={14} className="text-zinc-300" />
+                        </div>
+                        <div className="space-y-2 lg:space-y-3">
+                            {clientFiles.map(file => (
+                                <div key={file.id} className={`flex items-center justify-between p-3.5 lg:p-4 rounded-xl border group transition-all
+                                    ${isDark ? 'bg-black/20 border-white/5' : 'bg-zinc-50/50 border-transparent hover:border-black/5'}`}>
+                                    <span className={`text-[10px] lg:text-[11px] font-bold truncate max-w-[150px] ${isDark ? 'text-zinc-400' : 'text-zinc-700'}`}>{file.file_name}</span>
+                                    <a href={file.file_url} target="_blank" className={`p-2 rounded-lg ${isDark ? 'text-zinc-400 hover:text-white' : 'text-zinc-400 hover:text-black'}`}>
+                                        <Download size={14} />
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
 
-            <style dangerouslySetInnerHTML={{ __html: `
-                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background-color: ${isDark ? '#3f3f46' : '#e4e4e7'}; border-radius: 20px; }
-            `}} />
+                    <section className={`p-6 lg:p-8 rounded-[24px] lg:rounded-[32px] border transition-all duration-500
+                        ${isDark ? 'bg-zinc-900/50 border-white/5' : 'bg-white border-black/[0.03] shadow-sm'}`}>
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className={`text-[9px] lg:text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>Billing Node</h3>
+                            <FileText size={14} className="text-zinc-300" />
+                        </div>
+                        <div className="space-y-2 lg:space-y-3">
+                            {clientInvoices.map(inv => (
+                                <div key={inv.id} className={`flex items-center justify-between p-3.5 lg:p-4 rounded-xl border group transition-all
+                                    ${isDark ? 'bg-black/20 border-white/5' : 'bg-zinc-50/50 border-transparent hover:border-black/5'}`}>
+                                    <div className="flex items-center gap-2 lg:gap-3">
+                                        <div className={`w-1 h-1 lg:w-1.5 lg:h-1.5 rounded-full ${inv.status === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                        <span className={`text-[10px] lg:text-[11px] font-bold ${isDark ? 'text-zinc-400' : 'text-zinc-700'}`}>{inv.file_name}</span>
+                                    </div>
+                                    <a href={inv.file_url} target="_blank" className={`text-[8px] lg:text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-zinc-500 hover:text-white' : 'text-zinc-400 hover:text-black'}`}>View</a>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+            </div>
         </div>
     );
 }

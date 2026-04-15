@@ -1,0 +1,31 @@
+{
+  "company_name": "Novatrum",
+  "founder": "Yasin Can Koç",
+  "founder_title": "Founder & Digital Architect",
+  "location": "Belgium / Brussels",
+  "mission": "To architect high-performance, minimalist digital ecosystems that scale without friction.",
+  "vision": "Engineering Digital Excellence.",
+  "philosophy": "Invisible Excellence. Precision in microns, speed in milliseconds.",
+  "contact": {
+    "official_email": "info@novatrum.eu",
+    "founder_email": "yasin@novatrum.eu",
+    "support_desk": "Available through the Support tab in this portal",
+    "office_hours": "09:00 - 18:00 (CET)"
+  },
+  "tech_stack": {
+    "frontend": "Next.js, React, Tailwind CSS, Framer Motion",
+    "backend": "Node.js, Supabase, PostgreSQL",
+    "infrastructure": "Vercel, AWS, Cloudflare Edge Network",
+    "languages": "TypeScript (Standard for all projects)"
+  },
+  "project_standards": {
+    "standard_timeline": "Average 4-8 weeks for core architecture",
+    "performance_target": "90+ Lighthouse Score Guarantee",
+    "security_standard": "AES-256 Encryption & Automated Sentinel Monitoring",
+    "design_style": "Minimalist, Modern, High-Contrast (Apple-style)"
+  },
+  "social_media": {
+    "linkedin": "https://linkedin.com/company/novatrum",
+    "website": "https://novatrum.eu"
+  }
+}
