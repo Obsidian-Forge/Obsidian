@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Rocket, Box, Terminal, Server, CheckCircle2, Clock, 
     Activity, XCircle, Play, Square, RotateCw, Trash2, 
-    Zap, Plus, X, Search, ChevronRight
+    Zap, Plus, X, Search, ChevronRight, Cpu 
 } from 'lucide-react';
 
 type TabType = 'projects' | 'queue';
