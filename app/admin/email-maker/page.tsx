@@ -4,40 +4,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, ArrowLeft, Send, Trash2, X, Paperclip, Save, Edit, RefreshCw } from 'lucide-react';
 
-export default function EmailMakerPage() {
-
+export default function EmailEnginePage() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    // STATES
+    
     const [emails, setEmails] = useState<any[]>([]);
     const [drafts, setDrafts] = useState<any[]>([]);
-    const [activeRightTab, setActiveRightTab] = useState<'sent' | 'drafts'>('sent');
-
+    const [activeTab, setActiveTab] = useState<'sent' | 'drafts'>('drafts');
+    
     const [loading, setLoading] = useState(false);
+    const [savingDraft, setSavingDraft] = useState(false);
     const [uploading, setUploading] = useState(false);
-
     const [viewEmail, setViewEmail] = useState<any | null>(null);
-    const [exportOpen, setExportOpen] = useState(false);
-    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-    const [deleteModalId, setDeleteModalId] = useState<string | null>(null);
-    const [deleteType, setDeleteType] = useState<'sent' | 'draft'>('sent');
-
-    const [lang, setLang] = useState('EN');
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
-
-    const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
-
-    const SENDER_OPTIONS = [
-        "Yasin Can Koç | Novatrum",
-        "Novatrum Engineering",
-        "Novatrum Support",
-        "Novatrum Billing",
-        "Novatrum Administration",
-        "Novatrum Infrastructure"
-    ];
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+    
+    const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         senderName: 'Yasin Can Koç | Novatrum',
@@ -51,651 +34,338 @@ export default function EmailMakerPage() {
         attachments: [] as { name: string, url: string }[]
     });
 
+    const SENDER_OPTIONS = [
+        "Yasin Can Koç | Novatrum",
+        "Novatrum Engineering",
+        "Novatrum Support",
+        "Novatrum Billing"
+    ];
+
     useEffect(() => { fetchHistory(); }, []);
 
-    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
-        setTimeout(() => setToast(null), 4000);
+        setTimeout(() => setToast(null), 3000);
     };
 
-    // fetchHistory fonksiyonunu tamamen bununla değiştirin
+    // Hem gönderilenleri hem taslakları çekiyoruz [cite: 242, 243]
     async function fetchHistory() {
-        setLoading(true);
-
-        // 1. Gönderilen Mailleri Çek
-        const { data: sentData, error: sentError } = await supabase
-            .from('sent_emails')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        // 2. Taslakları Çek
-        const { data: draftData, error: draftError } = await supabase
-            .from('email_drafts')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (sentError) console.error("Sent Log RLS Hatası:", sentError.message);
-        else setEmails(sentData || []); // emails state'ini günceller
-
-        if (draftError) console.error("Drafts RLS Hatası:", draftError.message);
-        else setDrafts(draftData || []); // drafts state'ini günceller
-
-        setLoading(false);
+        const [sentRes, draftRes] = await Promise.all([
+            supabase.from('sent_emails').select('*').order('created_at', { ascending: false }),
+            supabase.from('email_drafts').select('*').order('created_at', { ascending: false })
+        ]);
+        
+        if (sentRes.data) setEmails(sentRes.data);
+        if (draftRes.data) setDrafts(draftRes.data);
     }
 
-    const allHistoricalEmails = Array.from(new Set(emails.flatMap(e => e.to_emails || [])));
-
-    const handleToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setFormData({ ...formData, to: val });
-
-        const parts = val.split(',');
-        const currentSearch = parts[parts.length - 1].trim().toLowerCase();
-
-        if (currentSearch.length > 0) {
-            const matches = allHistoricalEmails.filter(email => email.toLowerCase().includes(currentSearch) && email.toLowerCase() !== currentSearch);
-            setEmailSuggestions(matches);
-            setShowSuggestions(matches.length > 0);
-        } else {
-            setShowSuggestions(false);
-        }
+    const clearForm = () => {
+        setFormData(prev => ({
+            ...prev,
+            to: '', cc: '', bcc: '', subject: '', content: '', attachments: []
+        }));
+        setCurrentDraftId(null);
     };
 
-    const acceptSuggestion = (suggestion: string) => {
-        const parts = formData.to.split(',');
-        parts.pop();
-        parts.push(' ' + suggestion);
-        const newVal = parts.join(',').trim();
-        setFormData({ ...formData, to: newVal + ', ' });
-        setShowSuggestions(false);
-    };
-
-    const handleLangChange = (newLang: string) => {
-        setLang(newLang);
-        let newSignature = '';
-        if (newLang === 'EN') newSignature = 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum';
-        if (newLang === 'FR') newSignature = 'Cordialement,\n\nYasin Can Koç | Fondateur & Architecte Digital chez Novatrum';
-        if (newLang === 'NL') newSignature = 'Met vriendelijke groet,\n\nYasin Can Koç | Oprichter & Digitaal Architect bij Novatrum';
-        if (newLang === 'TR') newSignature = 'Saygılarımla,\n\nYasin Can Koç | Kurucu & Dijital Mimar, Novatrum';
-
-        setFormData(prev => ({ ...prev, signature: newSignature }));
-    };
-
+    // Dosya Yükleme (Vault Bucket) [cite: 244, 250]
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         setUploading(true);
         const file = e.target.files[0];
         const fileExt = file.name.split('.').pop();
-        const fileName = `email-attachment-${Date.now()}.${fileExt}`;
-        const filePath = `email_attachments/${fileName}`;
-
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `emails/${Date.now()}_${safeName}`;
+        
         try {
-            const { error: uploadError } = await supabase.storage.from('client-assets').upload(filePath, file);
+            const { error: uploadError } = await supabase.storage.from('vault').upload(filePath, file);
             if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage.from('client-assets').getPublicUrl(filePath);
+            const { data: { publicUrl } } = supabase.storage.from('vault').getPublicUrl(filePath);
             setFormData(prev => ({ ...prev, attachments: [...prev.attachments, { name: file.name, url: publicUrl }] }));
         } catch (error: any) {
-            showToast("Upload failed: " + error.message, "error");
+            showToast("Upload failed. Ensure 'vault' bucket exists.", "error");
         } finally {
             setUploading(false);
+            if (e.target) e.target.value = '';
         }
     };
 
-    const handleMessagePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        const html = e.clipboardData.getData('text/html');
-        if (html) {
-            e.preventDefault();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            doc.body.querySelectorAll('p').forEach(p => { p.appendChild(document.createTextNode('\n\n')); });
-            doc.body.querySelectorAll('li').forEach(li => { li.appendChild(document.createTextNode('\n')); });
-            doc.body.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-
-            let formattedText = doc.body.innerText.replace(/\n{3,}/g, '\n\n').trim();
-
-            const target = e.target as HTMLTextAreaElement;
-            const start = target.selectionStart;
-            const end = target.selectionEnd;
-            const currentContent = formData.content;
-
-            const newContent = currentContent.substring(0, start) + formattedText + currentContent.substring(end);
-            setFormData(prev => ({ ...prev, content: newContent }));
-
-            setTimeout(() => {
-                target.selectionStart = target.selectionEnd = start + formattedText.length;
-            }, 0);
-        }
-    };
-
-    const removeAttachment = (index: number) => {
-        setFormData(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
-    };
-
-    // FORM TEMİZLEME YARDIMCI FONKSİYONU
-    const clearForm = () => {
-        setEditingDraftId(null);
-        setFormData({
-            senderName: 'Yasin Can Koç | Novatrum',
-            from: 'yasin@novatrum.eu',
-            to: '', cc: '', bcc: '', subject: '', content: '',
-            signature: formData.signature,
-            attachments: []
-        });
-    };
-
-    // TASLAK (DRAFT) KAYDETME VE FORMU TEMİZLEME
-    async function handleSaveDraft() {
-        setLoading(true);
-        const draftPayload = {
+    const preparePayload = () => {
+        return {
             sender_name: formData.senderName,
-            from_email: formData.from,
-            to_emails: formData.to,
-            cc: formData.cc,
-            bcc: formData.bcc,
+            reply_to: formData.from,
+            to_emails: formData.to.split(',').map(e => e.trim()).filter(Boolean),
+            cc_emails: formData.cc ? formData.cc.split(',').map(e => e.trim()).filter(Boolean) : [],
+            bcc_emails: formData.bcc ? formData.bcc.split(',').map(e => e.trim()).filter(Boolean) : [],
             subject: formData.subject,
             content: formData.content,
             signature: formData.signature,
             attachments: formData.attachments
         };
+    };
 
-        if (editingDraftId) {
-            const { error } = await supabase.from('email_drafts').update(draftPayload).eq('id', editingDraftId);
-            if (error) showToast("DB Error: " + error.message, "error");
-            else {
-                showToast("Draft successfully updated!", "success");
-                clearForm(); // Güncelleyip formu temizler
-            }
-        } else {
-            const { data, error } = await supabase.from('email_drafts').insert([draftPayload]).select().single();
-            if (error) showToast("DB Error: " + error.message, "error");
-            else {
-                showToast("Saved to Drafts!", "success");
-                clearForm(); // Yeni kaydedip formu temizler
-            }
+    // --- TASLAK (DRAFT) KAYDETME ---
+    async function handleSaveDraft() {
+        if (!formData.subject && !formData.to) {
+            return showToast("Provide at least a subject or recipient to save a draft.", "error");
         }
+        
+        setSavingDraft(true);
+        const payload = preparePayload();
 
-        fetchHistory();
-        setLoading(false);
+        try {
+            if (currentDraftId) {
+                // Mevcut taslağı güncelle
+                const { error } = await supabase.from('email_drafts').update(payload).eq('id', currentDraftId);
+                if (error) throw error;
+                showToast("Draft updated successfully.");
+            } else {
+                // Yeni taslak oluştur
+                const { data, error } = await supabase.from('email_drafts').insert([payload]).select().single();
+                if (error) throw error;
+                setCurrentDraftId(data.id);
+                showToast("Saved as new draft.");
+            }
+            fetchHistory();
+            setActiveTab('drafts');
+        } catch (err: any) {
+            showToast(err.message, "error");
+        } finally {
+            setSavingDraft(false);
+        }
     }
 
-    // DRAFT YÜKLEME
-    function loadDraft(draft: any) {
+    // --- TASLAĞI FORMA YÜKLEME ---
+    const loadDraft = (draft: any) => {
         setFormData({
             senderName: draft.sender_name || 'Yasin Can Koç | Novatrum',
-            from: draft.from_email || 'yasin@novatrum.eu',
-            to: draft.to_emails || '',
-            cc: draft.cc || '',
-            bcc: draft.bcc || '',
+            from: draft.reply_to || 'yasin@novatrum.eu',
+            to: Array.isArray(draft.to_emails) ? draft.to_emails.join(', ') : '',
+            cc: Array.isArray(draft.cc_emails) ? draft.cc_emails.join(', ') : '',
+            bcc: Array.isArray(draft.bcc_emails) ? draft.bcc_emails.join(', ') : '',
             subject: draft.subject || '',
             content: draft.content || '',
             signature: draft.signature || 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum',
             attachments: draft.attachments || []
         });
-
-        setEditingDraftId(draft.id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // ANINDA GÖNDERME
-    async function handleSend() {
-        if (!formData.to || !formData.subject || !formData.content) return showToast("To, Subject and Message are required!", "error");
-
-        setLoading(true);
-        const toArray = formData.to.split(',').map(e => e.trim()).filter(Boolean);
-        const ccArray = formData.cc ? formData.cc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
-        const bccArray = formData.bcc ? formData.bcc.split(',').map(e => e.trim()).filter(Boolean) : undefined;
-
-        const res = await fetch('/api/email-maker', {
-            method: 'POST',
-            body: JSON.stringify({ ...formData, to: toArray, cc: ccArray, bcc: bccArray })
-        });
-
-        if (res.ok) {
-            showToast("Email Transmitted Successfully!", "success");
-
-            if (editingDraftId) {
-                await supabase.from('email_drafts').delete().eq('id', editingDraftId);
-            }
-
-            clearForm();
-            fetchHistory();
-            setActiveRightTab('sent');
-        } else {
-            const errData = await res.json();
-            showToast("Error: " + (errData.error || "Failed to send email."), "error");
-        }
-        setLoading(false);
-    }
-
-    async function confirmDelete() {
-        if (!deleteModalId) return;
-        const table = deleteType === 'sent' ? 'sent_emails' : 'email_drafts';
-        const { error } = await supabase.from(table).delete().eq('id', deleteModalId);
-
-        if (!error) {
-            if (deleteType === 'sent') setEmails(emails.filter(e => e.id !== deleteModalId));
-            else setDrafts(drafts.filter(d => d.id !== deleteModalId));
-
-            showToast("Log deleted successfully.", "success");
-            if (viewEmail && viewEmail.id === deleteModalId) setViewEmail(null);
-            if (editingDraftId === deleteModalId) {
-                clearForm();
-            }
-        } else {
-            showToast("Error deleting log.", "error");
-        }
-        setDeleteModalId(null);
-    }
-
-    const handleExport = (format: 'txt' | 'html' | 'pdf') => {
-        if (!viewEmail) return;
-
-        if (format === 'txt') {
-            const textContent = `Date: ${new Date(viewEmail.created_at).toLocaleString()}\nFrom: ${viewEmail.from_email}\nTo: ${viewEmail.to_emails?.join(', ')}\nSubject: ${viewEmail.subject}\n\n${viewEmail.content}\n\n${viewEmail.signature}`;
-            const blob = new Blob([textContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Novatrum_Email_${viewEmail.id.slice(0, 6)}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        if (format === 'html' || format === 'pdf') {
-            const htmlContent = `
-                <html>
-                <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #18181b; max-width: 700px; margin: 0 auto;">
-                    <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e4e4e7;">
-                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>Date:</strong> ${new Date(viewEmail.created_at).toLocaleString()}</p>
-                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>From:</strong> ${viewEmail.from_email || viewEmail.sender_name}</p>
-                        <p style="margin: 0 0 5px 0; color: #71717a; font-size: 13px;"><strong>To:</strong> ${viewEmail.to_emails?.join(', ') || viewEmail.to_emails}</p>
-                        <h2 style="margin: 15px 0 0 0; font-size: 20px;">Subject: ${viewEmail.subject}</h2>
-                    </div>
-                    <div style="text-align: center; margin-bottom: 40px;">
-                        <h1 style="font-size: 26px; letter-spacing: -0.05em; margin: 0; font-weight: 600; color: #000;">NOVATRUM</h1>
-                    </div>
-                    <div style="line-height: 1.7; font-size: 15px; white-space: pre-wrap;">
-                        ${viewEmail.content}
-                        <br/><br/>
-                        <span style="font-style: italic; color: #71717a;">${viewEmail.signature}</span>
-                    </div>
-                </body>
-                </html>
-            `;
-
-            if (format === 'html') {
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Novatrum_Email_${viewEmail.id.slice(0, 6)}.html`;
-                a.click();
-                URL.revokeObjectURL(url);
-            }
-
-            if (format === 'pdf') {
-                const printWin = window.open('', '', 'width=800,height=800');
-                if (printWin) {
-                    printWin.document.write(htmlContent);
-                    printWin.document.close();
-                    printWin.focus();
-                    setTimeout(() => {
-                        printWin.print();
-                        printWin.close();
-                    }, 250);
-                }
-            }
-        }
-        setExportOpen(false);
+        setCurrentDraftId(draft.id);
+        showToast("Draft loaded into workspace.");
     };
 
-    return (
-        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans relative selection:bg-black selection:text-white pb-20">
+    // --- E-POSTA GÖNDERME --- [cite: 251, 260]
+    async function handleSend() {
+        if (!formData.to || !formData.subject || !formData.content) {
+            return showToast("To, Subject and Message are required to dispatch!", "error");
+        }
+        
+        setLoading(true);
+        const payload = preparePayload();
+        
+        try {
+            const res = await fetch('/api/email-maker', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    ...formData, 
+                    to: payload.to_emails, 
+                    cc: payload.cc_emails.length > 0 ? payload.cc_emails : undefined, 
+                    bcc: payload.bcc_emails.length > 0 ? payload.bcc_emails : undefined 
+                })
+            });
 
-            {/* TOAST NOTIFICATION */}
+            if (res.ok) {
+                showToast("Email dispatched securely.");
+                
+                // Eğer gönderilen mail bir taslaksa, veritabanından taslağı sil
+                if (currentDraftId) {
+                    await supabase.from('email_drafts').delete().eq('id', currentDraftId);
+                }
+                
+                clearForm();
+                fetchHistory();
+                setActiveTab('sent');
+            } else {
+                const errData = await res.json();
+                throw new Error(errData.error || "Failed to dispatch email");
+            }
+        } catch (err: any) {
+            showToast(err.message, "error");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // --- SİLME İŞLEMLERİ --- [cite: 260, 262]
+    async function deleteLog(id: string, isDraft: boolean) {
+        if (!confirm(`Delete this ${isDraft ? 'draft' : 'log'}?`)) return;
+        const table = isDraft ? 'email_drafts' : 'sent_emails';
+        
+        const { error } = await supabase.from(table).delete().eq('id', id);
+        if (!error) {
+            if (isDraft) {
+                setDrafts(drafts.filter(e => e.id !== id));
+                if (currentDraftId === id) clearForm();
+            } else {
+                setEmails(emails.filter(e => e.id !== id));
+            }
+            showToast("Record erased.");
+            if (viewEmail?.id === id) setViewEmail(null);
+        }
+    }
+
+    return (
+        <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans pb-20">
             <AnimatePresence>
                 {toast && (
-                    <motion.div initial={{ opacity: 0, y: -20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -20, scale: 0.95 }} className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3.5 rounded-full shadow-2xl border flex items-center gap-3 backdrop-blur-xl ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-red-50 border-red-200 text-red-600'}`}>
-                        {toast.type === 'success' ? (
-                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
-                        ) : (
-                            <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        )}
-                        <span className="text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">{toast.message}</span>
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-2xl border flex items-center gap-2 backdrop-blur-xl ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-red-50 border-red-200 text-red-600'}`}>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{toast.message}</span>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* DELETE CONFIRMATION MODAL */}
-            <AnimatePresence>
-                {deleteModalId && (
-                    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
-                        <motion.div initial={{ scale: 0.95, y: 20, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.95, y: 20, opacity: 0 }} className="bg-white border border-zinc-200 shadow-2xl rounded-3xl w-full max-w-sm overflow-hidden flex flex-col">
-                            <div className="p-6 text-center">
-                                <div className="w-12 h-12 rounded-full bg-red-50 text-red-500 mx-auto flex items-center justify-center mb-4">
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                </div>
-                                <h3 className="text-lg font-bold text-zinc-900 mb-2">Delete Entry?</h3>
-                                <p className="text-xs font-medium text-zinc-500">This action cannot be undone. It will permanently remove this record from the database.</p>
-                            </div>
-                            <div className="flex border-t border-zinc-100">
-                                <button onClick={() => setDeleteModalId(null)} className="flex-1 py-4 text-xs font-bold text-zinc-500 uppercase tracking-widest hover:bg-zinc-50 transition-colors border-r border-zinc-100">Cancel</button>
-                                <button onClick={confirmDelete} className="flex-1 py-4 text-xs font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 transition-colors">Delete</button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* EMAIL PREVIEW MODAL */}
+            {/* Email Modal */}
             <AnimatePresence>
                 {viewEmail && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-zinc-900/30 backdrop-blur-sm">
-                        <motion.div initial={{ opacity: 0, y: 40, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 40, scale: 0.98 }} className="bg-white w-full max-w-4xl h-[90vh] rounded-[32px] shadow-2xl flex flex-col overflow-hidden relative">
-
-                            <div className="flex items-center justify-between px-8 py-6 border-b border-zinc-100 bg-zinc-50/50">
-                                <div className="flex flex-col">
-                                    <h2 className="text-xl font-bold text-zinc-900 truncate pr-4">{viewEmail.subject || '(No Subject)'}</h2>
-                                    <p className="text-xs font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join ? viewEmail.to_emails?.join(', ') : viewEmail.to_emails}</p>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white w-full max-w-3xl rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                            <div className="p-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50">
+                                <div>
+                                    <h3 className="font-bold text-lg">{viewEmail.subject || "No Subject"}</h3>
+                                    <p className="text-[10px] font-mono text-zinc-500 mt-1">To: {viewEmail.to_emails?.join ? viewEmail.to_emails.join(', ') : viewEmail.to_emails}</p>
                                 </div>
-
-                                <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <button onClick={() => setExportOpen(!exportOpen)} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-black hover:border-black transition-all shadow-sm">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                            Export
-                                        </button>
-                                        <AnimatePresence>
-                                            {exportOpen && (
-                                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute right-0 top-full mt-2 w-48 bg-white border border-zinc-200 rounded-2xl shadow-xl overflow-hidden z-50">
-                                                    <button onClick={() => handleExport('pdf')} className="w-full text-left px-5 py-3.5 text-xs font-bold text-zinc-600 hover:bg-zinc-50 hover:text-black transition-colors border-b border-zinc-100">Save as PDF</button>
-                                                    <button onClick={() => handleExport('html')} className="w-full text-left px-5 py-3.5 text-xs font-bold text-zinc-600 hover:bg-zinc-50 hover:text-black transition-colors border-b border-zinc-100">Download .HTML</button>
-                                                    <button onClick={() => handleExport('txt')} className="w-full text-left px-5 py-3.5 text-xs font-bold text-zinc-600 hover:bg-zinc-50 hover:text-black transition-colors">Download .TXT</button>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-
-                                    <button onClick={() => setViewEmail(null)} className="w-10 h-10 flex items-center justify-center bg-white border border-zinc-200 rounded-xl text-zinc-400 hover:text-black hover:border-black transition-all shadow-sm">
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                    </button>
-                                </div>
+                                <button onClick={() => setViewEmail(null)} className="p-2 bg-white rounded-xl border border-zinc-200 text-zinc-400 hover:text-black"><X size={16}/></button>
                             </div>
-
-                            <div className="flex-1 overflow-y-auto custom-scrollbar p-8 md:p-12 bg-white">
-                                <div className="max-w-[600px] mx-auto text-[#18181b] font-sans">
-                                    <div className="py-10 border-b border-zinc-200 text-center flex justify-center items-center gap-5">
-                                        <img src="https://novatrum.eu/logo.png" alt="N." className="h-9 pointer-events-none opacity-90" />
-                                        <h1 className="text-[28px] tracking-[-0.05em] m-0 font-semibold text-black leading-none">NOVATRUM</h1>
-                                    </div>
-                                    <div className="py-10 text-[15px] leading-[1.8] whitespace-pre-wrap text-zinc-800">
-                                        {viewEmail.content}
-                                        <p className="mt-10 italic text-zinc-500 whitespace-pre-wrap">{viewEmail.signature}</p>
-                                    </div>
-                                    <div className="p-6 mt-6 bg-[#fafafa] rounded-2xl text-xs text-zinc-500 border border-zinc-100">
-                                        <p className="m-0 font-bold text-[#18181b] tracking-[0.05em] uppercase">NOVATRUM CORE</p>
-                                        <p className="my-1.5">Engineering Digital Excellence</p>
-                                    </div>
-                                </div>
+                            <div className="p-8 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-zinc-800">
+                                {viewEmail.content}
+                                <p className="mt-8 italic text-zinc-500">{viewEmail.signature}</p>
                             </div>
-
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
 
-            <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.25]">
-                <div className="absolute inset-0 bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_50%,transparent_100%)] bg-[linear-gradient(#d4d4d8_1px,transparent_1px),linear-gradient(90deg,#d4d4d8_1px,transparent_1px)]" />
-            </div>
-
             <div className="max-w-7xl mx-auto p-6 md:p-12 relative z-10">
-
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 border-b border-zinc-200 pb-8">
                     <div>
-                        <h1 className="text-4xl md:text-5xl font-light tracking-tight text-black">Email Maker</h1>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">Professional Outreach System</p>
+                        <h1 className="text-4xl md:text-5xl font-light tracking-tight text-black">Email Engine</h1>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 mt-2">Protocol Dispatch System</p>
                     </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        <button onClick={() => router.push('/admin/audit-maker')} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all shadow-md active:scale-95 appearance-none">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            Open Audit Maker
-                        </button>
-
-                        <button onClick={() => router.push('/admin/dashboard')} className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 hover:text-black hover:border-black transition-all shadow-sm active:scale-95 appearance-none">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                            Back to Workspace
-                        </button>
-                    </div>
+                    <button onClick={() => router.push('/admin')} className="px-6 py-3 bg-white border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-500 shadow-sm hover:text-black transition-all flex items-center gap-2">
+                        <ArrowLeft size={14}/> Command Center
+                    </button>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-
+                    
                     {/* Compose Bölümü */}
-                    <div className="lg:col-span-3 space-y-8">
+                    <div className="lg:col-span-3 space-y-6">
                         <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm space-y-6">
+                            
+                            <div className="flex justify-between items-center border-b border-zinc-100 pb-4">
+                                <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-900 flex items-center gap-2">
+                                    {currentDraftId ? <><Edit size={16} className="text-amber-500"/> Editing Draft</> : <><Mail size={16}/> New Message</>}
+                                </h3>
+                                {currentDraftId && (
+                                    <button onClick={clearForm} className="text-[9px] font-bold uppercase text-zinc-400 hover:text-black flex items-center gap-1 transition-colors">
+                                        <RefreshCw size={12}/> Clear Workspace
+                                    </button>
+                                )}
+                            </div>
 
-                            {/* Üst Kısım: Başlık ve Temizle Butonu */}
-                            <div className="flex justify-between items-center pb-4 border-b border-zinc-100 mb-6">
-                                <h2 className="text-xl font-bold tracking-tight text-zinc-900">
-                                    {editingDraftId ? 'Editing Draft' : 'Compose'}
-                                </h2>
-                                <div className="flex gap-3">
-                                    {editingDraftId && (
-                                        <button onClick={clearForm} className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">Clear Form</button>
-                                    )}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Sender Profile</label>
+                                    <select value={formData.senderName} onChange={e => setFormData({ ...formData, senderName: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none cursor-pointer focus:border-black transition-colors">
+                                        {SENDER_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Reply-To Address</label>
+                                    <input value={formData.from} onChange={e => setFormData({ ...formData, from: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none focus:border-black transition-colors" />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="relative">
-                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Sender Name</label>
-                                    <select
-                                        suppressHydrationWarning
-                                        value={formData.senderName}
-                                        onChange={e => setFormData({ ...formData, senderName: e.target.value })}
-                                        className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none cursor-pointer"
-                                    >
-                                        {SENDER_OPTIONS.map((option, idx) => (
-                                            <option key={idx} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-5 top-[38px] pointer-events-none text-zinc-400">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">From Email</label>
-                                    <input suppressHydrationWarning value={formData.from} onChange={e => setFormData({ ...formData, from: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
-                                </div>
-
-                                <div className="md:col-span-2 relative">
-                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Recipient (To)</label>
-                                    <input
-                                        suppressHydrationWarning
-                                        value={formData.to}
-                                        onChange={handleToChange}
-                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                        placeholder="email1@test.com, email2@test.com"
-                                        className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none"
-                                    />
-                                    <AnimatePresence>
-                                        {showSuggestions && (
-                                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute top-full left-0 w-full mt-2 bg-white border border-zinc-200 rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar overflow-hidden">
-                                                {emailSuggestions.map(sug => (
-                                                    <div
-                                                        key={sug}
-                                                        onMouseDown={(e) => { e.preventDefault(); acceptSuggestion(sug); }}
-                                                        className="px-5 py-3.5 hover:bg-zinc-50 cursor-pointer text-sm font-medium transition-colors border-b border-zinc-50 last:border-0 text-zinc-700 hover:text-black flex items-center gap-3"
-                                                    >
-                                                        <svg className="w-4 h-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path></svg>
-                                                        {sug}
-                                                    </div>
-                                                ))}
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
-
-                                <div>
-                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">CC</label>
-                                    <input suppressHydrationWarning value={formData.cc} onChange={e => setFormData({ ...formData, cc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
-                                </div>
-                                <div>
-                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">BCC</label>
-                                    <input suppressHydrationWarning value={formData.bcc} onChange={e => setFormData({ ...formData, bcc: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
-                                </div>
+                            <div>
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Recipient(s) (Comma separated)</label>
+                                <input value={formData.to} onChange={e => setFormData({ ...formData, to: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none focus:border-black transition-colors" />
                             </div>
 
                             <div>
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Subject</label>
-                                <input suppressHydrationWarning value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all appearance-none" />
+                                <input value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-bold outline-none focus:border-black transition-colors" />
                             </div>
 
                             <div>
-                                <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Message</label>
-                                <textarea
-                                    suppressHydrationWarning
-                                    rows={10}
-                                    value={formData.content}
-                                    onChange={e => setFormData({ ...formData, content: e.target.value })}
-                                    onPaste={handleMessagePaste}
-                                    className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm font-medium outline-none focus:bg-white focus:border-black focus:ring-1 focus:ring-black transition-all resize-none appearance-none"
-                                />
+                                <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Message Content</label>
+                                <textarea rows={8} value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none resize-none focus:border-black transition-colors" />
                             </div>
 
-                            <div>
-                                <div className="flex justify-between items-center mb-2 ml-1">
-                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Signature</label>
-                                    <div className="flex items-center gap-1 bg-zinc-100 p-1 rounded-lg">
-                                        {['EN', 'NL', 'FR', 'TR'].map(l => (
-                                            <button
-                                                key={l}
-                                                onClick={() => handleLangChange(l)}
-                                                className={`text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md transition-all ${lang === l ? 'bg-white text-black shadow-sm' : 'text-zinc-400 hover:text-black'}`}
-                                            >
-                                                {l}
-                                            </button>
-                                        ))}
-                                    </div>
+                            <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-white border border-zinc-200 rounded-xl text-[9px] font-bold uppercase tracking-widest text-zinc-600 flex items-center gap-2 hover:border-zinc-300 transition-colors shadow-sm">
+                                        <Paperclip size={12}/> Attach
+                                    </button>
+                                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
                                 </div>
-                                <textarea suppressHydrationWarning rows={4} value={formData.signature} onChange={e => setFormData({ ...formData, signature: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm text-zinc-500 italic outline-none focus:border-black transition-all resize-none appearance-none" />                            </div>
-
-                            <div className="pt-4 border-t border-zinc-100">
-                                <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-3 ml-1">Attachments</label>
-                                <div className="space-y-3">
-                                    {formData.attachments.map((file, i) => (
-                                        <div key={i} className="flex items-center justify-between p-4 bg-white border border-zinc-200 rounded-2xl shadow-sm">
-                                            <span className="text-xs font-medium font-mono text-zinc-600 truncate max-w-[70%]">{file.name}</span>
-                                            <button onClick={() => removeAttachment(i)} className="text-[9px] font-bold uppercase text-red-500 tracking-widest hover:text-red-700 transition-colors bg-red-50 px-3 py-1.5 rounded-lg">Remove</button>
-                                        </div>
-                                    ))}
-
-                                    <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-zinc-200 rounded-2xl p-6 text-center bg-zinc-50 hover:border-black transition-all cursor-pointer group">
-                                        <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                                        {uploading ? (
-                                            <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" />
-                                        ) : (
-                                            <div className="flex flex-col items-center gap-2">
-                                                <svg className="w-6 h-6 text-zinc-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 group-hover:text-black">Add Document / File</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                                <span className="text-[9px] font-bold uppercase text-zinc-400">{formData.attachments.length} files attached</span>
                             </div>
 
-                            <div className="flex w-full flex-col sm:flex-row gap-4 pt-6 border-t border-zinc-100">
-                                <button onClick={handleSaveDraft} disabled={loading} className="flex-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 py-4 md:py-5 rounded-2xl font-bold uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2 appearance-none">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                                    {editingDraftId ? "Update Draft" : "Save as Draft"}
+                            <div className="grid grid-cols-2 gap-4">
+                                <button onClick={handleSaveDraft} disabled={savingDraft} className="w-full bg-white border border-zinc-200 text-zinc-600 py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest shadow-sm flex items-center justify-center gap-2 hover:border-black hover:text-black transition-all disabled:opacity-50">
+                                    {savingDraft ? "Saving..." : <><Save size={14}/> Save Draft</>}
                                 </button>
-                                <button onClick={handleSend} disabled={loading} className="flex-[2] text-white py-4 md:py-5 rounded-2xl font-bold uppercase text-[10px] tracking-widest disabled:opacity-50 shadow-md active:scale-95 transition-all appearance-none flex items-center justify-center bg-black hover:bg-zinc-800">
-                                    {loading ? <span className="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin" /> : "Transmit Professional Email NOW"}
+                                <button onClick={handleSend} disabled={loading} className="w-full bg-black text-white py-4 rounded-2xl font-bold uppercase text-[10px] tracking-widest shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform disabled:opacity-50">
+                                    {loading ? "Transmitting..." : <><Send size={14}/> Dispatch Email</>}
                                 </button>
                             </div>
-
                         </div>
                     </div>
 
-                    {/* Sağ Panel: Sent Log & Drafts */}
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm h-full max-h-[1000px] flex flex-col">
-
-                            <div className="flex gap-6 mb-8 border-b border-zinc-100 pb-4">
-                                <button
-                                    onClick={() => setActiveRightTab('sent')}
-                                    className={`text-sm font-bold uppercase tracking-widest transition-colors ${activeRightTab === 'sent' ? 'text-black border-b-2 border-black pb-1 -mb-[17px]' : 'text-zinc-400 hover:text-zinc-600'}`}
-                                >
-                                    Sent Log
+                    {/* Dispatch Log & Drafts (Right Column) */}
+                    <div className="lg:col-span-2">
+                        <div className="bg-white p-8 md:p-10 rounded-[40px] border border-zinc-200 shadow-sm h-full max-h-[850px] flex flex-col">
+                            
+                            {/* Tabs */}
+                            <div className="flex bg-zinc-50 p-1.5 rounded-2xl w-full mb-6 border border-zinc-100">
+                                <button onClick={() => setActiveTab('drafts')} className={`flex-1 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${activeTab === 'drafts' ? 'bg-white text-black shadow-sm border border-zinc-200' : 'text-zinc-500 hover:text-black'}`}>
+                                    Drafts ({drafts.length})
                                 </button>
-                                <button
-                                    onClick={() => setActiveRightTab('drafts')}
-                                    className={`text-sm font-bold uppercase tracking-widest transition-colors flex items-center gap-2 ${activeRightTab === 'drafts' ? 'text-black border-b-2 border-black pb-1 -mb-[17px]' : 'text-zinc-400 hover:text-zinc-600'}`}
-                                >
-                                    Drafts
-                                    {drafts.length > 0 && (
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] ${activeRightTab === 'drafts' ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-500'}`}>
-                                            {drafts.length}
-                                        </span>
-                                    )}
+                                <button onClick={() => setActiveTab('sent')} className={`flex-1 py-2.5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${activeTab === 'sent' ? 'bg-white text-black shadow-sm border border-zinc-200' : 'text-zinc-500 hover:text-black'}`}>
+                                    Sent ({emails.length})
                                 </button>
                             </div>
 
-                            <div className="space-y-4 overflow-y-auto pr-2 custom-scrolzlbar flex-1">
-
-                                {activeRightTab === 'sent' && (
-                                    <>
-                                        {emails.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No outgoing transmissions.</p>}
-                                        {emails.map((email) => (
-                                            <motion.div key={email.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => setViewEmail(email)} className="group bg-zinc-50 border border-zinc-100 p-5 rounded-3xl hover:border-black transition-all relative shadow-sm cursor-pointer">
-                                                
-                                                {/* ÜST KISIM: Sadece Tarih ve Çöp Kutusu (Sent rozeti silindi) */}
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">
-                                                        {new Date(email.created_at).toLocaleDateString()}
-                                                    </span>
-                                                    
-                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteType('sent'); setDeleteModalId(email.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    </button>
+                            <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+                                {activeTab === 'drafts' ? (
+                                    drafts.length === 0 ? (
+                                        <p className="text-[10px] text-zinc-400 uppercase tracking-widest text-center py-10 border border-dashed border-zinc-100 rounded-3xl">No drafts stored.</p>
+                                    ) : (
+                                        drafts.map(draft => (
+                                            <div key={draft.id} onClick={() => loadDraft(draft)} className={`group bg-zinc-50 border p-5 rounded-3xl cursor-pointer hover:border-black transition-all relative ${currentDraftId === draft.id ? 'border-zinc-400' : 'border-zinc-100'}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-amber-600 flex items-center gap-1"><Edit size={10}/> DRAFT</span>
+                                                    <button onClick={(e) => { e.stopPropagation(); deleteLog(draft.id, true); }} className="text-zinc-300 hover:text-red-500 bg-white p-1.5 rounded-lg border border-zinc-200 transition-colors"><Trash2 size={12}/></button>
                                                 </div>
-
-                                                {/* ALT KISIM: Konu ve Alıcı */}
-                                                <h3 className="font-bold text-sm text-zinc-900 truncate mb-1">{email.subject}</h3>
-                                                <p className="text-[10px] text-zinc-500 font-mono truncate">To: {email.to_emails?.join ? email.to_emails?.join(', ') : email.to_emails}</p>
-                                            </motion.div>
-                                        ))}
-                                    </>
-                                )}
-
-                                {activeRightTab === 'drafts' && (
-                                    <>
-                                        {drafts.length === 0 && <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 text-center py-10">No saved drafts.</p>}
-                                        {drafts.map((draft) => (
-                                            <motion.div key={draft.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={() => loadDraft(draft)} className={`group border p-5 rounded-3xl transition-all relative shadow-sm cursor-pointer ${editingDraftId === draft.id ? 'bg-black border-black text-white' : 'bg-white border-zinc-200 hover:border-black text-zinc-900'}`}>
-                                                
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-zinc-500 shadow-sm">
-                                                        {new Date(draft.created_at).toLocaleDateString()}
-                                                    </span>
-
-                                                    {/* BURADAKİ email YAZILARI draft OLARAK DEĞİŞTİRİLDİ */}
-                                                    <button onClick={(e) => { e.stopPropagation(); setDeleteType('draft'); setDeleteModalId(draft.id); }} className="text-zinc-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 bg-white p-1.5 rounded-lg shadow-sm border border-zinc-200">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                    </button>
+                                                <h4 className="font-bold text-sm text-zinc-900 truncate mb-1">{draft.subject || "No Subject"}</h4>
+                                                <p className="text-[10px] font-mono text-zinc-500 truncate">{draft.to_emails?.join ? draft.to_emails.join(', ') : draft.to_emails || 'No Recipient'}</p>
+                                            </div>
+                                        ))
+                                    )
+                                ) : (
+                                    emails.length === 0 ? (
+                                        <p className="text-[10px] text-zinc-400 uppercase tracking-widest text-center py-10 border border-dashed border-zinc-100 rounded-3xl">No dispatches recorded.</p>
+                                    ) : (
+                                        emails.map(email => (
+                                            <div key={email.id} onClick={() => setViewEmail(email)} className="group bg-white border border-zinc-100 p-5 rounded-3xl cursor-pointer hover:border-black transition-all relative shadow-sm">
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className="text-[9px] font-bold bg-zinc-50 border border-zinc-200 px-2 py-1 rounded-md text-zinc-500">{new Date(email.created_at).toLocaleDateString()}</span>
+                                                    <button onClick={(e) => { e.stopPropagation(); deleteLog(email.id, false); }} className="text-zinc-300 hover:text-red-500 bg-zinc-50 p-1.5 rounded-lg border border-zinc-200 transition-colors"><Trash2 size={12}/></button>
                                                 </div>
-                                                
-                                                <h3 className={`font-bold text-sm truncate mb-1 ${editingDraftId === draft.id ? 'text-white' : 'text-zinc-900'}`}>{draft.subject || '(No Subject)'}</h3>
-                                                <p className={`text-[10px] font-mono truncate ${editingDraftId === draft.id ? 'text-zinc-400' : 'text-zinc-500'}`}>To: {draft.to_emails || '(Empty)'}</p>
-                                                {draft.attachments?.length > 0 && (
-                                                    <p className={`text-[9px] mt-2 font-bold uppercase tracking-widest ${editingDraftId === draft.id ? 'text-indigo-300' : 'text-indigo-600'}`}>📎 {draft.attachments.length} Attachment(s)</p>
-                                                )}
-                                            </motion.div>
-                                        ))}
-                                    </>
+                                                <h4 className="font-bold text-sm text-zinc-900 truncate mb-1">{email.subject}</h4>
+                                                <p className="text-[10px] font-mono text-zinc-500 truncate">{email.to_emails?.join ? email.to_emails.join(', ') : email.to_emails}</p>
+                                            </div>
+                                        ))
+                                    )
                                 )}
                             </div>
                         </div>

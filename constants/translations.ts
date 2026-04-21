@@ -431,7 +431,57 @@ export const translations = {
       },
       ctaTitle: "Ready to define your parameters?",
       ctaButton: "Start Project Discovery"
-    }
+    },
+
+    productsPage: {
+      splashInit: "Initializing Premium Modules...",
+      heroTag: "Premium Modules",
+      heroTitleLine1: "Expand Your",
+      heroTitleLine2: "Architecture.",
+      heroDesc: "Supercharge your operations with deeply integrated SaaS modules. From military-grade security to omniscient AI assistants, build the exact infrastructure your agency needs.",
+      visualInterface: "Visual Interface",
+      investment: "Module Investment",
+      mo: "/mo",
+      btnRequest: "Request Access",
+      ctaTitle: "Not sure which nodes to activate?",
+      ctaDesc: "Connect with the engineering team to audit your current architecture and determine the exact modules required for optimal scaling.",
+      btnConsult: "Consult Engineering",
+      modules: {
+        nexus: {
+          name: "Nexus CX Module",
+          tagline: "Client Experience Paradigm",
+          desc: "A dedicated internal portal for your clients. Centralize all communications, document sharing, and project status tracking in one highly secure, branded environment. Eliminate email clutter and elevate your professional image.",
+          f1: "Real-time project tracking",
+          f2: "Secure vault access",
+          f3: "Automated billing sync"
+        },
+        sentinel: {
+          name: "Sentinel Core Security",
+          tagline: "Military-Grade Infrastructure",
+          desc: "Advanced threat protection for your architecture. Sentinel Core provides continuous vulnerability scanning, DDoS mitigation, and automated database backups to ensure your digital assets remain impenetrable 24/7.",
+          f1: "Automated daily backups",
+          f2: "DDoS mitigation layer",
+          f3: "Zero-day vulnerability patching"
+        },
+        architect: {
+          name: "Architect AI Module",
+          tagline: "Automated Blueprint Generation",
+          desc: "Instantly generate high-conversion technical audit reports and architecture blueprints for prospective clients. Use data-driven insights to close deals faster with automated PageSpeed and Wappalyzer parsing.",
+          f1: "Instant audit generation",
+          f2: "PDF blueprint rendering",
+          f3: "Legacy stack identification"
+        },
+        neural: {
+          name: "Neural AI Engine",
+          tagline: "The Ultimate Oracle",
+          desc: "Deploy a high-level infrastructure intelligence node. Neural AI has real-time access to your entire database, acting as a tireless executive assistant capable of calculating MRR, tracking debts, and writing sales copies.",
+          price: "Tiered",
+          f1: "Unlimited world knowledge",
+          f2: "Live database context",
+          f3: "Financial & technical logic"
+        }
+      }
+    },
   },
 
   nl: {
@@ -863,7 +913,57 @@ export const translations = {
       },
       ctaTitle: "Klaar om uw parameters te bepalen?",
       ctaButton: "Start Project Discovery"
-    }
+    },
+
+    productsPage: {
+      splashInit: "Premium Modules Initialiseren...",
+      heroTag: "Premium Modules",
+      heroTitleLine1: "Breid Uw Architectuur",
+      heroTitleLine2: "Uit.",
+      heroDesc: "Geef uw operaties een boost met diep geïntegreerde SaaS-modules. Van militaire beveiliging tot alwetende AI-assistenten, bouw de exacte infrastructuur die uw bureau nodig heeft.",
+      visualInterface: "Visuele Interface",
+      investment: "Module Investering",
+      mo: "/mnd",
+      btnRequest: "Toegang Aanvragen",
+      ctaTitle: "Niet zeker welke nodes u moet activeren?",
+      ctaDesc: "Neem contact op met het engineeringteam om uw huidige architectuur te auditen en de exacte modules te bepalen die nodig zijn voor optimale schaalbaarheid.",
+      btnConsult: "Engineering Raadplegen",
+      modules: {
+        nexus: {
+          name: "Nexus CX Module",
+          tagline: "Klantervaring Paradigma",
+          desc: "Een speciaal intern portaal voor uw klanten. Centraliseer alle communicatie, het delen van documenten en het bijhouden van de projectstatus in één zeer veilige, merkgebonden omgeving. Elimineer e-mailrommel en verhoog uw professionele imago.",
+          f1: "Real-time project tracking",
+          f2: "Beveiligde kluistoegang",
+          f3: "Geautomatiseerde facturatie sync"
+        },
+        sentinel: {
+          name: "Sentinel Core Security",
+          tagline: "Militaire Infrastructuur",
+          desc: "Geavanceerde bedreigingsbescherming voor uw architectuur. Sentinel Core biedt continue kwetsbaarheidsscans, DDoS-mitigatie en geautomatiseerde database back-ups om ervoor te zorgen dat uw digitale activa 24/7 ondoordringbaar blijven.",
+          f1: "Geautomatiseerde dagelijkse back-ups",
+          f2: "DDoS mitigatie laag",
+          f3: "Zero-day kwetsbaarheid patching"
+        },
+        architect: {
+          name: "Architect AI Module",
+          tagline: "Geautomatiseerde Blueprint Generatie",
+          desc: "Genereer direct technische auditrapporten en architectuurblauwdrukken met hoge conversie voor potentiële klanten. Gebruik data-gedreven inzichten om deals sneller te sluiten met geautomatiseerde PageSpeed en Wappalyzer parsing.",
+          f1: "Directe audit generatie",
+          f2: "PDF blueprint rendering",
+          f3: "Identificatie van legacy stack"
+        },
+        neural: {
+          name: "Neural AI Engine",
+          tagline: "Het Ultieme Orakel",
+          desc: "Implementeer een high-level infrastructuur intelligentie node. Neural AI heeft real-time toegang tot uw volledige database en fungeert als een onvermoeibare uitvoerende assistent die in staat is om MRR te berekenen, schulden bij te houden en verkoopteksten te schrijven.",
+          price: "Gelaagd",
+          f1: "Onbeperkte wereldkennis",
+          f2: "Live database context",
+          f3: "Financiële & technische logica"
+        }
+      }
+    },
   },
 
   fr: {
@@ -1294,7 +1394,57 @@ export const translations = {
       },
       ctaTitle: "Prêt à définir vos paramètres ?",
       ctaButton: "Démarrer la Découverte du Projet"
-    }
+    },
+
+    productsPage: {
+      splashInit: "Initialisation des Modules Premium...",
+      heroTag: "Modules Premium",
+      heroTitleLine1: "Développez Votre",
+      heroTitleLine2: "Architecture.",
+      heroDesc: "Dynamisez vos opérations avec des modules SaaS profondément intégrés. De la sécurité de niveau militaire aux assistants IA omniscients, construisez l'infrastructure exacte dont votre agence a besoin.",
+      visualInterface: "Interface Visuelle",
+      investment: "Investissement du Module",
+      mo: "/mois",
+      btnRequest: "Demander l'Accès",
+      ctaTitle: "Vous ne savez pas quels nœuds activer ?",
+      ctaDesc: "Connectez-vous avec l'équipe d'ingénierie pour auditer votre architecture actuelle et déterminer les modules exacts requis pour une mise à l'échelle optimale.",
+      btnConsult: "Consulter l'Ingénierie",
+      modules: {
+        nexus: {
+          name: "Module Nexus CX",
+          tagline: "Paradigme de l'Expérience Client",
+          desc: "Un portail interne dédié pour vos clients. Centralisez toutes les communications, le partage de documents et le suivi de l'état des projets dans un environnement de marque hautement sécurisé. Éliminez l'encombrement des e-mails et rehaussez votre image professionnelle.",
+          f1: "Suivi de projet en temps réel",
+          f2: "Accès sécurisé au coffre-fort",
+          f3: "Synchronisation automatisée de la facturation"
+        },
+        sentinel: {
+          name: "Sécurité Sentinel Core",
+          tagline: "Infrastructure de Niveau Militaire",
+          desc: "Protection avancée contre les menaces pour votre architecture. Sentinel Core fournit une analyse continue des vulnérabilités, une atténuation des attaques DDoS et des sauvegardes automatisées de la base de données pour garantir que vos actifs numériques restent impénétrables 24h/24 et 7j/7.",
+          f1: "Sauvegardes quotidiennes automatisées",
+          f2: "Couche d'atténuation DDoS",
+          f3: "Correction des vulnérabilités Zero-day"
+        },
+        architect: {
+          name: "Module Architect AI",
+          tagline: "Génération Automatisée de Blueprint",
+          desc: "Générez instantanément des rapports d'audit technique à fort taux de conversion et des plans d'architecture pour les clients potentiels. Utilisez des informations basées sur les données pour conclure des transactions plus rapidement avec l'analyse automatisée de PageSpeed et Wappalyzer.",
+          f1: "Génération d'audit instantanée",
+          f2: "Rendu de blueprint PDF",
+          f3: "Identification de la pile existante"
+        },
+        neural: {
+          name: "Moteur Neural AI",
+          tagline: "L'Oracle Ultime",
+          desc: "Déployez un nœud d'intelligence d'infrastructure de haut niveau. Neural AI a un accès en temps réel à l'ensemble de votre base de données, agissant comme un assistant exécutif infatigable capable de calculer le MRR, de suivre les dettes et d'écrire des textes de vente.",
+          price: "À plusieurs niveaux",
+          f1: "Connaissance illimitée du monde",
+          f2: "Contexte de base de données en direct",
+          f3: "Logique financière & technique"
+        }
+      }
+    },
   },
 
   tr: {
@@ -1728,6 +1878,56 @@ export const translations = {
       },
       ctaTitle: "Parametrelerinizi belirlemeye hazır mısınız?",
       ctaButton: "Proje Keşfine Başla"
-    }
+    },
+
+    productsPage: {
+      splashInit: "Premium Modüller Başlatılıyor...",
+      heroTag: "Premium Modüller",
+      heroTitleLine1: "Mimarinizi",
+      heroTitleLine2: "Genişletin.",
+      heroDesc: "Operasyonlarınızı derinlemesine entegre edilmiş SaaS modülleri ile güçlendirin. Askeri düzeyde güvenlikten her şeyi bilen yapay zeka asistanlarına kadar, ajansınızın ihtiyaç duyduğu tam altyapıyı oluşturun.",
+      visualInterface: "Görsel Arayüz",
+      investment: "Modül Yatırımı",
+      mo: "/ay",
+      btnRequest: "Erişim Talep Et",
+      ctaTitle: "Hangi düğümleri etkinleştireceğinizden emin değil misiniz?",
+      ctaDesc: "Mevcut mimarinizi denetlemek ve optimum ölçeklendirme için gereken kesin modülleri belirlemek üzere mühendislik ekibiyle bağlantı kurun.",
+      btnConsult: "Mühendisliğe Danışın",
+      modules: {
+        nexus: {
+          name: "Nexus CX Modülü",
+          tagline: "Müşteri Deneyimi Paradigması",
+          desc: "Müşterileriniz için özel bir iç portal. Tüm iletişimleri, belge paylaşımını ve proje durumu izlemeyi son derece güvenli, markalı bir ortamda merkezileştirin. E-posta karmaşasını ortadan kaldırın ve profesyonel imajınızı yükseltin.",
+          f1: "Gerçek zamanlı proje takibi",
+          f2: "Güvenli kasa erişimi",
+          f3: "Otomatik faturalandırma senkronizasyonu"
+        },
+        sentinel: {
+          name: "Sentinel Core Güvenlik",
+          tagline: "Askeri Düzeyde Altyapı",
+          desc: "Mimariniz için gelişmiş tehdit koruması. Sentinel Core, dijital varlıklarınızın 7/24 aşılmaz kalmasını sağlamak için sürekli güvenlik açığı taraması, DDoS azaltma ve otomatik veritabanı yedeklemeleri sağlar.",
+          f1: "Otomatik günlük yedeklemeler",
+          f2: "DDoS azaltma katmanı",
+          f3: "Sıfır gün (Zero-day) güvenlik açığı yaması"
+        },
+        architect: {
+          name: "Architect AI Modülü",
+          tagline: "Otomatik Plan Üretimi",
+          desc: "Potansiyel müşteriler için anında yüksek dönüşümlü teknik denetim raporları ve mimari planlar oluşturun. Otomatik PageSpeed ve Wappalyzer ayrıştırması ile anlaşmaları daha hızlı kapatmak için veriye dayalı içgörüleri kullanın.",
+          f1: "Anında denetim oluşturma",
+          f2: "PDF plan oluşturma",
+          f3: "Eski sistem (legacy stack) tanımlama"
+        },
+        neural: {
+          name: "Neural AI Motoru",
+          tagline: "Nihai Kahin",
+          desc: "Üst düzey bir altyapı zekası düğümü dağıtın. Neural AI, tüm veritabanınıza gerçek zamanlı erişime sahiptir; MRR'yi hesaplayabilen, borçları takip edebilen ve satış metinleri yazabilen yorulmak bilmez bir yönetici asistanı olarak hareket eder.",
+          price: "Kademeli",
+          f1: "Sınırsız dünya bilgisi",
+          f2: "Canlı veritabanı bağlamı",
+          f3: "Finansal ve teknik mantık"
+        }
+      }
+    },
   }
 };

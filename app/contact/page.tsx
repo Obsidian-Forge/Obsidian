@@ -47,7 +47,6 @@ export default function ContactPage() {
 
   if (!data || !data.form) return <div className="pt-40 text-center text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Loading translations...</div>;
 
-  // Roadmap bileşenini hem masaüstü hem de mobilde (farklı yerlerde) kullanacağımız için küçük bir fonksiyona çevirdik
   const renderRoadmap = () => (
     <div className="space-y-8">
       <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400 border-l-2 border-indigo-200 pl-4">
@@ -94,29 +93,41 @@ export default function ContactPage() {
         {/* MAIN CONTENT GRID (Responsive Layout) */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-16 lg:gap-20 mt-32 border-b border-zinc-100/50 pb-32">
           
-          {/* COLUMN 1: STUDIO INFO & (Desktop) ROADMAP & BADGE */}
+          {/* COLUMN 1: STUDIO INFO & ROADMAP */}
           <div className="order-1">
             <FadeUp delay={100}>
               <div className="space-y-16 flex flex-col">
                 
-                {/* Studio Information */}
+                {/* Studio Information & Direct Support Box */}
                 <div className="space-y-6">
                   <h2 className="text-4xl md:text-5xl font-light tracking-tighter text-black">{data.studioName}</h2>
-                  <div className="p-8 rounded-[32px] bg-white/60 backdrop-blur-md border border-zinc-200/60 shadow-sm inline-block relative overflow-hidden group">
-                    <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-50 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    <p className="text-zinc-500 font-bold text-[10px] tracking-[0.2em] uppercase text-left leading-relaxed relative z-10">
-                      {data.studioLoc} <br />
-                      {data.studioOper}
-                    </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4">
+                      {/* Location Box */}
+                      <div className="p-8 rounded-[32px] bg-white/60 backdrop-blur-md border border-zinc-200/60 shadow-sm relative overflow-hidden group flex-1">
+                        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-50 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <p className="text-zinc-500 font-bold text-[10px] tracking-[0.2em] uppercase text-left leading-relaxed relative z-10">
+                          {data.studioLoc} <br />
+                          {data.studioOper}
+                        </p>
+                      </div>
+
+                      {/* YENİ: Direct Support Email Box (Sadece Text) */}
+                      <div className="p-8 rounded-[32px] bg-indigo-50/30 backdrop-blur-md border border-indigo-100/50 shadow-sm flex flex-col justify-center group flex-1 hover:bg-indigo-50/80 transition-colors duration-500">
+                          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-400 mb-2">Direct Support</span>
+                          <span className="text-sm font-medium tracking-tight text-indigo-950 selection:bg-indigo-200 selection:text-indigo-900">
+                            support@novatrum.eu
+                          </span>
+                      </div>
                   </div>
                 </div>
 
-                {/* DESKTOP ROADMAP (Sadece PC'de görünür) */}
+                {/* DESKTOP ROADMAP */}
                 <div className="hidden lg:block">
                   {renderRoadmap()}
                 </div>
 
-                {/* STATUS BADGE (PC'de Roadmap altında, Mobilde Formun hemen üstünde) */}
+                {/* STATUS BADGE */}
                 <div className="flex items-center gap-4 p-5 rounded-2xl bg-emerald-50/80 backdrop-blur-sm border border-emerald-100/50 w-fit shadow-sm">
                   <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                   <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-[0.2em]">{data.badge}</p>
@@ -155,18 +166,31 @@ export default function ContactPage() {
                       </div>
                     </div>
                     
+                    {/* AÇILIR MENÜ (DROPDOWN) */}
                     <div className="space-y-3 text-left">
                       <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold ml-2">{data.form.categoryLabel}</label>
-                      {/* appearance-none eklendi */}
-                      <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-[24px] px-6 py-5 text-zinc-300 text-sm font-medium shadow-sm appearance-none" suppressHydrationWarning>
-                        {data.form.categoryValue}
+                      <div className="relative">
+                        <select 
+                          name="category" 
+                          required 
+                          className="w-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm rounded-[24px] px-6 py-5 text-white text-sm focus:border-indigo-400 transition-all outline-none appearance-none cursor-pointer"
+                          suppressHydrationWarning
+                        >
+                          <option value={data.form.categoryValue} className="bg-zinc-900 text-white">{data.form.categoryValue}</option>
+                          <option value="Nexus CX Module" className="bg-zinc-900 text-white">Nexus CX Module</option>
+                          <option value="Sentinel Core Security" className="bg-zinc-900 text-white">Sentinel Core Security</option>
+                          <option value="Architect AI Module" className="bg-zinc-900 text-white">Architect AI Module</option>
+                          <option value="Neural AI Engine" className="bg-zinc-900 text-white">Neural AI Engine</option>
+                          <option value="General Inquiry" className="bg-zinc-900 text-white">General Support Inquiry</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none">
+                          <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
                       </div>
-                      <input type="hidden" name="category" value={data.form.categoryValue} suppressHydrationWarning />
                     </div>
 
                     <div className="space-y-3 text-left">
                       <label className="text-[10px] uppercase text-zinc-400 tracking-[0.2em] font-bold ml-2">{data.form.briefLabel}</label>
-                      {/* appearance-none eklendi */}
                       <textarea name="message" required rows={4} placeholder={data.form.briefPlaceholder} className="w-full bg-white/5 backdrop-blur-md border border-white/10 shadow-sm rounded-[24px] px-6 py-5 text-white text-sm focus:border-indigo-400 transition-all outline-none resize-none placeholder:text-zinc-500 appearance-none" suppressHydrationWarning></textarea>
                     </div>
 
@@ -197,12 +221,11 @@ export default function ContactPage() {
                     </button>
                   </div>
                 )}
-
               </div>
             </FadeUp>
           </div>
 
-          {/* MOBILE ROADMAP (Sadece telefonda Formun altında görünür) */}
+          {/* MOBILE ROADMAP */}
           <div className="order-3 block lg:hidden pt-8">
             <FadeUp delay={300}>
               {renderRoadmap()}

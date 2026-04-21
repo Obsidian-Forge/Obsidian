@@ -5,6 +5,7 @@ import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { useLanguage } from '../context/LanguageContext';
 import Image from 'next/image';
+import AnnouncementBar from './components/AnnouncementBar';
 
 const CodeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>;
 const LayoutIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>;
@@ -61,6 +62,7 @@ export default function HomePage() {
   return (
     <div className="w-full overflow-x-hidden bg-white selection:bg-black/10 pb-20 font-sans">
 
+      <AnnouncementBar />
       {/* 1. HERO BANNER SECTION (PURE WHITE LIQUID GLASS) */}
       <section className="px-4 md:px-8 pt-4 md:pt-8">
         <div className="relative w-full min-h-[85vh] rounded-[40px] md:rounded-[60px] bg-zinc-50 border border-zinc-200 overflow-hidden flex flex-col items-center justify-center text-center px-6 py-20 shadow-[0_8px_40px_rgba(0,0,0,0.03)]">
@@ -68,7 +70,7 @@ export default function HomePage() {
           {/* Liquid animated blobs in the background - GPU Hızlandırmalı */}
           <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-zinc-200/60 blur-[100px] mix-blend-multiply opacity-50 animate-pulse transform-gpu translate-z-0 will-change-[opacity,transform]" style={{ animationDuration: '8s' }} />
           <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-zinc-100 blur-[120px] mix-blend-multiply opacity-70 animate-pulse transform-gpu translate-z-0 will-change-[opacity,transform]" style={{ animationDuration: '12s' }} />
-          
+
           {/* Frosted Glass Overlay - GPU Hızlandırmalı */}
           <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl transform-gpu translate-z-0 will-change-transform"></div>
 
@@ -183,7 +185,7 @@ export default function HomePage() {
 
             {/* READY TO BUILD BOX: Gece Moru & Siyah Gradient */}
             <div className="flex-1 w-full bg-zinc-950 border border-zinc-800 rounded-[40px] p-12 md:p-16 text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[450px] shadow-2xl group">
-              
+
               {/* Image Optimizasyonu Eklendi */}
               <div className="absolute inset-0 w-full h-full opacity-10 mix-blend-overlay">
                 <Image
@@ -194,7 +196,7 @@ export default function HomePage() {
                   className="object-cover object-center"
                   loading="lazy"
                 />
-              </div>              
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-indigo-950/60 to-transparent pointer-events-none"></div>
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-indigo-600/30 rounded-full blur-[80px] pointer-events-none group-hover:bg-indigo-600/40 transition-colors duration-1000" />
 
@@ -217,8 +219,8 @@ export default function HomePage() {
 
             {/* Background Image Optimizasyonu Eklendi */}
             <div className="absolute inset-0 w-full h-full opacity-20 mix-blend-overlay transition-opacity duration-1000 group-hover:opacity-30">
-              <Image 
-                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop" 
+              <Image
+                src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop"
                 alt="Novatrum Contact Background"
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
