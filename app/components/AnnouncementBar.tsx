@@ -12,30 +12,39 @@ export default function AnnouncementBar() {
     useEffect(() => {
         fetchAnnouncement();
 
-        // GERÇEK ZAMANLI DİNLEME: Admin panelinden güncellediğin an burası tetiklenir
-        const channel = supabase.channel('public:announcements')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
+        // ÇÖZÜM: Kanal ismine rastgele bir ID ekleyerek çakışmayı önlüyoruz
+        const channelId = `announcement-bar-${Math.random().toString(36).substring(7)}`;
+        
+        const channel = supabase.channel(channelId)
+            .on('postgres_changes', { 
+                event: '*', 
+                schema: 'public', 
+                table: 'announcements' 
+            }, () => {
                 fetchAnnouncement();
             })
             .subscribe();
 
-        // Senin isteğin üzerine her ihtimale karşı 5 saniyelik yedek kontrol (Polling)
         const interval = setInterval(fetchAnnouncement, 5000);
 
         return () => {
+            // Temizlik sırasında kanalı kesinlikle kaldırıyoruz
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
     }, []);
 
     const fetchAnnouncement = async () => {
-        const { data } = await supabase.from('announcements').select('*').eq('id', 1).single();
-        if (data) setAnnouncement(data);
+        try {
+            const { data } = await supabase.from('announcements').select('*').eq('id', 1).single();
+            if (data) setAnnouncement(data);
+        } catch (err) {
+            console.error("Announcement fetch error:", err);
+        }
     };
 
     if (!announcement || !announcement.is_active) return null;
 
-    // Temaya göre renk ve ikon ayarlamaları
     const themeConfig: Record<string, any> = {
         info: { bg: 'bg-indigo-600', text: 'text-white', icon: Megaphone },
         sale: { bg: 'bg-amber-500', text: 'text-black', icon: Gift },
@@ -57,7 +66,7 @@ export default function AnnouncementBar() {
             >
                 <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-center text-center gap-3">
                     <Icon size={14} className="shrink-0 animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                    <span className="text-[10px] font-bold uppercase tracking-widest leading-tight">
                         {announcement.message}
                     </span>
                     {announcement.link_url && (

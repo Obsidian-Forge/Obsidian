@@ -1,0 +1,146 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+export default function StatusClient() {
+    const [systems, setSystems] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+    useEffect(() => {
+        fetchStatus();
+
+        const channel = supabase.channel('public-status-sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'system_status' }, () => {
+                fetchStatus();
+            }).subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+
+    const fetchStatus = async () => {
+        const { data } = await supabase
+            .from('system_status')
+            .select('*')
+            .order('label', { ascending: true });
+
+        if (data) {
+            // Aynı isme sahip (çift) kayıtları engelleme
+            const uniqueData = Array.from(new Map(data.map(item => [item.label, item])).values());
+            setSystems(uniqueData);
+            setLastUpdated(new Date());
+        }
+        setLoading(false);
+    };
+
+    // ÇÖZÜM BURADA: Katı ID kuralı yerine, "Şunlar HARİÇ hepsini göster" mantığına geçtik
+    const excludedLabels = ['Aura Creative', 'Aegis Finance', 'Node Logistics', 'Quantum Engine', 'Global Network Status'];
+    
+    const coreNodes = systems.filter(node => 
+        (!node.id || !node.id.startsWith('client-')) && 
+        !excludedLabels.includes(node.label)
+    );
+
+    // Genel durumu hesapla
+    const isDown = coreNodes.some(s => s.status === 'down');
+    const isDegraded = coreNodes.some(s => s.status === 'degraded');
+    
+    let globalStatus = 'All Systems Operational';
+    let globalColor = 'text-emerald-600';
+    let globalBg = 'bg-emerald-500';
+    let globalBorder = 'border-emerald-200';
+    let globalBox = 'bg-emerald-50';
+
+    if (isDown) {
+        globalStatus = 'Major System Outage';
+        globalColor = 'text-red-600';
+        globalBg = 'bg-red-500';
+        globalBorder = 'border-red-200';
+        globalBox = 'bg-red-50';
+    } else if (isDegraded) {
+        globalStatus = 'Partial System Degradation';
+        globalColor = 'text-amber-600';
+        globalBg = 'bg-amber-500';
+        globalBorder = 'border-amber-200';
+        globalBox = 'bg-amber-50';
+    }
+
+    return (
+        <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-black selection:text-white">
+            <main className="max-w-3xl mx-auto px-6 py-20 md:py-32">
+                
+                <header className="mb-16 text-center animate-in fade-in duration-700 slide-in-from-bottom-4">
+                    <h1 className="text-5xl md:text-7xl font-light tracking-tighter text-black mb-4 leading-[1.1]">
+                        Novatrum <br className="md:hidden" />
+                        <span className="text-zinc-400">Status</span>
+                    </h1>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
+                        Real-time Core Infrastructure Availability
+                    </p>
+                </header>
+
+                {loading ? (
+                    <div className="py-20 flex justify-center">
+                        <span className="w-8 h-8 border-2 border-zinc-200 border-t-black rounded-full animate-spin" />
+                    </div>
+                ) : (
+                    <div className="animate-in fade-in duration-700 slide-in-from-bottom-8 delay-150 fill-mode-both">
+                        
+                        <div className={`p-6 md:p-10 rounded-[32px] border ${globalBorder} ${globalBox} mb-16 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-colors duration-500 shadow-sm`}>
+                            <div className="flex items-center gap-5">
+                                <span className="relative flex h-5 w-5 shrink-0">
+                                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-40 ${globalBg}`}></span>
+                                    <span className={`relative inline-flex rounded-full h-5 w-5 ${globalBg}`}></span>
+                                </span>
+                                <h2 className={`text-3xl md:text-4xl font-light tracking-tighter ${globalColor}`}>
+                                    {globalStatus}
+                                </h2>
+                            </div>
+                        </div>
+
+                        <div className="space-y-12">
+                            {coreNodes.length > 0 && (
+                                <div>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-6 px-2">Core Infrastructure</h3>
+                                    <div className="bg-white border border-zinc-200 rounded-[32px] overflow-hidden shadow-sm">
+                                        {coreNodes.map((node, index) => (
+                                            <div key={node.id} className={`p-5 md:p-6 flex items-center justify-between ${index !== coreNodes.length - 1 ? 'border-b border-zinc-100' : ''} hover:bg-zinc-50 transition-colors`}>
+                                                <span className="font-medium text-base text-zinc-800">{node.label}</span>
+                                                <StatusBadge status={node.status} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-20 pt-8 border-t border-zinc-100 flex flex-col items-center justify-center gap-2 text-center">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                                Automatically updated every 10 minutes
+                            </p>
+                            {lastUpdated && (
+                                <p className="text-[9px] font-bold text-zinc-300">
+                                    Last check: {lastUpdated.toLocaleTimeString()}
+                                </p>
+                            )}
+                        </div>
+                        
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+}
+
+function StatusBadge({ status }: { status: string }) {
+    if (status === 'operational') {
+        return <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50">Operational</span>;
+    }
+    if (status === 'degraded') {
+        return <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100/50">Degraded</span>;
+    }
+    return <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-100/50">Outage</span>;
+}

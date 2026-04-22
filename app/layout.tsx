@@ -4,6 +4,7 @@ import "./globals.css";
 import SharedLayout from "./components/SharedLayout";
 import { LanguageProvider } from "../context/LanguageContext";
 import { ThemeProvider } from "../context/ThemeContext";
+import AnnouncementBar from "./components/AnnouncementBar"; // Duyuru çubuğu eklendi
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,17 +16,36 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// GÜNCELLENMİŞ PREMİUM METADATA YAPISI
 export const metadata: Metadata = {
-  title: "Novatrum | Premium Software Studio",
+  title: {
+    default: "Novatrum | Premium Software Studio", // Ana sayfadaki isim
+    template: "%s | Novatrum", // Diğer sayfalarda "Sayfa Adı | Novatrum" yapar
+  },
   description: "We engineer bespoke web applications, SaaS platforms, and enterprise digital architectures. Transforming complex logic into high-performance software.",
+  metadataBase: new URL('https://novatrum.eu'),
   openGraph: {
-    title: 'Novatrum | Premium Software Studio',
-    description: 'We engineer bespoke web applications, SaaS platforms, and enterprise digital architectures.',
+    title: 'Novatrum | Future-Ready Infrastructure',
+    description: 'Bespoke software engineering and high-performance digital architectures.',
     url: 'https://novatrum.eu',
     siteName: 'Novatrum',
+    images: [
+      {
+        url: '/og-image.png', // Public klasöründe bu isimle bir resim olmalı
+        width: 1200,
+        height: 630,
+        alt: 'Novatrum Infrastructure Preview',
+      },
+    ],
+    locale: 'en_US',
     type: 'website',
   },
-  // YALNIZCA VAR OLAN icon.png DOSYASINA YÖNLENDİRİLDİ
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Novatrum | Premium SaaS Solutions',
+    description: 'Building the digital backbone of tomorrow.',
+    images: ['/og-image.png'],
+  },
   icons: {
     icon: '/icon.png',
     apple: '/icon.png',
@@ -60,6 +80,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#F8F9FA] dark:bg-zinc-950 transition-colors duration-300`}>
         <LanguageProvider>
           <ThemeProvider>
+            {/* DUYURU ÇUBUĞU: Tüm sayfalarda en üstte görünür */}
+            <AnnouncementBar />
+            
             <SharedLayout>
               {children}
             </SharedLayout>
