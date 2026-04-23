@@ -67,38 +67,35 @@ export default function HomePage() {
       <section className="px-4 md:px-8 pt-4 md:pt-8">
         <div className="relative w-full min-h-[85vh] rounded-[40px] md:rounded-[60px] bg-zinc-50 border border-zinc-200 overflow-hidden flex flex-col items-center justify-center text-center px-6 py-20 shadow-[0_8px_40px_rgba(0,0,0,0.03)]">
 
-          {/* Liquid animated blobs in the background - GPU Hızlandırmalı */}
-          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-zinc-200/60 blur-[100px] mix-blend-multiply opacity-50 animate-pulse transform-gpu translate-z-0 will-change-[opacity,transform]" style={{ animationDuration: '8s' }} />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-zinc-100 blur-[120px] mix-blend-multiply opacity-70 animate-pulse transform-gpu translate-z-0 will-change-[opacity,transform]" style={{ animationDuration: '12s' }} />
+          {/* ÇÖZÜM 1: Mobilde blur oranları düşürüldü (50px), masaüstünde aynı (100px) bırakıldı */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-zinc-200/60 blur-[50px] md:blur-[100px] mix-blend-multiply opacity-50 animate-pulse transform-gpu translate-z-0 will-change-[opacity,transform]" style={{ animationDuration: '8s' }} />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-zinc-100 blur-[60px] md:blur-[120px] mix-blend-multiply opacity-70 animate-pulse transform-gpu translate-z-0 will-change-[opacity,transform]" style={{ animationDuration: '12s' }} />
 
-          {/* Frosted Glass Overlay - GPU Hızlandırmalı */}
-          <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl transform-gpu translate-z-0 will-change-transform"></div>
+          {/* ÇÖZÜM 1.1: Backdrop blur mobilde 'xl', masaüstünde '3xl' yapıldı */}
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-xl md:backdrop-blur-3xl transform-gpu translate-z-0 will-change-transform"></div>
 
           <div className="relative z-10 max-w-4xl mx-auto space-y-8 flex flex-col items-center">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-zinc-200 shadow-sm backdrop-blur-md">
+  
+            <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border border-zinc-200 shadow-sm backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-1000">
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">{t.hero.badge}</span>
-            </motion.div>
+            </div>
 
-            {/* LCP dostu Framer Motion başlığı */}
-            <motion.h1
-              initial={{ opacity: 0.9, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-6xl md:text-[7rem] font-light tracking-tighter text-black leading-[0.9]"
-            >
+            {/* ÇÖZÜM 2: Framer Motion (<motion.h1>) İptal Edildi. Saf CSS Tailwind Animasyonu Eklendi! */}
+            <h1 className="text-6xl md:text-[7rem] font-light tracking-tighter text-black leading-[0.9] animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-150 fill-mode-both">
               {t.hero.title} <br />
               <span className="text-zinc-300">{t.hero.subtitle}</span>
-            </motion.h1>
+            </h1>
 
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-lg text-zinc-500 max-w-xl mx-auto font-medium leading-relaxed">
+            {/* Paragraf için de JS beklemeyen CSS animasyonu */}
+            <p className="text-lg text-zinc-500 max-w-xl mx-auto font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300 fill-mode-both">
               {t.hero.desc}
-            </motion.p>
+            </p>
 
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8 animate-in fade-in duration-1000 delay-500 fill-mode-both">
               <Link href="/gateway" className="px-8 py-4 bg-black text-white font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:scale-105 hover:bg-zinc-800 transition-all shadow-xl">
                 Start Project Discovery
               </Link>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
