@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function StatusClient() {
+    const { t } = useLanguage();
     const [systems, setSystems] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -38,7 +40,7 @@ export default function StatusClient() {
 
     // ÇÖZÜM BURADA: Katı ID kuralı yerine, "Şunlar HARİÇ hepsini göster" mantığına geçtik
     const excludedLabels = ['Aura Creative', 'Aegis Finance', 'Node Logistics', 'Quantum Engine', 'Global Network Status'];
-    
+
     const coreNodes = systems.filter(node => 
         (!node.id || !node.id.startsWith('client-')) && 
         !excludedLabels.includes(node.label)
@@ -48,20 +50,21 @@ export default function StatusClient() {
     const isDown = coreNodes.some(s => s.status === 'down');
     const isDegraded = coreNodes.some(s => s.status === 'degraded');
     
-    let globalStatus = 'All Systems Operational';
+    // DİNAMİK ÇEVİRİLİ GLOBAL STATUS YÖNETİMİ
+    let globalStatus = t?.statusPage?.global?.operational || 'All Systems Operational';
     let globalColor = 'text-emerald-600';
     let globalBg = 'bg-emerald-500';
     let globalBorder = 'border-emerald-200';
     let globalBox = 'bg-emerald-50';
 
     if (isDown) {
-        globalStatus = 'Major System Outage';
+        globalStatus = t?.statusPage?.global?.outage || 'Major System Outage';
         globalColor = 'text-red-600';
         globalBg = 'bg-red-500';
         globalBorder = 'border-red-200';
         globalBox = 'bg-red-50';
     } else if (isDegraded) {
-        globalStatus = 'Partial System Degradation';
+        globalStatus = t?.statusPage?.global?.degraded || 'Partial System Degradation';
         globalColor = 'text-amber-600';
         globalBg = 'bg-amber-500';
         globalBorder = 'border-amber-200';
@@ -75,10 +78,10 @@ export default function StatusClient() {
                 <header className="mb-16 text-center animate-in fade-in duration-700 slide-in-from-bottom-4">
                     <h1 className="text-5xl md:text-7xl font-light tracking-tighter text-black mb-4 leading-[1.1]">
                         Novatrum <br className="md:hidden" />
-                        <span className="text-zinc-400">Status</span>
+                        <span className="text-zinc-400">{t?.statusPage?.titleStatus || "Status"}</span>
                     </h1>
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-                        Real-time Core Infrastructure Availability
+                        {t?.statusPage?.subtitle || "Real-time Core Infrastructure Availability"}
                     </p>
                 </header>
 
@@ -104,12 +107,14 @@ export default function StatusClient() {
                         <div className="space-y-12">
                             {coreNodes.length > 0 && (
                                 <div>
-                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-6 px-2">Core Infrastructure</h3>
+                                    <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-6 px-2">
+                                        {t?.statusPage?.coreSystems || "Core Infrastructure"}
+                                    </h3>
                                     <div className="bg-white border border-zinc-200 rounded-[32px] overflow-hidden shadow-sm">
                                         {coreNodes.map((node, index) => (
                                             <div key={node.id} className={`p-5 md:p-6 flex items-center justify-between ${index !== coreNodes.length - 1 ? 'border-b border-zinc-100' : ''} hover:bg-zinc-50 transition-colors`}>
                                                 <span className="font-medium text-base text-zinc-800">{node.label}</span>
-                                                <StatusBadge status={node.status} />
+                                                <StatusBadge status={node.status} t={t} />
                                             </div>
                                         ))}
                                     </div>
@@ -119,11 +124,11 @@ export default function StatusClient() {
 
                         <div className="mt-20 pt-8 border-t border-zinc-100 flex flex-col items-center justify-center gap-2 text-center">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
-                                Automatically updated every 10 minutes
+                                {t?.statusPage?.autoUpdate || "Automatically updated every 10 minutes"}
                             </p>
                             {lastUpdated && (
                                 <p className="text-[9px] font-bold text-zinc-300">
-                                    Last check: {lastUpdated.toLocaleTimeString()}
+                                    {t?.statusPage?.lastCheck || "Last check:"} {lastUpdated.toLocaleTimeString()}
                                 </p>
                             )}
                         </div>
@@ -135,12 +140,13 @@ export default function StatusClient() {
     );
 }
 
-function StatusBadge({ status }: { status: string }) {
+// Rozet bileşenine çeviri (t) objesi geçirildi
+function StatusBadge({ status, t }: { status: string, t: any }) {
     if (status === 'operational') {
-        return <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50">Operational</span>;
+        return <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100/50">{t?.statusPage?.badge?.operational || "Operational"}</span>;
     }
     if (status === 'degraded') {
-        return <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100/50">Degraded</span>;
+        return <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100/50">{t?.statusPage?.badge?.degraded || "Degraded"}</span>;
     }
-    return <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-100/50">Outage</span>;
+    return <span className="text-[10px] font-bold uppercase tracking-widest text-red-600 bg-red-50 px-3 py-1.5 rounded-full border border-red-100/50">{t?.statusPage?.badge?.outage || "Outage"}</span>;
 }

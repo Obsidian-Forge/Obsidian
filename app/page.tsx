@@ -5,7 +5,7 @@ import HomeClient from './HomeClient';
 export const metadata: Metadata = {
   // Buraya yazdığın title, layout.tsx'teki template sayesinde 
   // "Novatrum | Premium Software Studio" olarak görünecek.
-  title: "Premium Software Studio", 
+  title: "Novatrum", 
   description: "We engineer bespoke web applications, SaaS platforms, and enterprise digital architectures.",
 };
 

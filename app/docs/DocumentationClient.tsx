@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Download, Copy, CheckCircle2, Server, Mail, UserCircle, CheckSquare, Square, AlertTriangle } from "lucide-react";
 
 type Language = "en" | "nl" | "fr" | "tr";
@@ -286,7 +286,7 @@ const contentData: Record<DocType, Record<Language, DocContent>> = {
         },
         {
           title: "4. Secure Vault & Credentials",
-          content: "The Secure Vault is a zwaar versleutelde omgeving binnen uw portaal. Hier vindt u uw e-mailwachtwoorden, en kunt u veilig gevoelige informatie, zoals API-sleutels, delen met het Novatrum engineering team zonder e-mail te hoeven gebruiken."
+          content: "The Secure Vault is een zwaar versleutelde omgeving binnen uw portaal. Hier vindt u uw e-mailwachtwoorden, en kunt u veilig gevoelige informatie, zoals API-sleutels, delen met het Novatrum engineering team zonder e-mail te hoeven gebruiken."
         },
         {
           title: "5. Real-time Support Desk",
@@ -306,7 +306,7 @@ const contentData: Record<DocType, Record<Language, DocContent>> = {
       steps: [
         {
           title: "1. Aperçu du Tableau de Bord",
-          content: "Votre Portail Client est conçu pour vous offrir une transparence et un contrôle total sur votre projet. L' image ci-dessous met en évidence les sections principales.",
+          content: "Votre Portail Client est conçu pour vous offrir une transparence et un contrôle total sur votre projet. L'image ci-dessous met en évidence les sections principales.",
           image: "/docs/client-portal-overview.png"
         },
         {
@@ -481,11 +481,20 @@ const contentData: Record<DocType, Record<Language, DocContent>> = {
   }
 };
 
-export default function DocsPage() {
+export default function DocumentationClient() {
   const [lang, setLang] = useState<Language>("en");
   const [activeDoc, setActiveDoc] = useState<DocType>("dns");
   const [copied, setCopied] = useState<string | null>(null);
   const [checklist, setChecklist] = useState<boolean[]>([false, false, false]);
+
+  // HYDRATION ERROR FIX
+  const [mounted, setMounted] = useState(false);
+  const [currentDate, setCurrentDate] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+    setCurrentDate(new Date().toLocaleDateString());
+  }, []);
 
   const currentContent = contentData[activeDoc][lang];
 
@@ -506,16 +515,47 @@ export default function DocsPage() {
   };
 
   return (
-    <div className="pt-24 min-h-screen bg-white">
+    <div className="pt-24 min-h-screen bg-white print:pt-0">
+      
+      {/* KUSURSUZ PDF OPTİMİZASYONU İÇİN EKLENEN STİLLER */}
       <style>{`
-        @media print { .print\\:hidden { display: none !important; } }
+        @media print { 
+          @page { margin: 1.5cm; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: white !important; color: black; }
+          
+          /* Küresel Header ve Footer'ı PDF anında zorla gizler */
+          header, footer { display: none !important; }
+          
+          /* Yalnızca Web'de görünmesi gerekenleri gizler */
+          .print\\:hidden { display: none !important; } 
+          
+          /* Adımların sayfa sonunda yarım kesilmesini engeller */
+          .page-break-avoid { page-break-inside: avoid; break-inside: avoid; }
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
       
       <div className="max-w-6xl mx-auto p-4 md:p-6 font-sans text-black">
         
-        {/* Responsive Header */}
+        {/* PDF PRINT HEADER (Sadece yazdırma anında sayfanın en üstünde çıkar) */}
+        <div className="hidden print:flex flex-col border-b-2 border-black pb-8 mb-10">
+          <div className="flex justify-between items-end">
+            <div>
+              <h1 className="text-2xl font-black uppercase tracking-tighter">Novatrum</h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Premium Software Studio</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Document Type</p>
+              <p className="text-xs font-bold uppercase tracking-tighter">Technical Specification / {activeDoc}</p>
+            </div>
+          </div>
+          <div className="mt-4 text-[9px] font-mono text-zinc-400">
+            Generated on: {mounted ? currentDate : ""} | Reference: NVTR-DOC-{activeDoc.toUpperCase()}
+          </div>
+        </div>
+
+        {/* Responsive Header (Orijinal Tasarımın) */}
         <div className="flex flex-col gap-6 mb-12 print:hidden">
           <h1 className="text-2xl md:text-3xl font-light tracking-tighter uppercase text-black">Novatrum Documentation</h1>
           
@@ -538,7 +578,7 @@ export default function DocsPage() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-10">
-          {/* Scrollable Sidebar Navigation for Mobile */}
+          {/* Scrollable Sidebar Navigation for Mobile & Desktop (Orijinal Tasarımın) */}
           <div className="w-full md:w-64 overflow-x-auto no-scrollbar print:hidden shrink-0">
             <div className="flex md:flex-col gap-3 pb-2 md:pb-0">
               <button 
@@ -577,12 +617,13 @@ export default function DocsPage() {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 pb-24">
-            <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-zinc-100 pb-8 gap-6">
+          <div className="flex-1 pb-24 print:pb-0">
+            <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-zinc-100 pb-8 gap-6 print:hidden">
               <div>
                 <h2 className="text-2xl md:text-3xl font-light tracking-tighter text-black mb-3">{currentContent.title}</h2>
                 <p className="text-zinc-500 text-sm leading-relaxed font-medium">{currentContent.description}</p>
               </div>
+              
               <button 
                 onClick={handlePrint}
                 className="flex items-center gap-2 px-5 py-3 bg-zinc-50 border border-zinc-200 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-zinc-100 transition-all print:hidden w-full md:w-auto justify-center"
@@ -591,8 +632,14 @@ export default function DocsPage() {
               </button>
             </div>
 
+            {/* SADECE PDF'TE ÇIKACAK İÇERİK BAŞLIĞI */}
+            <div className="hidden print:block mb-8">
+              <h2 className="text-3xl font-bold tracking-tighter text-black mb-3">{currentContent.title}</h2>
+              <p className="text-zinc-600 text-base font-medium">{currentContent.description}</p>
+            </div>
+
             {/* Checklist Section */}
-            <div className="mb-10 bg-zinc-50/50 border border-zinc-200 p-6 rounded-2xl print:hidden">
+            <div className="mb-10 bg-zinc-50/50 border border-zinc-200 p-6 rounded-2xl print:border-zinc-400 print:bg-white page-break-avoid">
               <h4 className="text-[11px] font-bold uppercase tracking-widest text-black mb-4">
                 {currentContent.checklistTitle}
               </h4>
@@ -601,14 +648,14 @@ export default function DocsPage() {
                   <button 
                     key={index}
                     onClick={() => toggleChecklist(index)}
-                    className="flex items-center gap-3 text-left group"
+                    className="flex items-center gap-3 text-left group print:pointer-events-none"
                   >
                     {checklist[index] ? (
-                      <CheckSquare size={20} className="text-emerald-500 shrink-0" />
+                      <CheckSquare size={20} className="text-emerald-500 shrink-0 print:text-black" />
                     ) : (
-                      <Square size={20} className="text-zinc-400 shrink-0" />
+                      <Square size={20} className="text-zinc-400 shrink-0 print:text-zinc-800" />
                     )}
-                    <span className={`text-sm leading-snug font-medium transition-colors ${checklist[index] ? "text-zinc-400 line-through" : "text-zinc-700"}`}>
+                    <span className={`text-sm leading-snug font-medium transition-colors ${checklist[index] ? "text-zinc-400 line-through print:no-underline print:text-black" : "text-zinc-700 print:text-black"}`}>
                       {item}
                     </span>
                   </button>
@@ -616,21 +663,21 @@ export default function DocsPage() {
               </div>
             </div>
 
-            <div className="space-y-8 md:space-y-12">
+            <div className="space-y-8 md:space-y-12 print:space-y-8">
               {currentContent.steps.map((step, index) => (
-                <div key={index} className="bg-white p-6 md:p-10 rounded-[32px] border border-zinc-100 shadow-sm">
+                <div key={index} className="bg-white p-6 md:p-10 rounded-[32px] border border-zinc-100 shadow-sm print:border-none print:shadow-none print:p-0 print:mb-8 page-break-avoid">
                   <h3 className="text-base md:text-lg font-bold text-black mb-5 uppercase tracking-tight">{step.title}</h3>
-                  <p className="text-zinc-600 whitespace-pre-line leading-relaxed text-sm font-medium">{step.content}</p>
+                  <p className="text-zinc-600 whitespace-pre-line leading-relaxed text-sm font-medium print:text-black">{step.content}</p>
                   
                   {step.image && (
-                    <div className="mt-8 border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/50 p-3">
-                      <img src={step.image} alt={step.title} className="w-full h-auto rounded-xl shadow-sm" />
+                    <div className="mt-8 border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50/50 p-3 print:border-zinc-300 print:p-0">
+                      <img src={step.image} alt={step.title} className="w-full h-auto rounded-xl shadow-sm print:rounded-none" />
                     </div>
                   )}
                   
                   {step.warning && (
-                    <div className="bg-red-50/30 border-l-4 border-red-500 p-5 mt-8 rounded-r-2xl">
-                      <p className="text-red-700 text-sm font-bold uppercase tracking-tight flex items-center gap-2">
+                    <div className="bg-red-50/30 border-l-4 border-red-500 p-5 mt-8 rounded-r-2xl print:bg-white print:border-l-0 print:border print:border-red-500">
+                      <p className="text-red-700 text-sm font-bold uppercase tracking-tight flex items-center gap-2 print:text-black">
                         <AlertTriangle size={14} /> {step.warning}
                       </p>
                     </div>

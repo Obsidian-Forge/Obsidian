@@ -22,11 +22,11 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     // 2. TEMA KONTROLÜ (Products sayfası karanlık mı olsun?)
     const isProductsPage = pathname === '/products';
 
-    // NAVİGASYON LİNKLERİ
+    // NAVİGASYON LİNKLERİ (Tamamen Dinamik)
     const navLinks = [
         { name: t.nav.home, href: "/" },
         { name: t.nav.services, href: "/services" },
-        { name: "Products", href: "/products" },
+        { name: t.nav.products || "Products", href: "/products" },
         { name: t.nav.process, href: "/process" },
         { name: t.nav.contact, href: "/contact" },
     ];
@@ -77,10 +77,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                         {/* DİNAMİK MASAÜSTÜ BUTONU */}
                         <Link href="/client/login" className={`hidden md:inline-flex items-center gap-2.5 px-8 py-3.5 text-[9px] font-bold uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-sm ${isProductsPage ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'}`}>
                             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                            Client Portal
+                            {t.nav.gateway}
                         </Link>
 
-                        {/* HAMBURGER MENÜ (Karanlık sayfada beyaz, açık sayfada siyah) */}
+                        {/* HAMBURGER MENÜ */}
                         <button
                             onClick={() => setIsOpen(!isOpen)}
                             className="flex md:hidden flex-col justify-center items-center w-10 h-10 gap-1.5 focus:outline-none relative"
@@ -103,7 +103,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                 </div>
             </header>
 
-            {/* MOBILE MENU OVERLAY - DİNAMİK */}
+            {/* MOBILE MENU OVERLAY */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -144,7 +144,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                                     className={`inline-flex items-center justify-center gap-3 w-full max-w-[280px] py-5 font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl mx-auto ${isProductsPage ? 'bg-white text-black' : 'bg-black text-white'}`}
                                 >
                                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                    Client Portal
+                                    {t.nav.gateway}
                                 </Link>
                             </motion.div>
                         </div>
@@ -171,7 +171,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                             </span>
                         </div>
                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-relaxed">
-                            &copy; {new Date().getFullYear()} Novatrum. {t.footer.rights} <br />
+                            &copy;{new Date().getFullYear()} Novatrum. {t.footer.rights} <br />
                             {t.footer.builtIn}
                         </p>
 
@@ -190,7 +190,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
 
                         {/* Navigasyon (Company) */}
                         <div className="flex flex-col gap-6">
-                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>Company</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>{t.footer.company || "Company"}</span>
                             <div className="flex flex-col gap-4">
                                 {navLinks.map((link) => (
                                     <Link key={link.name} href={link.href} className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
@@ -202,26 +202,26 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
 
                         {/* Dökümantasyonlar (Resources) */}
                         <div className="flex flex-col gap-6">
-                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>Resources</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>{t.footer.resources || "Resources"}</span>
                             <div className="flex flex-col gap-4">
                                 <Link href="/showroom" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
-                                    Showroom
+                                    {t.nav.showroom || "Showroom"}
                                 </Link>
                                 <Link href="/docs" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
-                                    Documentation
+                                    {t.nav.documentation || "Documentation"}
                                 </Link>
                                 <Link href="/status" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
-                                    System Status
+                                    {t.nav.systemStatus || "System Status"}
                                 </Link>
                                 <Link href="/client/login" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
-                                    Client Portal
+                                    {t.nav.gateway}
                                 </Link>
                             </div>
                         </div>
 
                         {/* Ayarlar ve Sosyal (Connect) */}
                         <div className="flex flex-col gap-6">
-                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>Connect</span>
+                            <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>{t.footer.connect || "Connect"}</span>
                             <div className="flex flex-col gap-4">
                                 <a href="https://www.linkedin.com/company/novatrum/about/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
                                     LinkedIn

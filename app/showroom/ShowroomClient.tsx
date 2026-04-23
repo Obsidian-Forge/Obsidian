@@ -9,40 +9,27 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export default function ShowroomPage() {
     const router = useRouter();
-    const { t } = useLanguage();
+    const { language, setLanguage, t } = useLanguage();
     
-    // Translation fallbacks to ensure it works in English even if en.ts is not updated yet
+    // Çeviri Fallback Sistemi (Tüm diller için garanti)
     const sData = t?.showroom || {
         badge: "Environment Selector",
         title: "Simulation Hub.",
-        subtitle: "Explore industry-specific prototypes engineered with Novatrum infrastructure. Each module is designed to redefine industry standards.",
+        subtitle: "Explore industry-specific prototypes engineered with Novatrum infrastructure.",
         networkActive: "Showroom Active",
         networkMaintenance: "Network Maintenance",
         networkDegraded: "Network Degraded",
         moduleReady: "Ready",
         btnDeploy: "Initialize Protocol",
         btnRestricted: "Access Restricted",
+        footerEnv: "Simulation Environment.",
+        btnHub: "Return to Hub",
+        btnStart: "Start Protocol",
         demos: {
-            creative: {
-                title: "Aura Creative",
-                category: "Architecture & Studio",
-                desc: "Luxury, minimal, and visually-driven portfolio architecture. Features smooth scrolling and large typography."
-            },
-            fintech: {
-                title: "Aegis Finance",
-                category: "Neo-Banking & Wealth",
-                desc: "High-contrast, Swiss-style financial interface designed for enterprise-level wealth management."
-            },
-            logistics: {
-                title: "Node Logistics",
-                category: "Global Tracking & B2B",
-                desc: "Operational company dashboard focused on speed, dense data tables, and live map tracking."
-            },
-            quantum: {
-                title: "Quantum Engine",
-                category: "Spatial Computing & WebGL",
-                desc: "Dark-mode heavy, 3D interactive neural API showcase for developers and Web3 startups."
-            }
+            creative: { title: "Aura Creative", category: "Architecture & Studio", desc: "Luxury, minimal, and visually-driven portfolio architecture." },
+            fintech: { title: "Aegis Finance", category: "Neo-Banking & Wealth", desc: "High-contrast, Swiss-style financial interface." },
+            logistics: { title: "Node Logistics", category: "Global Tracking & B2B", desc: "Operational company dashboard focused on speed." },
+            quantum: { title: "Quantum Engine", category: "Spatial Computing & WebGL", desc: "Dark-mode heavy, 3D interactive neural API showcase." }
         }
     };
 
@@ -275,19 +262,40 @@ export default function ShowroomPage() {
                 </div>
             </main>
 
-            {/* MINIMALIST FOOTER */}
+            {/* MINIMALIST FOOTER + LANGUAGE SELECTOR */}
             <footer className="w-full border-t border-zinc-100 bg-white relative z-10 mt-auto">
                 <div className="max-w-[1400px] mx-auto px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-6">
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                        &copy; {new Date().getFullYear()} Novatrum. Simulation Environment.
+                        &copy;{new Date().getFullYear()} Novatrum. {sData.footerEnv || "Simulation Environment."}
                     </p>
-                    <div className="flex items-center gap-8">
+                    
+                    <div className="flex flex-col sm:flex-row items-center gap-6 md:gap-8">
                         <Link href="/" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
-                            Return to Hub
+                            {sData.btnHub || "Return to Hub"}
                         </Link>
-                        <Link href="/gateway" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
-                            Start Protocol
-                        </Link>
+                        
+                        <div className="flex items-center gap-4">
+                            <Link href="/gateway" className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hover:text-black transition-colors">
+                                {sData.btnStart || "Start Protocol"}
+                            </Link>
+
+                            {/* DİL SEÇİCİ (DROPDOWN) */}
+                            <div className="relative inline-block text-left group">
+                                <select
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value as any)}
+                                    className="appearance-none rounded-full px-4 py-2 text-[9px] font-bold uppercase tracking-widest outline-none cursor-pointer transition-all bg-white border border-zinc-200 text-zinc-500 group-hover:border-black group-hover:text-black shadow-sm"
+                                >
+                                    <option value="en">English</option>
+                                    <option value="nl">Nederlands</option>
+                                    <option value="fr">Français</option>
+                                    <option value="tr">Türkçe</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                                    <svg className="w-3 h-3 text-zinc-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </footer>

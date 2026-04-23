@@ -2,8 +2,14 @@ export type Language = 'en' | 'nl' | 'fr' | 'tr';
 
 export const translations = {
   en: {
-    nav: { home: "Home", services: "Services", process: "Process", contact: "Contact", privacy: "Privacy", terms: "Terms", gateway: "Client Portal" },
-    footer: { rights: "All rights reserved.", builtIn: "Engineered in Dilbeek, Belgium.", lang: "Language" },
+    nav: { 
+      home: "Home", services: "Services", process: "Process", contact: "Contact", privacy: "Privacy", terms: "Terms", gateway: "Client Portal",
+      products: "Products", showroom: "Showroom", documentation: "Documentation", systemStatus: "System Status"
+    },
+    footer: { 
+      rights: "All rights reserved.", builtIn: "Engineered in Dilbeek, Belgium.", lang: "Language",
+      company: "Company", resources: "Resources", connect: "Connect"
+    },
 
     hero: {
       badge: "Digital Studio • Dilbeek, Belgium",
@@ -54,47 +60,102 @@ export const translations = {
     },
 
     privacy: {
-      title: "Privacy Policy",
-      subtitle: "Data protection.",
-      tag: "LEGAL",
-      lastUpdated: "Last Updated: 2026",
-      sec1Title: "01. Data Collection",
-      sec1Desc: "We only collect what is strictly necessary for engineering your product.",
-      sec1Notice: "We never sell your data to third parties.",
-      techAuthTitle: "02. Technical Authentication",
-      techAuthDesc: "We use strictly necessary technical cookies to maintain your secure session within the Client Portal. These are essential for core security features and do not track personal behavior.",
-      sec2Title: "03. Communication",
-      sec2Desc: "How we contact you securely.",
-      rule1: "Strictly project-related communication.",
-      rule2: "No third-party marketing spam.",
-      rule3: "Secure and encrypted channels.",
-      sec3Title: "04. Security",
-      sec3Desc: "Your project parameters and credentials are encrypted within our private network.",
-      footerTag: "QUESTIONS?",
-      cta: "Contact Us"
+      title: "Data Protection",
+      subtitle: "Privacy Directive & GDPR.",
+      tag: "Compliance",
+      lastUpdated: "Last Updated: April 2026",
+      sec1Title: "01. Data Collection & Processing",
+      sec1Desc: "As a European engineering firm, we operate under strict GDPR compliance. We collect only the cryptographic and corporate data absolutely necessary to architect and host your digital infrastructure.",
+      sec1Notice: "We strictly refuse the sale, monetization, or unauthorized sharing of client data to third parties.",
+      techAuthTitle: "02. Technical Authentication (Cookies)",
+      techAuthDesc: "Novatrum utilizes zero-knowledge session handling. We deploy only strictly necessary technical cookies required to authenticate your identity within the Client Portal. We do not use third-party marketing trackers.",
+      sec2Title: "03. Communication Privacy",
+      sec2Desc: "Your corporate communication is treated as confidential engineering data.",
+      rule1: "End-to-end encryption on project parameters.",
+      rule2: "Zero unsolicited third-party marketing.",
+      rule3: "Automated deletion of expired credentials.",
+      sec3Title: "04. Infrastructure Security",
+      sec3Desc: "All database environments and architectural blueprints are isolated within our private edge network. Data is encrypted both in transit and at rest to ensure enterprise-grade impenetrability.",
+      footerTag: "SECURITY INQUIRIES?",
+      cta: "Contact Engineering"
     },
     terms: {
-      title: "Terms of Service",
-      subtitle: "Operational standards.",
-      tag: "LEGAL",
-      lastUpdated: "Last Updated: 2026",
-      sec1Title: "01. Originality",
-      sec1Desc: "Every line of code and UI component is custom engineered.",
-      sec1Notice: "We strictly reject generic templates.",
-      sec2Title: "02. Standards",
-      sec2Desc: "Our baseline engineering rules.",
-      rule1Title: "Quality",
-      rule1Desc: "Uncompromising focus on sub-second load times.",
-      rule2Title: "Delivery",
-      rule2Desc: "Strict adherence to agreed deployment timelines.",
-      rule3Title: "Support",
-      rule3Desc: "Comprehensive post-launch care.",
-      sec3Title: "03. Usage",
-      sec3Desc: "Fair usage policies apply to all our deployed platforms and digital products.",
-      sec4Title: "04. Ownership",
-      sec4Desc: "Upon final payment, full intellectual property rights are transferred to your entity.",
-      footerTag: "AGREEMENT",
-      cta: "Calculate Estimate"
+      title: "Terms of",
+      subtitle: "Service & Partnership",
+      tag: "Legal Directive",
+      lastUpdated: "Effective: April 2026",
+      sec1Title: "01. Acceptance & Scope",
+      sec1Desc: "By initiating a project, you agree to our Legal Blueprint. These terms define the professional and technical boundaries of our partnership. We do not operate on hourly rates; any additional features requested after approval will be evaluated as a fixed-price addition.",
+      sec1Notice: "Actioning a deposit or gateway access confirms your explicit acceptance of these parameters.",
+      sec2Title: "02. Professional Conduct",
+      sec2Desc: "To maintain engineering focus and project integrity, all interactions must adhere strictly to the following communication protocol:",
+      rule1Title: "Client Portal",
+      rule1Desc: "All official requests, revisions, and technical support must be routed via the Novatrum Client Portal.",
+      rule2Title: "Corporate Email",
+      rule2Desc: "Secondary official communication and documentation are handled via corporate email channels.",
+      rule3Title: "No Informal Channels",
+      rule3Desc: "Informal messaging (e.g., WhatsApp, Social Media) is strictly not recognized for project directives.",
+      sec3Title: "03. Billing & Retainers",
+      sec3Desc: "Billing is milestone-based. Initial setup fees reserve engineering capacity and infrastructure. Therefore, initial payments are strictly non-refundable. Delays in payment exceeding 14 days will result in an immediate infrastructure pause.",
+      sec4Title: "04. Architecture Ownership",
+      sec4Desc: "While clients hold commercial usage rights to the visual design, the core software and source code remain the exclusive property of Novatrum. All systems are hosted on our edge network. We operate as a SaaS provider; raw code is never exported.",
+      footerTag: "Novatrum // Autonomous Engineering Systems",
+      cta: "Return to Gateway"
+    },
+
+    legal: {
+      pageTitle: "Legal Blueprint",
+      subtitle: "General Terms & Conditions",
+      desc: "The foundational parameters governing our engineering partnerships.",
+      footerInfo: "Novatrum Core Infrastructure // Security & Compliance Division",
+      footerLink: "General Terms of Service",
+      sections: [
+        { num: '01', title: 'Scope of Work (Scope Creep)', desc: 'The services provided by Novatrum are strictly limited to the specifications outlined in the agreed "Definitive Blueprint". We do not operate on hourly rates; any additional features or pages requested after approval will be evaluated and billed as a fixed-price structural addition.' },
+        { num: '02', title: 'Payment Terms & Retainers', desc: 'Invoices are generated via our automated system. Development will pause if payments are delayed beyond 14 days. Initial payments (setup fees/deposits) reserve engineering time and infrastructure. Therefore, these initial payments are strictly non-refundable if the project is cancelled by the client.' },
+        { num: '03', title: 'Intellectual Property & Access', desc: 'Upon final payment, the client receives full commercial rights to the visual design. The underlying codebase and Admin Dashboards remain the exclusive property of Novatrum. Novatrum reserves the right to display the completed project in our portfolio and marketing materials unless a custom NDA is signed.' },
+        { num: '04', title: 'Hosting & Continuous Engineering', desc: 'To guarantee enterprise-grade security, all platforms are hosted exclusively on Novatrum\'s infrastructure. A mandatory monthly continuous engineering retainer applies. We operate as a SaaS provider; raw code is never exported to third-party servers.' },
+        { num: '05', title: 'Client Responsibilities & Communication', desc: 'The client is solely responsible for purchasing their Domain Name. All official communication, technical support, and revision requests must be conducted exclusively via the Novatrum Client Portal or corporate email. Informal channels (e.g., WhatsApp, social media) are not recognized for project directives.' },
+        { num: '06', title: 'Limitation of Liability', desc: 'Novatrum engineers high-performance systems, but we cannot guarantee absolute immunity from cyber threats. Novatrum\'s maximum liability for any claim arising out of the project is limited to the total amount paid by the client for that specific project.' }
+      ]
+    },
+
+    showroom: {
+      badge: "Environment Selector",
+      title: "Simulation Hub.",
+      subtitle: "Explore industry-specific prototypes engineered with Novatrum infrastructure. Each module is designed to redefine industry standards.",
+      networkActive: "Showroom Active",
+      networkMaintenance: "Network Maintenance",
+      networkDegraded: "Network Degraded",
+      moduleReady: "Ready",
+      btnDeploy: "Initialize Protocol",
+      btnRestricted: "Access Restricted",
+      footerEnv: "Simulation Environment.",
+      btnHub: "Return to Hub",
+      btnStart: "Start Protocol",
+      demos: {
+        creative: { title: "Aura Creative", category: "Architecture & Studio", desc: "Luxury, minimal, and visually-driven portfolio architecture. Features smooth scrolling and large typography." },
+        fintech: { title: "Aegis Finance", category: "Neo-Banking & Wealth", desc: "High-contrast, Swiss-style financial interface designed for enterprise-level wealth management." },
+        logistics: { title: "Node Logistics", category: "Global Tracking & B2B", desc: "Operational company dashboard focused on speed, dense data tables, and live map tracking." },
+        quantum: { title: "Quantum Engine", category: "Spatial Computing & WebGL", desc: "Dark-mode heavy, 3D interactive neural API showcase for developers and Web3 startups." }
+      }
+    },
+
+    statusPage: {
+      titleStatus: "Status",
+      subtitle: "Real-time Core Infrastructure Availability",
+      coreSystems: "Core Infrastructure",
+      autoUpdate: "Automatically updated every 10 minutes",
+      lastCheck: "Last check:",
+      global: {
+        operational: "All Systems Operational",
+        outage: "Major System Outage",
+        degraded: "Partial System Degradation"
+      },
+      badge: {
+        operational: "Operational",
+        degraded: "Degraded",
+        outage: "Outage"
+      }
     },
 
     gateway: {
@@ -128,6 +189,36 @@ export const translations = {
       termsAgree: "I acknowledge that I have read and agree to the ",
       termsLink: "Novatrum Master Service Agreement",
       termsDesc: ". I understand that this definitive blueprint forms the technical scope and billing terms of our collaboration.",
+      
+      // --- PREMIUM ARCHITECTURE OPTIONS ---
+      architectures: {
+        landing: { label: "Landing Architecture", desc: "A high-performance, single-page digital asset. Includes bespoke design, sub-second load times, and conversion-optimized routing." },
+        corporate: { label: "Corporate Platform", desc: "A multi-page authoritative presence. Features scalable CMS architecture, flawless SEO structures, and dynamic routing." },
+        ecommerce: { label: "Digital Storefront", desc: "A bespoke conversion engine. Custom inventory logic, frictionless checkout flows, and secure payment architectures." },
+        saas: { label: "Custom Software (SaaS)", desc: "Proprietary digital infrastructure. Advanced database design, complex user auth, and bespoke business logic engineered from scratch." }
+      },
+
+      // --- PREMIUM SETUP FEE ---
+      setupFee: {
+        title: "Initialization Fee",
+        desc: "Every Novatrum architecture begins with a standard operational setup. This mandatory fee ensures enterprise-grade performance and security from day one.",
+        includesTitle: "The Novatrum Standard Includes:",
+        items: {
+          i1: "Vercel Edge Network Deployment",
+          i2: "SSL Encryption & Security Headers",
+          i3: "Global CDN Configuration",
+          i4: "100/100 Lighthouse Performance Tuning"
+        }
+      },
+
+      // --- PREMIUM MAINTENANCE OPTIONS ---
+      maintenance: {
+        none: { title: "No Ongoing Support", desc: "Client assumes full responsibility for server security, API changes, and maintenance post-launch." },
+        essential: { title: "Infrastructure Management", desc: "Proactive security patches, uptime monitoring, daily database backups, and core system updates." },
+        growth: { title: "Growth Engineering", desc: "Infrastructure package + 5 hours of monthly continuous development and UI/UX iterations." },
+        scale: { title: "Dedicated Tech Lead", desc: "Growth package + 15 hours of development. Priority Slack channel and dedicated engineering support." }
+      },
+
       integrations: {
         stripe: "Stripe Payment Gateway",
         auth: "User Authentication & Authorization",
@@ -140,10 +231,10 @@ export const translations = {
         multilang: "Multi-language Alphas"
       },
       designStyles: {
-        minimal: "Minimal & Focus on Typography",
-        bold: "Bold, Premium & Brand Driven",
-        corporate: "Professional & Corporate Structure",
-        interactive: "Highly Interactive & Complex UI"
+        minimal: "Scandinavian Minimal",
+        bold: "Bold & Editorial",
+        corporate: "Modern Corporate",
+        interactive: "Award-Winning Immersive"
       },
       fontPrefs: {
         sans: "Modern Sans-Serif",
@@ -155,9 +246,9 @@ export const translations = {
         advanced: "Advanced / Technical SEO"
       },
       timelines: {
-        standard: "Standard (4-6 Weeks)",
-        relaxed: "Relaxed (8-10 Weeks)",
-        expedited: "Expedited (1-2 Weeks)"
+        standard: "Standard Pipeline",
+        relaxed: "Relaxed Delivery",
+        expedited: "Expedited Priority"
       },
       constraint: {
         title: "Architectural Constraint",
@@ -165,44 +256,44 @@ export const translations = {
       },
       form: {
         credentials: "Credentials",
-        entity: "Entity Name *",
-        website: "Current URL",
-        goals: "Primary Objective & Goals *",
-        goalsPlace: "Describe the ultimate purpose of this platform...",
-        competitors: "Competitors or Inspirations",
-        architecture: "Architecture",
-        archDesc: "Select the engineering framework for your application.",
-        pages: "Estimated Number of Pages/Screens",
-        design: "Aesthetics",
-        designDesc: "How should the platform feel? Select your direction.",
+        entity: "Corporate Entity / Brand Name *",
+        website: "Existing Domain (Optional)",
+        goals: "Primary Objective *",
+        goalsPlace: "What specific business problem are we solving? (e.g., Automating bookings, increasing B2B leads, launching a SaaS product)",
+        competitors: "Direct Competitors / Benchmarks",
+        architecture: "Architecture.",
+        archDesc: "Select the foundational technical structure for your deployment.",
+        pages: "Scale Requirement (Page Count)",
+        design: "Aesthetics.",
+        designDesc: "Define the visual engineering and brand parameters.",
         color: "Primary Color",
         accent: "Accent Color",
         hasAccent: "Has Accent Color?",
-        fonts: "Typography Preference",
-        content: "Content & Copy",
-        copy: "Include Professional Copywriting",
-        assets: "Attach Brand Assets / Brief (Max 100MB)",
-        integrations: "Integrations & Functionality",
-        intDesc: "Select the complex features and third-party API syncs.",
+        fonts: "Typography Base",
+        content: "Assets.",
+        copy: "Novatrum SEO Copywriting",
+        assets: "Asset Upload Center",
+        integrations: "Matrix.",
+        intDesc: "Select backend capabilities and API integrations.",
         seo: "Visibility",
         seoDesc: "Select content engineering and indexing strategy.",
-        timeline: "Logistics",
-        timelineDesc: "Let's define the required deployment timeline.",
-        maintenance: "Continuous Support",
-        maintenanceDesc: "Include post-launch maintenance & security retainer.",
+        timeline: "Logistics.",
+        timelineDesc: "Define delivery timeline and ongoing engineering retainer.",
+        maintenance: "Continuous Engineering (Retainer)",
+        maintenanceDesc: "Include post-launch infrastructure management.",
         maintenanceCheck: "Include priority maintenance",
-        client: "Identify Client",
-        clientSub: "Provide billing details to securely log this discovery into our systems.",
-        name: "Full Name / Point of Contact *",
-        email: "Corporate Email Address *",
-        phone: "Corporate Phone Number *",
-        address: "Billing Address (City, Country) *",
-        vat: "VAT Number (Optional)",
+        client: "Authorization.",
+        clientSub: "Finalize billing credentials to generate the official blueprint.",
+        name: "Authorized Signatory *",
+        email: "Corporate Email *",
+        phone: "Phone Number",
+        address: "Billing Address *",
+        vat: "VAT Number",
         notes: "Design Notes",
         notesPlace: "Share any specific visual directions or technical notes...",
         transparencyTitle: "Operational Compliance",
         transparencyDesc: "Our pricing model separates engineering value from mandatory operational costs (licenses, cloud infrastructure, and business compliance). This ensures full transparency.",
-        exclVat: "Excl. VAT & Operational Expenses",
+        exclVat: "Excl. VAT",
         twoMonthsFreeBadge: "2 Months Free Included",
         pdfDisclaimer: "* Estimate represents engineering value. Operational expenses and VAT are calculated during onboarding.",
       },
@@ -222,17 +313,17 @@ export const translations = {
       btn: {
         prev: "Previous Phase",
         next: "Next Phase",
-        submit: "Lock Discovery & Blueprint",
-        encrypting: "Encrypting...",
+        submit: "Submit For Review",
+        encrypting: "Encrypting Protocol...",
         finish: "Start Discovery",
-        pdf: "Generate & Download PDF",
-        hub: "Return to Hub"
+        pdf: "Download Blueprint PDF",
+        hub: "Return to Central Gateway"
       },
       success: {
-        title: "Blueprint Locked.",
+        title: "Protocol Logged.",
         sub: "Definitive Discovery",
-        desc: "Your secure reference ID is logged. We will review your blueprint and email you within 24-48 hours with a Definitive Proposal.",
-        dsNumber: "DS Number"
+        desc: "Architecture specifications secured. Engineering review pending.",
+        dsNumber: "Deployment Reference"
       }
     },
 
@@ -485,8 +576,14 @@ export const translations = {
   },
 
   nl: {
-    nav: { home: "Home", services: "Diensten", process: "Methodologie", contact: "Contact", privacy: "Privacy", terms: "Voorwaarden", gateway: "Klantenportaal" },
-    footer: { rights: "Alle rechten voorbehouden.", builtIn: "Ontwikkeld in Dilbeek, België.", lang: "Taal" },
+    nav: { 
+      home: "Home", services: "Diensten", process: "Methodologie", contact: "Contact", privacy: "Privacy", terms: "Voorwaarden", gateway: "Klantenportaal",
+      products: "Producten", showroom: "Showroom", documentation: "Documentatie", systemStatus: "Systeemstatus"
+    },
+    footer: { 
+      rights: "Alle rechten voorbehouden.", builtIn: "Ontwikkeld in Dilbeek, België.", lang: "Taal",
+      company: "Bedrijf", resources: "Bronnen", connect: "Contact"
+    },
 
     hero: {
       badge: "Digitale Studio • Dilbeek, België",
@@ -536,47 +633,102 @@ export const translations = {
       button: "Bericht Verzenden"
     },
     privacy: {
-      title: "Privacybeleid",
-      subtitle: "Gegevensbescherming.",
-      tag: "JURIDISCH",
-      lastUpdated: "Laatst bijgewerkt: 2026",
-      sec1Title: "01. Gegevensverzameling",
-      sec1Desc: "Wij verzamelen alleen wat strikt noodzakelijk is voor de ontwikkeling.",
-      sec1Notice: "Wij verkopen uw gegevens nooit aan derden.",
-      techAuthTitle: "02. Technische Authenticatie",
-      techAuthDesc: "Wij gebruiken strikt noodzakelijke technische cookies om uw veilige sessie binnen het Klantenportaal te behouden. Deze zijn essentieel voor de kernbeveiliging en volgen geen persoonlijk gedrag.",
-      sec2Title: "03. Communicatie",
-      sec2Desc: "Hoe wij veilig contact met u opnemen.",
-      rule1: "Strikt projectgerelateerde communicatie.",
-      rule2: "Geen marketing spam van derden.",
-      rule3: "Veilige en versleutelde kanalen.",
-      sec3Title: "04. Veiligheid",
-      sec3Desc: "Uw projectparameters worden versleuteld binnen ons privénetwerk.",
-      footerTag: "VRAGEN?",
-      cta: "Neem Contact Op"
+      title: "Gegevensbescherming",
+      subtitle: "Privacyrichtlijn & AVG.",
+      tag: "Compliance",
+      lastUpdated: "Laatst bijgewerkt: April 2026",
+      sec1Title: "01. Gegevensverzameling & Verwerking",
+      sec1Desc: "Als Europees ingenieursbureau werken wij onder strikte AVG (GDPR) naleving. Wij verzamelen alleen cryptografische en bedrijfsgegevens die absoluut noodzakelijk zijn om uw digitale infrastructuur te hosten.",
+      sec1Notice: "Wij weigeren ten strengste de verkoop of het ongeautoriseerd delen van klantgegevens aan derden.",
+      techAuthTitle: "02. Technische Authenticatie (Cookies)",
+      techAuthDesc: "Novatrum maakt gebruik van zero-knowledge sessiebeheer. Wij plaatsen alleen strikt noodzakelijke cookies om uw identiteit binnen het Klantenportaal te verifiëren. Wij gebruiken geen third-party marketing trackers.",
+      sec2Title: "03. Communicatie Privacy",
+      sec2Desc: "Uw zakelijke communicatie wordt behandeld als vertrouwelijke technische data.",
+      rule1: "End-to-end encryptie op projectparameters.",
+      rule2: "Geen ongevraagde marketing van derden.",
+      rule3: "Automatische verwijdering van verlopen inloggegevens.",
+      sec3Title: "04. Infrastructuur Veiligheid",
+      sec3Desc: "Alle databaseomgevingen zijn geïsoleerd binnen ons private edge-netwerk. Gegevens worden zowel tijdens verzending als in rust (at rest) versleuteld om enterprise-grade veiligheid te garanderen.",
+      footerTag: "BEVEILIGINGSVRAGEN?",
+      cta: "Contacteer Engineering"
     },
     terms: {
-      title: "Servicevoorwaarden",
-      subtitle: "Operationele standaarden.",
-      tag: "JURIDISCH",
-      lastUpdated: "Laatst bijgewerkt: 2026",
-      sec1Title: "01. Originaliteit",
-      sec1Desc: "Elke regel code en UI wordt op maat gemaakt.",
-      sec1Notice: "Wij weigeren het gebruik van generieke templates.",
-      sec2Title: "02. Standaarden",
-      sec2Desc: "Onze technische basisregels.",
-      rule1Title: "Kwaliteit",
-      rule1Desc: "Focus op laadtijden onder de seconde.",
-      rule2Title: "Levering",
-      rule2Desc: "Strikte naleving van afgesproken deadlines.",
-      rule3Title: "Support",
-      rule3Desc: "Uitgebreide zorg na lancering.",
-      sec3Title: "03. Gebruik",
-      sec3Desc: "Fair use beleid is van toepassing op al onze platformen.",
-      sec4Title: "04. Eigendom",
-      sec4Desc: "Na volledige betaling wordt het intellectueel eigendom aan u overgedragen.",
-      footerTag: "AKKOORD",
-      cta: "Schatting Berekenen"
+      title: "Voorwaarden van",
+      subtitle: "Service & Partnerschap",
+      tag: "Juridische Richtlijn",
+      lastUpdated: "Geldig vanaf: April 2026",
+      sec1Title: "01. Aanvaarding & Bereik",
+      sec1Desc: "Door een project te starten, gaat u akkoord met onze Legal Blueprint. Wij werken niet met uurtarieven; extra functies die na goedkeuring worden aangevraagd, worden geëvalueerd als een vaste prijs toevoeging.",
+      sec1Notice: "Het betalen van een aanbetaling of inloggen bevestigt uw uitdrukkelijke acceptatie van deze parameters.",
+      sec2Title: "02. Professioneel Gedrag",
+      sec2Desc: "Om de technische focus te behouden, dienen alle interacties strikt te voldoen aan het volgende communicatieprotocol:",
+      rule1Title: "Client Portal",
+      rule1Desc: "Alle officiële verzoeken en technische ondersteuning moeten via het Novatrum Client Portal verlopen.",
+      rule2Title: "Zakelijke E-mail",
+      rule2Desc: "Secundaire officiële communicatie wordt afgehandeld via zakelijke e-mail.",
+      rule3Title: "Geen Informele Kanalen",
+      rule3Desc: "Informele berichten (bijv. WhatsApp) worden strikt niet erkend voor projectrichtlijnen.",
+      sec3Title: "03. Facturatie & Retainers",
+      sec3Desc: "Facturatie is per mijlpaal. Opstartkosten reserveren engineering-capaciteit en zijn daarom strikt niet-restitueerbaar. Betalingsachterstanden van meer dan 14 dagen leiden tot het pauzeren van de infrastructuur.",
+      sec4Title: "04. Eigendom Architectuur",
+      sec4Desc: "Hoewel klanten commerciële gebruiksrechten hebben, blijft de kernsoftware exclusief eigendom van Novatrum. Systemen worden op ons netwerk gehost als SaaS; broncode wordt nooit geëxporteerd.",
+      footerTag: "Novatrum // Autonome Engineering Systemen",
+      cta: "Terug naar Gateway"
+    },
+
+    legal: {
+      pageTitle: "Juridische Blueprint",
+      subtitle: "Algemene Voorwaarden",
+      desc: "De fundamentele parameters die onze technische partnerschappen regelen.",
+      footerInfo: "Novatrum Core Infrastructure // Beveiliging & Compliance",
+      footerLink: "Algemene Voorwaarden",
+      sections: [
+        { num: '01', title: 'Werkbereik (Scope Creep)', desc: 'De diensten van Novatrum zijn strikt beperkt tot de specificaties in de "Definitive Blueprint". Wij werken niet met uurtarieven; extra functies die na goedkeuring worden aangevraagd, worden gefactureerd als een vaste prijs toevoeging.' },
+        { num: '02', title: 'Betalingsvoorwaarden', desc: 'Ontwikkeling pauzeert als betalingen meer dan 14 dagen te laat zijn. Aanbetalingen (opstartkosten) reserveren engineering-tijd en infrastructuur. Deze initiële betalingen zijn daarom strikt niet-restitueerbaar indien het project door de klant wordt geannuleerd.' },
+        { num: '03', title: 'Intellectueel Eigendom & Toegang', desc: 'Na volledige betaling krijgt de klant commerciële rechten op het visuele ontwerp. De onderliggende broncode blijft exclusief eigendom van Novatrum. Novatrum behoudt zich het recht voor om het voltooide project in haar portfolio te tonen, tenzij een specifieke NDA is getekend.' },
+        { num: '04', title: 'Hosting & Continuous Engineering', desc: 'Om topveiligheid te garanderen, worden alle platformen uitsluitend gehost op de Novatrum infrastructuur. Er geldt een verplichte maandelijkse onderhoudsvergoeding. Wij werken als SaaS-provider; broncode wordt nooit naar externe servers geëxporteerd.' },
+        { num: '05', title: 'Verantwoordelijkheden & Communicatie', desc: 'De klant is zelf verantwoordelijk voor zijn Domeinnaam. Alle officiële communicatie, technische ondersteuning en revisieverzoeken dienen uitsluitend via het Novatrum Client Portal of e-mail te verlopen. Informele kanalen (zoals WhatsApp) worden niet geaccepteerd voor projectrichtlijnen.' },
+        { num: '06', title: 'Beperking van Aansprakelijkheid', desc: 'Novatrum ontwikkelt hoogwaardige systemen, maar kan geen absolute immuniteit tegen cyberdreigingen garanderen. De maximale aansprakelijkheid van Novatrum is beperkt tot het totale bedrag dat door de klant voor dat project is betaald.' }
+      ]
+    },
+
+    showroom: {
+      badge: "Omgevingsselector",
+      title: "Simulatie Hub.",
+      subtitle: "Verken branchespecifieke prototypes gebouwd met Novatrum infrastructuur. Elke module is ontworpen om industriestandaarden te herdefiniëren.",
+      networkActive: "Showroom Actief",
+      networkMaintenance: "Netwerk Onderhoud",
+      networkDegraded: "Netwerk Problemen",
+      moduleReady: "Klaar",
+      btnDeploy: "Protocol Initialiseren",
+      btnRestricted: "Toegang Geweigerd",
+      footerEnv: "Simulatie Omgeving.",
+      btnHub: "Terug naar Hub",
+      btnStart: "Start Protocol",
+      demos: {
+        creative: { title: "Aura Creative", category: "Architectuur & Studio", desc: "Luxe, minimalistische en visueel gedreven portfolio architectuur. Met soepele scrolling en grote typografie." },
+        fintech: { title: "Aegis Finance", category: "Neo-Banking & Vermogen", desc: "Hoog contrast, financiële interface in Zwitserse stijl ontworpen voor enterprise vermogensbeheer." },
+        logistics: { title: "Node Logistics", category: "Global Tracking & B2B", desc: "Operationeel bedrijfsdashboard gericht op snelheid, dichte datatabellen en live map tracking." },
+        quantum: { title: "Quantum Engine", category: "Spatial Computing & WebGL", desc: "Dark-mode zware, 3D interactieve neurale API showcase voor ontwikkelaars en Web3 startups." }
+      }
+    },
+
+    statusPage: {
+      titleStatus: "Status",
+      subtitle: "Real-time Kerninfrastructuur Beschikbaarheid",
+      coreSystems: "Kerninfrastructuur",
+      autoUpdate: "Wordt elke 10 minuten automatisch bijgewerkt",
+      lastCheck: "Laatste controle:",
+      global: {
+        operational: "Alle Systemen Operationeel",
+        outage: "Grote Systeemstoring",
+        degraded: "Gedeeltelijke Systeemvertraging"
+      },
+      badge: {
+        operational: "Operationeel",
+        degraded: "Vertraagd",
+        outage: "Storing"
+      }
     },
 
     gateway: {
@@ -601,7 +753,7 @@ export const translations = {
     discoveryPage: {
       title: "Definitieve",
       subtitle: "Discovery.",
-      desc: "Voer de gedetailleerde parameters van uw project in. Wij maken bir exact technisch plan en een contractklaar voorstel.",
+      desc: "Voer de gedetailleerde parameters van uw project in. Wij engineeren een exact technisch plan en een contractklaar voorstel.",
       liveEstimate: "Live Schatting",
       phase: "Fase",
       of: "van",
@@ -610,22 +762,52 @@ export const translations = {
       termsAgree: "Ik bevestig dat ik de ",
       termsLink: "Novatrum Algemene Voorwaarden",
       termsDesc: " heb gelezen en hiermee akkoord ga. Ik begrijp dat deze definitieve blauwdruk de technische omvang en factureringsvoorwaarden van onze samenwerking vormt.",
+      
+      // --- PREMIUM ARCHITECTURE OPTIONS ---
+      architectures: {
+        landing: { label: "Landing Architectuur", desc: "Een high-performance, single-page digitaal platform. Inclusief op maat gemaakt design, sub-seconde laadtijden en conversie-geoptimaliseerde routing." },
+        corporate: { label: "Corporate Platform", desc: "Een multi-page autoritaire aanwezigheid. Voorzien van schaalbare CMS-architectuur, foutloze SEO-structuren en dynamische routing." },
+        ecommerce: { label: "Digitaal Storefront", desc: "Een op maat gemaakte conversiemachine. Custom voorraadlogica, frictieloze checkout-flows en veilige betalingsarchitecturen." },
+        saas: { label: "Custom Software (SaaS)", desc: "Eigen digitale infrastructuur. Geavanceerd database-ontwerp, complexe gebruikersauthenticatie en op maat gemaakte bedrijfslogica vanaf nul opgebouwd." }
+      },
+
+      // --- PREMIUM SETUP FEE ---
+      setupFee: {
+        title: "Initialisatiekosten",
+        desc: "Elke Novatrum architectuur begint met een standaard operationele setup. Deze verplichte vergoeding garandeert enterprise-grade prestaties en veiligheid vanaf dag één.",
+        includesTitle: "De Novatrum Standaard Omvat:",
+        items: {
+          i1: "Vercel Edge Network Deployment",
+          i2: "SSL Encryptie & Security Headers",
+          i3: "Wereldwijde CDN Configuratie",
+          i4: "100/100 Lighthouse Prestatie Tuning"
+        }
+      },
+
+      // --- PREMIUM MAINTENANCE OPTIONS ---
+      maintenance: {
+        none: { title: "Geen Doorlopende Ondersteuning", desc: "Klant neemt volledige verantwoordelijkheid voor serverbeveiliging, API-wijzigingen en onderhoud na de lancering." },
+        essential: { title: "Infrastructuur Beheer", desc: "Proactieve beveiligingspatches, uptime monitoring, dagelijkse database back-ups en kernsysteem updates." },
+        growth: { title: "Growth Engineering", desc: "Infrastructuurpakket + 5 uur maandelijkse continue ontwikkeling en UI/UX-iteraties." },
+        scale: { title: "Toegewijde Tech Lead", desc: "Growth pakket + 15 uur ontwikkeling. Prioritair Slack-kanaal en toegewijde technische ondersteuning." }
+      },
+
       integrations: {
-        stripe: "Stripe Betalingsgateway",
-        auth: "Kullanıcı Veri ve Yetkilendirme",
-        crm: "CRM / Hubspot Synchronisatie",
-        mail: "Nieuwsbrief & E-mail Synchronisatie",
-        analytics: "Geavanceerde Gebeurtenisanalyses",
-        ai: "Bespoke AI / ML Integratie",
-        sockets: "Real-time Veri / Sockets",
-        cms: "Custom Content Management (CMS)",
-        multilang: "Meertalige Alfa's"
+        stripe: "Stripe Betalingsinfrastructuur",
+        auth: "Authenticatie & Rollen",
+        crm: "CRM Sync",
+        mail: "Transactionele E-mail",
+        analytics: "Telemetrie & Analytics",
+        ai: "AI & LLM Pipelines",
+        sockets: "Real-time WebSockets",
+        cms: "Bespoke Admin Controle",
+        multilang: "Meertaligheid (i18n)"
       },
       designStyles: {
-        minimal: "Minimal & Focus op Typografie",
-        bold: "Vet, Premium & Brand Driven",
-        corporate: "Profesyonel & Kurumsal Yapı",
-        interactive: "Hoog Interactief & Complex UI"
+        minimal: "Scandinavisch Minimalisme",
+        bold: "Bold & Editorial",
+        corporate: "Modern Corporate",
+        interactive: "Bekroonde Immersieve UI"
       },
       fontPrefs: {
         sans: "Modern Sans-Serif",
@@ -637,9 +819,9 @@ export const translations = {
         advanced: "Geavanceerd / Technisch SEO"
       },
       timelines: {
-        standard: "Standaard (4-6 Weken)",
-        relaxed: "Relaxed (8-10 Weken)",
-        expedited: "Versneld (1-2 Weken)"
+        standard: "Standaard Pipeline",
+        relaxed: "Relaxte Levering",
+        expedited: "Versnelde Prioriteit"
       },
       constraint: {
         title: "Architecturale Beperking",
@@ -647,45 +829,45 @@ export const translations = {
       },
       form: {
         credentials: "Credentials",
-        entity: "Entiteitsnaam *",
-        website: "Huidige URL",
-        goals: "Primaire Doelstelling & Doelen *",
-        goalsPlace: "Beschrijf het ultieme doel van dit platform...",
-        competitors: "Concurrenten of Inspiraties",
-        architecture: "Architectuur",
-        archDesc: "Selecteer het technische framework voor uw applicatie.",
-        pages: "Geschat aantal Pagina's/Schermen",
-        design: "Esthetiek",
-        designDesc: "Hoe moet het platform aanvoelen? Selecteer uw richting.",
+        entity: "Corporate Entiteit / Merknaam *",
+        website: "Huidig Domein (Optioneel)",
+        goals: "Primaire Doelstelling *",
+        goalsPlace: "Welk specifiek zakelijk probleem lossen we op?",
+        competitors: "Directe Concurrenten / Benchmarks",
+        architecture: "Architectuur.",
+        archDesc: "Selecteer de fundamentele technische structuur voor uw deployment.",
+        pages: "Schaalvereiste (Aantal Pagina's)",
+        design: "Esthetiek.",
+        designDesc: "Definieer de visuele engineering en merkparameters.",
         color: "Primaire Kleur",
         accent: "Accentkleur",
-        hasAccent: "Accentkleur?",
-        fonts: "Typografievoorkeur",
-        content: "Inhoud & Copy",
-        copy: "Include Professional Copywriting",
-        assets: "Attach Brand Assets / Brief (Max 100MB)",
-        integrations: "Integraties & Functionaliteit",
-        intDesc: "Selecteer de complexe functies en API-synchronisaties.",
+        hasAccent: "Accentkleur toevoegen?",
+        fonts: "Typografie Basis",
+        content: "Assets.",
+        copy: "Novatrum SEO Copywriting",
+        assets: "Asset Upload Centrum",
+        integrations: "Matrix.",
+        intDesc: "Selecteer backend capaciteiten en API integraties.",
         seo: "Zichtbaarheid",
         seoDesc: "Selecteer de strategie voor content engineering en indexering.",
-        timeline: "Logistiek",
-        timelineDesc: "Laten we de vereiste lanceringstermijn bepalen.",
-        maintenance: "Continu Onderhoud",
-        maintenanceDesc: "Include post-launch maintenance & security retainer.",
-        maintenanceCheck: "Include priority maintenance",
-        client: "Identificeer Klant",
-        clientSub: "Voer uw facturatiegegevens in om deze discovery veilig in onze systemen op te slaan.",
-        name: "Volledige Naam / Contactpersoon *",
+        timeline: "Logistiek.",
+        timelineDesc: "Definieer de leveringstermijn en doorlopend onderhoudscontract.",
+        maintenance: "Continuous Engineering",
+        maintenanceDesc: "Inclusief infrastructuurbeheer na lancering.",
+        maintenanceCheck: "Inclusief prioriteit onderhoud",
+        client: "Autorisatie.",
+        clientSub: "Voer uw facturatiegegevens in om de officiële blauwdruk te genereren.",
+        name: "Bevoegde Ondertekenaar *",
         email: "Zakelijk E-mailadres *",
-        phone: "Kurumsal Telefoonnummer *",
-        address: "Billing Adres (Stad, Land) *",
-        vat: "BTW-nummer (Optioneel)",
+        phone: "Telefoonnummer",
+        address: "Factuuradres *",
+        vat: "BTW-nummer",
         notes: "Ontwerpnotities",
         notesPlace: "Deel specifieke visuele richtlijnen of technische opmerkingen...",
         transparencyTitle: "Operationele Naleving",
-        transparencyDesc: "Ons prijsmodel scheidt de technische waarde van verplichte operationele kosten (licenties, cloudinfrastructuur en zakelijke compliance). Dit zorgt voor volledige transparantie.",
-        exclVat: "Excl. BTW & Operationele Kosten",
-        twoMonthsFreeBadge: "2 Maanden Gratis Inbegrepen",
+        transparencyDesc: "Ons prijsmodel scheidt de technische waarde van verplichte operationele kosten. Dit zorgt voor volledige transparantie.",
+        exclVat: "Excl. BTW",
+        twoMonthsFreeBadge: "2 Maanden Gratis",
         pdfDisclaimer: "* Schatting vertegenwoordigt technische waarde. Operationele kosten en BTW worden berekend tijdens de onboarding.",
       },
       summary: {
@@ -698,23 +880,23 @@ export const translations = {
         maintenance: "Onderhoud",
         design: "Ontwerprichting",
         integrations: "Integraties",
-        total: "Canlı Hesaplama (€)",
+        total: "Live Berekening (€)",
         twoMonthsFreeNote: "Eerste 2 Maanden Gratis",
       },
       btn: {
         prev: "Vorige Fase",
         next: "Volgende Fase",
-        submit: "Vergrendel Plan & Blueprint",
-        encrypting: "Versleutelen...",
+        submit: "Indienen voor Beoordeling",
+        encrypting: "Protocol Versleutelen...",
         finish: "Start Discovery",
-        pdf: "Genereer & Download PDF",
-        hub: "Terug naar Hub"
+        pdf: "Download Blueprint PDF",
+        hub: "Terug naar Central Gateway"
       },
       success: {
-        title: "Plan Vergrendeld.",
+        title: "Protocol Vastgelegd.",
         sub: "Definitieve Discovery",
-        desc: "Uw beveiligde referentie-ID is vastgelegd. Wij zullen uw blueprint beoordelen en u binnen 24-48 uur e-mailen met bir Definitief Voorstel.",
-        dsNumber: "DS Nummer"
+        desc: "Architectuurspecificaties beveiligd. Wachtend op technische beoordeling.",
+        dsNumber: "Deployment Referentie"
       }
     },
 
@@ -967,8 +1149,14 @@ export const translations = {
   },
 
   fr: {
-    nav: { home: "Accueil", services: "Services", process: "Méthodologie", contact: "Contact", privacy: "Confidentialité", terms: "Conditions", gateway: "Portail Client" },
-    footer: { rights: "Tous droits réservés.", builtIn: "Conçu à Dilbeek, Belgique.", lang: "Langue" },
+    nav: { 
+      home: "Accueil", services: "Services", process: "Méthodologie", contact: "Contact", privacy: "Confidentialité", terms: "Conditions", gateway: "Portail Client",
+      products: "Produits", showroom: "Showroom", documentation: "Documentation", systemStatus: "État du Système"
+    },
+    footer: { 
+      rights: "Tous droits réservés.", builtIn: "Conçu à Dilbeek, Belgique.", lang: "Langue",
+      company: "Entreprise", resources: "Ressources", connect: "Connecter"
+    },
 
     hero: {
       badge: "Studio Digital • Dilbeek, Belgique",
@@ -1018,48 +1206,104 @@ export const translations = {
       button: "Transmettre le Message"
     },
     privacy: {
-      title: "Confidentialité",
-      subtitle: "Protection des données.",
-      tag: "LÉGAL",
-      lastUpdated: "Dernière mise à jour : 2026",
-      sec1Title: "01. Collecte de Données",
-      sec1Desc: "Nous ne collectons que ce qui est strictement nécessaire à l'ingénierie.",
-      sec1Notice: "Nous ne vendons jamais vos données à des tiers.",
-      techAuthTitle: "02. Authentification Technique",
-      techAuthDesc: "Nous utilisons des cookies techniques strictement nécessaires pour maintenir votre session sécurisée dans le Portail Client. Ils sont essentiels pour la sécurité et ne suivent pas le comportement personnel.",
-      sec2Title: "03. Communication",
-      sec2Desc: "Comment nous vous contactons en toute sécurité.",
-      rule1: "Communication strictement liée au projet.",
-      rule2: "Pas de spam marketing.",
-      rule3: "Canaux sécurisés et chiffrés.",
-      sec3Title: "04. Sécurité",
-      sec3Desc: "Vos paramètres sont chiffrés dans notre réseau privé.",
-      footerTag: "DES QUESTIONS ?",
-      cta: "Nous Contacter"
+      title: "Protection des Données",
+      subtitle: "Directive de Confidentialité & RGPD.",
+      tag: "Conformité",
+      lastUpdated: "Dernière mise à jour : Avril 2026",
+      sec1Title: "01. Collecte et Traitement des Données",
+      sec1Desc: "En tant que cabinet d'ingénierie européen, nous opérons sous stricte conformité RGPD. Nous ne collectons que les données cryptographiques et d'entreprise absolument nécessaires pour héberger votre infrastructure numérique.",
+      sec1Notice: "Nous refusons strictement la vente, la monétisation ou le partage non autorisé des données clients à des tiers.",
+      techAuthTitle: "02. Authentification Technique (Cookies)",
+      techAuthDesc: "Novatrum utilise une gestion de session zero-knowledge. Nous ne déployons que les cookies techniques strictement nécessaires pour authentifier votre identité dans le Portail Client. Nous n'utilisons aucun tracker tiers.",
+      sec2Title: "03. Confidentialité des Communications",
+      sec2Desc: "Votre communication d'entreprise est traitée comme des données d'ingénierie confidentielles.",
+      rule1: "Chiffrement de bout en bout des paramètres.",
+      rule2: "Aucun marketing tiers non sollicité.",
+      rule3: "Suppression automatique des identifiants expirés.",
+      sec3Title: "04. Sécurité de l'Infrastructure",
+      sec3Desc: "Tous les environnements de base de données sont isolés dans notre réseau privé. Les données sont chiffrées en transit et au repos (at rest) pour garantir une impénétrabilité de niveau entreprise.",
+      footerTag: "QUESTIONS DE SÉCURITÉ ?",
+      cta: "Contacter l'Ingénierie"
     },
     terms: {
-      title: "Conditions de Service",
-      subtitle: "Normes opérationnelles.",
-      tag: "LÉGAL",
-      lastUpdated: "Dernière mise à jour : 2026",
-      sec1Title: "01. Originalité",
-      sec1Desc: "Chaque ligne de code est conçue sur mesure.",
-      sec1Notice: "Nous rejetons les modèles génériques.",
-      sec2Title: "02. Normes",
-      sec2Desc: "Nos règles d'ingénierie de base.",
-      rule1Title: "Qualité",
-      rule1Desc: "Focus sur des temps de chargement ultra-rapides.",
-      rule2Title: "Livraison",
-      rule2Desc: "Respect strict des délais de déploiement.",
-      rule3Title: "Support",
-      rule3Desc: "Suivi complet après le lancement.",
-      sec3Title: "03. Utilisation",
-      sec3Desc: "Des politiques d'utilisation équitable s'appliquent.",
-      sec4Title: "04. Propriété",
-      sec4Desc: "Après paiement intégral, les droits de propriété intellectuelle vous sont transférés.",
-      footerTag: "ACCORD",
-      cta: "Calculer l'Estimation"
+      title: "Conditions de",
+      subtitle: "Service & Partenariat",
+      tag: "Directive Juridique",
+      lastUpdated: "En vigueur : Avril 2026",
+      sec1Title: "01. Acceptation et Portée",
+      sec1Desc: "En initiant un projet, vous acceptez notre Blueprint Juridique. Nous ne travaillons pas à taux horaire ; toute fonctionnalité supplémentaire sera évaluée à un prix fixe.",
+      sec1Notice: "Le paiement d'un acompte confirme votre acceptation explicite de ces paramètres.",
+      sec2Title: "02. Conduite Professionnelle",
+      sec2Desc: "Pour maintenir la concentration technique, toutes les interactions doivent respecter le protocole de communication suivant :",
+      rule1Title: "Portail Client",
+      rule1Desc: "Toutes les demandes officielles et le support doivent passer par le Portail Client Novatrum.",
+      rule2Title: "E-mail d'Entreprise",
+      rule2Desc: "La communication officielle secondaire est gérée par e-mail d'entreprise.",
+      rule3Title: "Pas de Canaux Informels",
+      rule3Desc: "La messagerie informelle (ex: WhatsApp) n'est pas reconnue pour les directives de projet.",
+      sec3Title: "03. Facturation et Acomptes",
+      sec3Desc: "Les frais d'installation initiaux réservent la capacité d'ingénierie et sont donc strictement non remboursables. Les retards de paiement de plus de 14 jours entraînent une pause de l'infrastructure.",
+      sec4Title: "04. Propriété de l'Architecture",
+      sec4Desc: "Les clients détiennent les droits d'utilisation commerciale, mais le code source reste la propriété de Novatrum. Nous opérons comme un fournisseur SaaS ; le code brut n'est jamais exporté.",
+      footerTag: "Novatrum // Systèmes d'Ingénierie Autonomes",
+      cta: "Retour au Portail"
     },
+
+    legal: {
+      pageTitle: "Blueprint Juridique",
+      subtitle: "Conditions Générales",
+      desc: "Les paramètres fondamentaux régissant nos partenariats d'ingénierie.",
+      footerInfo: "Infrastructure Core Novatrum // Division Sécurité & Conformité",
+      footerLink: "Conditions Générales de Service",
+      sections: [
+        { num: '01', title: 'Portée du Travail (Scope Creep)', desc: 'Les services de Novatrum sont limités aux spécifications du "Definitive Blueprint". Nous ne travaillons pas à taux horaire ; toute fonctionnalité supplémentaire demandée sera évaluée et facturée à un prix fixe.' },
+        { num: '02', title: 'Conditions de Paiement', desc: 'Le développement sera suspendu si les paiements sont retardés de plus de 14 jours. Les paiements initiaux (acomptes) réservent le temps d\'ingénierie. Par conséquent, ils sont strictement non remboursables si le projet est annulé par le client.' },
+        { num: '03', title: 'Propriété Intellectuelle & Accès', desc: 'Après paiement intégral, le client obtient les droits commerciaux sur le design. Le code source sous-jacent reste la propriété exclusive de Novatrum. Novatrum se réserve le droit de présenter le projet dans son portfolio, sauf si un accord de confidentialité (NDA) est signé.' },
+        { num: '04', title: 'Hébergement & Ingénierie Continue', desc: 'Pour garantir une sécurité maximale, toutes les plateformes sont hébergées exclusivement sur l\'infrastructure de Novatrum. Des frais mensuels obligatoires s\'appliquent. Nous opérons comme un fournisseur SaaS ; le code brut n\'est jamais exporté.' },
+        { num: '05', title: 'Responsabilités & Communication', desc: 'Le client est responsable de l\'achat de son nom de domaine. Toute communication officielle, support technique et demande de révision doivent être effectués exclusivement via le Portail Client Novatrum ou par e-mail. Les canaux informels (ex: WhatsApp) ne sont pas reconnus.' },
+        { num: '06', title: 'Limitation de Responsabilité', desc: 'Novatrum conçoit des systèmes haute performance, mais ne peut garantir une immunité absolue. La responsabilité maximale de Novatrum est limitée au montant total payé par le client pour ce projet spécifique.' }
+      ]
+    },
+
+    showroom: {
+      badge: "Sélecteur d'Environnement",
+      title: "Hub de Simulation.",
+      subtitle: "Explorez des prototypes spécifiques à l'industrie conçus avec l'infrastructure Novatrum. Chaque module est conçu pour redéfinir les normes de l'industrie.",
+      networkActive: "Showroom Actif",
+      networkMaintenance: "Maintenance du Réseau",
+      networkDegraded: "Réseau Dégradé",
+      moduleReady: "Prêt",
+      btnDeploy: "Initialiser le Protocole",
+      btnRestricted: "Accès Restreint",
+      footerEnv: "Environnement de Simulation.",
+      btnHub: "Retour au Hub",
+      btnStart: "Démarrer le Protocole",
+      demos: {
+        creative: { title: "Aura Creative", category: "Architecture & Studio", desc: "Architecture de portfolio de luxe, minimaliste et axée sur le visuel. Avec défilement fluide et grande typographie." },
+        fintech: { title: "Aegis Finance", category: "Néo-Banque & Patrimoine", desc: "Interface financière à contraste élevé, de style suisse, conçue pour la gestion de patrimoine d'entreprise." },
+        logistics: { title: "Node Logistics", category: "Suivi Mondial & B2B", desc: "Tableau de bord opérationnel axé sur la vitesse, les tables de données denses et le suivi cartographique en direct." },
+        quantum: { title: "Quantum Engine", category: "Informatique Spatiale & WebGL", desc: "Vitrine d'API neuronale interactive 3D, fortement en mode sombre, pour les développeurs et startups Web3." }
+      }
+    },
+
+    statusPage: {
+      titleStatus: "Statut",
+      subtitle: "Disponibilité de l'Infrastructure de Base en Temps Réel",
+      coreSystems: "Infrastructure de Base",
+      autoUpdate: "Mis à jour automatiquement toutes les 10 minutes",
+      lastCheck: "Dernière vérification :",
+      global: {
+        operational: "Tous les Systèmes sont Opérationnels",
+        outage: "Panne Système Majeure",
+        degraded: "Dégradation Partielle du Système"
+      },
+      badge: {
+        operational: "Opérationnel",
+        degraded: "Dégradé",
+        outage: "Panne"
+      }
+    },
+
     gateway: {
       title: "Initiation de Projet",
       subtitle: "Sélectionnez votre voie préférée pour commencer le processus d'ingénierie.",
@@ -1091,22 +1335,52 @@ export const translations = {
       termsAgree: "Je reconnais avoir lu et accepté les ",
       termsLink: "Conditions Générales de Service de Novatrum",
       termsDesc: ". Je comprends que ce plan définitif constitue la portée technique et les conditions de facturation de notre collaboration.",
+      
+      // --- PREMIUM ARCHITECTURE OPTIONS ---
+      architectures: {
+        landing: { label: "Architecture Landing", desc: "Un actif numérique d'une seule page à haute performance. Comprend un design sur mesure, des temps de chargement ultra-rapides et un routage optimisé." },
+        corporate: { label: "Plateforme Corporate", desc: "Une présence d'autorité multi-pages. Comprend une architecture CMS évolutive, des structures SEO impeccables et un routage dynamique." },
+        ecommerce: { label: "Vitrine Numérique", desc: "Un moteur de conversion sur mesure. Logique d'inventaire personnalisée, flux de paiement sans friction et architectures sécurisées." },
+        saas: { label: "Logiciel Sur Mesure (SaaS)", desc: "Infrastructure numérique propriétaire. Conception de base de données avancée, authentification complexe et logique métier conçue de zéro." }
+      },
+
+      // --- PREMIUM SETUP FEE ---
+      setupFee: {
+        title: "Frais d'Initialisation",
+        desc: "Chaque architecture Novatrum commence par une configuration opérationnelle standard. Ces frais obligatoires garantissent des performances et une sécurité de niveau entreprise dès le premier jour.",
+        includesTitle: "Le Standard Novatrum Comprend :",
+        items: {
+          i1: "Déploiement Vercel Edge Network",
+          i2: "Chiffrement SSL & En-têtes de Sécurité",
+          i3: "Configuration CDN Globale",
+          i4: "Ajustement des Performances Lighthouse 100/100"
+        }
+      },
+
+      // --- PREMIUM MAINTENANCE OPTIONS ---
+      maintenance: {
+        none: { title: "Aucun Support Continu", desc: "Le client assume l'entière responsabilité de la sécurité du serveur, des modifications d'API et de la maintenance." },
+        essential: { title: "Gestion de l'Infrastructure", desc: "Correctifs de sécurité proactifs, surveillance de la disponibilité, sauvegardes quotidiennes et mises à jour du système." },
+        growth: { title: "Ingénierie de Croissance", desc: "Pack infrastructure + 5 heures de développement continu mensuel et d'itérations UI/UX." },
+        scale: { title: "Tech Lead Dédié", desc: "Pack croissance + 15 heures de développement. Canal Slack prioritaire et support technique dédié." }
+      },
+
       integrations: {
-        stripe: "Passerelle de Paiement Stripe",
-        auth: "Authentification & Autorisation Utilisateur",
-        crm: "Synchronisation CRM / Hubspot",
-        mail: "Synchronisation Newsletter & Email",
-        analytics: "Analyses d'Evénements Avancées",
-        ai: "Intégration AI / ML sur mesure",
-        sockets: "Données en Temps Réel / Sockets",
-        cms: "Gestionnaire de Contenu (CMS)",
-        multilang: "Alphas Multilingues"
+        stripe: "Infrastructure de Paiement",
+        auth: "Authentification & Rôles",
+        crm: "Synchronisation CRM",
+        mail: "E-mail Transactionnel",
+        analytics: "Télémétrie & Analytics",
+        ai: "Pipelines IA & LLM",
+        sockets: "WebSockets en Temps Réel",
+        cms: "Contrôle Admin Sur Mesure",
+        multilang: "Multilingue (i18n)"
       },
       designStyles: {
-        minimal: "Minimal & Focus sur la Typographie",
-        bold: "Gras, Premium & Brand Driven",
-        corporate: "Structure Professionnelle & Entreprise",
-        interactive: "Hautement Interactif & Complex UI"
+        minimal: "Minimalisme Scandinave",
+        bold: "Audacieux & Éditorial",
+        corporate: "Corporate Moderne",
+        interactive: "UI Immersive Primée"
       },
       fontPrefs: {
         sans: "Modern Sans-Serif",
@@ -1118,55 +1392,55 @@ export const translations = {
         advanced: "SEO Avancé / Technique"
       },
       timelines: {
-        standard: "Standart (4-6 Semaines)",
-        relaxed: "Relax (8-10 Semaines)",
-        expedited: "Accéléré (1-2 Semaines)"
+        standard: "Pipeline Standard",
+        relaxed: "Livraison Détendue",
+        expedited: "Priorité Accélérée"
       },
       constraint: {
         title: "Contrainte Architecturale",
-        desc: "Une plateforme complexe ne peut pas être accélérée. Veuillez privilégier les calendriers standard ou détendus pour une ingénierie appropriée."
+        desc: "Une plateforme complexe ne peut pas être accélérée. Veuillez privilégier les calendriers standard pour une ingénierie appropriée."
       },
       form: {
         credentials: "Credentials",
-        entity: "Nom de l'Entité *",
-        website: "URL Actuelle",
-        goals: "Objectif Principal & Buts *",
-        goalsPlace: "Décrivez le but ultime de cette plateforme...",
-        competitors: "Concurrents ou Inspirations",
-        architecture: "Architecture",
-        archDesc: "Sélectionnez le cadre d'ingénierie pour votre application.",
-        pages: "Nombre Estimé de Pages/Écrans",
-        design: "Esthétique",
-        designDesc: "Quelle sensation la plateforme doit-elle dégager ? Sélectionnez votre direction.",
+        entity: "Entité Corporative / Nom de Marque *",
+        website: "Domaine Existant (Optionnel)",
+        goals: "Objectif Principal *",
+        goalsPlace: "Quel problème commercial spécifique résolvons-nous ?",
+        competitors: "Concurrents Directs / Benchmarks",
+        architecture: "Architecture.",
+        archDesc: "Sélectionnez la structure technique fondamentale pour votre déploiement.",
+        pages: "Exigence d'Échelle (Nombre de Pages)",
+        design: "Esthétique.",
+        designDesc: "Définissez l'ingénierie visuelle et les paramètres de marque.",
         color: "Couleur Principale",
         accent: "Couleur d'Accent",
-        hasAccent: "Couleur d'Accent?",
-        fonts: "Préférence de Typographie",
-        content: "Contenu & Copy",
-        copy: "Include Professional Copywriting",
-        assets: "Attach Brand Assets / Brief (Max 100MB)",
-        integrations: "Intégrations & Fonctionnalités",
-        intDesc: "Sélectionnez les fonctionnalités complexes et les synchronisations API.",
+        hasAccent: "Ajouter une couleur d'accent ?",
+        fonts: "Base Typographique",
+        content: "Actifs.",
+        copy: "Copywriting SEO Novatrum",
+        assets: "Centre de Téléchargement d'Actifs",
+        integrations: "Matrice.",
+        intDesc: "Sélectionnez les capacités backend et les intégrations API.",
         seo: "Visibilité",
-        seoDesc: "Sélectionnez content engineering et la stratégie d'indexation.",
-        timeline: "Logistique",
-        timelineDesc: "Définissons le calendrier de déploiement requis.",
-        maintenance: "Soutien Continu",
-        maintenanceDesc: "Include post-launch maintenance & security retainer.",
-        maintenanceCheck: "Include priority maintenance",
-        client: "Identifier Client",
-        clientSub: "Fournissez vos coordonnées de facturation pour enregistrer cette découverte en toute sécurité.",
-        name: "Nom Complet / Point de Contact *",
-        email: "Adresse E-mail Professionnelle *",
-        phone: "Téléphone Professionnel *",
-        address: "Adresse de Facturation (Ville, Pays) *",
-        vat: "Numéro de TVA (Optionnel)",
+        seoDesc: "Sélectionnez la stratégie d'ingénierie de contenu.",
+        timeline: "Logistique.",
+        timelineDesc: "Définissez le calendrier de livraison et le contrat d'ingénierie continu.",
+        maintenance: "Ingénierie Continue",
+        maintenanceDesc: "Inclure la gestion de l'infrastructure post-lancement.",
+        maintenanceCheck: "Inclure la maintenance prioritaire",
+        client: "Autorisation.",
+        clientSub: "Finalisez les informations de facturation pour générer le plan officiel.",
+        name: "Signataire Autorisé *",
+        email: "E-mail Professionnel *",
+        phone: "Numéro de Téléphone",
+        address: "Adresse de Facturation *",
+        vat: "Numéro de TVA",
         notes: "Notes de Conception",
-        notesPlace: "Partagez toute direction visuelle spécifique ou note technique...",
+        notesPlace: "Partagez des directives visuelles spécifiques ou notes...",
         transparencyTitle: "Conformité Opérationnelle",
-        transparencyDesc: "Notre modèle de tarification sépare la valeur d'ingénierie des coûts opérationnels obligatoires (licences, infrastructure cloud et conformité commerciale). Cela garantit une transparence totale.",
-        exclVat: "Hors TVA & Frais Opérationnels",
-        twoMonthsFreeBadge: "2 Mois Gratuits Inclus",
+        transparencyDesc: "Notre modèle de tarification sépare la valeur d'ingénierie des coûts opérationnels obligatoires. Cela garantit une transparence totale.",
+        exclVat: "Hors TVA",
+        twoMonthsFreeBadge: "2 Mois Gratuits",
         pdfDisclaimer: "* L'estimation représente la valeur d'ingénierie. Les frais opérationnels et la TVA sont calculés lors de l'intégration.",
       },
       summary: {
@@ -1185,17 +1459,17 @@ export const translations = {
       btn: {
         prev: "Phase Précédente",
         next: "Phase Suivante",
-        submit: "Verrouiller Plan & Blueprint",
-        encrypting: "Chiffrement...",
+        submit: "Soumettre pour Examen",
+        encrypting: "Chiffrement du Protocole...",
         finish: "Démarrer Découverte",
-        pdf: "Générer & Télécharger PDF",
-        hub: "Retour au Hub"
+        pdf: "Télécharger le Blueprint PDF",
+        hub: "Retour au Portail Central"
       },
       success: {
-        title: "Blueprint Verrouillé.",
+        title: "Protocole Enregistré.",
         sub: "Découverte Définitive",
-        desc: "Votre ID de référence sécurisé est enregistré. Nous examinerons votre blueprint et vous enverrons un e-mail dans les 24-48 heures avec une Proposition Définitive.",
-        dsNumber: "Numéro DS"
+        desc: "Spécifications de l'architecture sécurisées. En attente d'examen technique.",
+        dsNumber: "Référence de Déploiement"
       }
     },
 
@@ -1448,8 +1722,14 @@ export const translations = {
   },
 
   tr: {
-    nav: { home: "Ana Sayfa", services: "Hizmetler", process: "Metodoloji", contact: "İletişim", privacy: "Gizlilik", terms: "Şartlar", gateway: "Müşteri Portalı" },
-    footer: { rights: "Tüm hakları saklıdır.", builtIn: "Dilbeek, Belçika'da geliştirildi.", lang: "Dil" },
+    nav: { 
+      home: "Ana Sayfa", services: "Hizmetler", process: "Metodoloji", contact: "İletişim", privacy: "Gizlilik", terms: "Şartlar", gateway: "Müşteri Portalı",
+      products: "Ürünler", showroom: "Showroom", documentation: "Dokümantasyon", systemStatus: "Sistem Durumu"
+    },
+    footer: { 
+      rights: "Tüm hakları saklıdır.", builtIn: "Dilbeek, Belçika'da geliştirildi.", lang: "Dil",
+      company: "Şirket", resources: "Kaynaklar", connect: "Bağlantı"
+    },
 
     hero: {
       badge: "Dijital Stüdyo • Dilbeek, Belçika",
@@ -1500,47 +1780,101 @@ export const translations = {
     },
 
     privacy: {
-      title: "Gizlilik Politikası",
-      subtitle: "Veri koruması.",
-      tag: "YASAL",
-      lastUpdated: "Son Güncelleme: 2026",
-      sec1Title: "01. Veri Toplama",
-      sec1Desc: "Sadece ürününüzü geliştirmek için kesinlikle gerekli olanları topluyoruz.",
-      sec1Notice: "Verilerinizi asla üçüncü şahıslara satmıyoruz.",
-      techAuthTitle: "02. Teknik Kimlik Doğrulama",
-      techAuthDesc: "Müşteri Portalı içindeki güvenli oturumunuzu sürdürmek için kesinlikle gerekli teknik çerezleri kullanıyoruz. Bunlar temel güvenlik özellikleri için şarttır ve kişisel davranışları izlemez.",
-      sec2Title: "03. İletişim",
-      sec2Desc: "Sizinle nasıl güvenli iletişim kuruyoruz.",
-      rule1: "Kesinlikle projeyle ilgili iletişim.",
-      rule2: "Üçüncü taraf pazarlama spam'i yok.",
-      rule3: "Yalnızca güvenli ve şifreli kanallar.",
-      sec3Title: "04. Güvenlik",
-      sec3Desc: "Proje parametreleriniz ve kimlik bilgileriniz özel ağımızda şifrelenir.",
-      footerTag: "SORULARINIZ MI VAR?",
-      cta: "Bize Ulaşın"
+      title: "Veri Koruması",
+      subtitle: "Gizlilik Yönergesi ve GDPR.",
+      tag: "Uyumluluk",
+      lastUpdated: "Son Güncelleme: Nisan 2026",
+      sec1Title: "01. Veri Toplama ve İşleme",
+      sec1Desc: "Avrupa merkezli bir mühendislik firması olarak katı GDPR uyumluluğu altında faaliyet gösteriyoruz. Sadece dijital altyapınızı barındırmak için kesinlikle gerekli olan kriptografik ve kurumsal verileri topluyoruz.",
+      sec1Notice: "Müşteri verilerinin satılmasını, paraya dönüştürülmesini veya üçüncü şahıslarla izinsiz paylaşılmasını kesinlikle reddediyoruz.",
+      techAuthTitle: "02. Teknik Kimlik Doğrulama (Çerezler)",
+      techAuthDesc: "Novatrum, sıfır bilgi (zero-knowledge) oturum yönetimi kullanır. Müşteri Portalı içindeki kimliğinizi doğrulamak için yalnızca kesinlikle gerekli teknik çerezleri dağıtıyoruz. Üçüncü taraf pazarlama izleyicileri (tracker) kullanmıyoruz.",
+      sec2Title: "03. İletişim Gizliliği",
+      sec2Desc: "Kurumsal iletişiminiz, gizli mühendislik verisi olarak kabul edilir.",
+      rule1: "Proje parametrelerinde uçtan uca şifreleme.",
+      rule2: "İstenmeyen üçüncü taraf pazarlama mesajları yok.",
+      rule3: "Süresi dolan kimlik bilgilerinin otomatik silinmesi.",
+      sec3Title: "04. Altyapı Güvenliği",
+      sec3Desc: "Tüm veritabanı ortamları ve mimari planlar özel uç ağımızda (edge network) izole edilmiştir. Kurumsal düzeyde aşılmazlık sağlamak için veriler hem aktarım sırasında hem de sunucuda (at rest) şifrelenir.",
+      footerTag: "GÜVENLİK SORULARINIZ MI VAR?",
+      cta: "Mühendisliğe Ulaşın"
     },
     terms: {
-      title: "Hizmet Şartları",
-      subtitle: "Operasyonel standartlar.",
-      tag: "YASAL",
-      lastUpdated: "Son Güncelleme: 2026",
-      sec1Title: "01. Özgünlük",
-      sec1Desc: "Her kod satırı ve UI bileşeni özel olarak tasarlanır.",
-      sec1Notice: "Jenerik şablonları kesinlikle reddediyoruz.",
-      sec2Title: "02. Standartlar",
-      sec2Desc: "Temel mühendislik kurallarımız.",
-      rule1Title: "Kalite",
-      rule1Desc: "Saniyenin altındaki yükleme sürelerine tavizsiz odaklanma.",
-      rule2Title: "Teslimat",
-      rule2Desc: "Anlaşılan dağıtım takvimlerine sıkı sıkıya bağlılık.",
-      rule3Title: "Destek",
-      rule3Desc: "Lansman sonrası kapsamlı bakım.",
-      sec3Title: "03. Kullanım",
-      sec3Desc: "Adil kullanım politikaları dağıtılan tüm platformlarımız için geçerlidir.",
-      sec4Title: "04. Sahiplik",
-      sec4Desc: "Son ödemenin ardından, tüm fikri mülkiyet hakları kurumunuza devredilir.",
-      footerTag: "SÖZLEŞME",
-      cta: "Tahmini Hesapla"
+      title: "Hizmet",
+      subtitle: "Şartları ve Ortaklık",
+      tag: "Yasal Yönerge",
+      lastUpdated: "Geçerlilik: Nisan 2026",
+      sec1Title: "01. Kabul ve Kapsam",
+      sec1Desc: "Bir projeyi başlatarak Hukuki Bildirgemizi kabul etmiş olursunuz. Saatlik ücretle çalışmıyoruz; onaydan sonra talep edilen ek özellikler sabit fiyatlı bir eklenti olarak değerlendirilir.",
+      sec1Notice: "Ön ödeme yapmak veya panele giriş yapmak, bu parametreleri açıkça kabul ettiğinizi onaylar.",
+      sec2Title: "02. Profesyonel İletişim",
+      sec2Desc: "Mühendislik odağını korumak için, tüm etkileşimler aşağıdaki iletişim protokolüne sıkı sıkıya bağlı kalmalıdır:",
+      rule1Title: "Müşteri Portalı",
+      rule1Desc: "Tüm resmi talepler, revizyonlar ve teknik destek Novatrum Müşteri Portalı üzerinden iletilmelidir.",
+      rule2Title: "Kurumsal E-posta",
+      rule2Desc: "İkincil resmi iletişim ve belgelendirme kurumsal e-posta kanallarıyla yönetilir.",
+      rule3Title: "Resmi Olmayan Kanallar Yok",
+      rule3Desc: "Kayıt dışı mesajlaşmalar (örn. WhatsApp, Instagram) iş direktifi olarak kesinlikle kabul edilmez.",
+      sec3Title: "03. Faturalandırma ve Ödemeler",
+      sec3Desc: "İlk kurulum ücretleri (avanslar) mühendislik kapasitesini rezerve eder. Bu nedenle ön ödemeler kesinlikle iade edilmez. 14 günü aşan ödeme gecikmeleri altyapının anında durdurulmasına neden olur.",
+      sec4Title: "04. Mimari Sahipliği",
+      sec4Desc: "Müşteriler görsel tasarımın ticari kullanım haklarına sahip olsa da, çekirdek yazılım ve kaynak kodu Novatrum'un münhasır mülkiyetindedir. Bir SaaS olarak çalışıyoruz; ham kodlar asla dışa aktarılmaz.",
+      footerTag: "Novatrum // Otonom Mühendislik Sistemleri",
+      cta: "Panele Geri Dön"
+    },
+
+    legal: {
+      pageTitle: "Hukuki Bildirge",
+      subtitle: "Genel Şartlar ve Koşullar",
+      desc: "Mühendislik ortaklıklarımızı yöneten temel parametreler.",
+      footerInfo: "Novatrum Çekirdek Altyapısı // Güvenlik ve Uyumluluk Birimi",
+      footerLink: "Genel Hizmet Şartları",
+      sections: [
+        { num: '01', title: 'Çalışma Kapsamı (Kapsam Kayması)', desc: 'Novatrum tarafından sağlanan hizmetler, üzerinde anlaşılan "Kesin Blueprint" içinde belirtilen özelliklerle sınırlıdır. Saatlik ücretle çalışmıyoruz; talep edilen ek özellikler, sabit fiyatlı yapısal bir eklenti olarak değerlendirilir ve faturalandırılır.' },
+        { num: '02', title: 'Ödeme Koşulları ve İadeler', desc: 'Ödemeler 14 gün gecikirse geliştirme duraklatılır. Projeyi başlatmak için alınan ilk ödemeler (avans/kurulum), mühendislik zamanının ve altyapının rezerve edilmesini kapsar. Bu nedenle, projenin müşteri tarafından iptal edilmesi durumunda kesinlikle iade edilmez.' },
+        { num: '03', title: 'Fikri Mülkiyet ve Erişim', desc: 'Son ödeme ile müşteri görsel tasarımın ticari kullanım hakkını alır. Ancak temel kod tabanı münhasıran Novatrum\'un mülkiyetinde kalır. Novatrum, özel bir gizlilik sözleşmesi (NDA) imzalanmadığı sürece tamamlanan projeyi kendi portföyünde sergileme hakkını saklı tutar.' },
+        { num: '04', title: 'Barındırma ve Sürekli Mühendislik', desc: 'Kurumsal düzeyde güvenliği garanti etmek için, platformlar yalnızca Novatrum\'un altyapısında barındırılır. Zorunlu bir aylık bakım/hosting ücreti uygulanır. Bir SaaS (Hizmet olarak yazılım) gibi çalışıyoruz; ham kodlar asla dış sunuculara aktarılmaz.' },
+        { num: '05', title: 'Müşteri Sorumlulukları ve İletişim', desc: 'Müşteri, Alan Adını (Domain) almaktan kendisi sorumludur. Tüm resmi iletişim, teknik destek ve revizyon talepleri yalnızca Novatrum Müşteri Portalı veya resmi e-posta üzerinden yürütülmelidir. Resmi olmayan kanallar (örn. WhatsApp, Instagram) direktif olarak kabul edilmez.' },
+        { num: '06', title: 'Sorumluluk Sınırlandırması', desc: 'Novatrum yüksek performanslı sistemler tasarlar, ancak siber tehditlere karşı mutlak dokunulmazlık garanti edemeyiz. Novatrum\'un projeden kaynaklanan herhangi bir talep için maksimum sorumluluğu, o proje için ödenen toplam miktarla sınırlıdır.' }
+      ]
+    },
+
+    showroom: {
+      badge: "Ortam Seçici",
+      title: "Simülasyon Merkezi.",
+      subtitle: "Novatrum altyapısıyla geliştirilmiş sektöre özel prototipleri keşfedin. Her modül endüstri standartlarını yeniden tanımlamak için tasarlanmıştır.",
+      networkActive: "Showroom Aktif",
+      networkMaintenance: "Ağ Bakımı",
+      networkDegraded: "Ağ Sorunları",
+      moduleReady: "Hazır",
+      btnDeploy: "Protokolü Başlat",
+      btnRestricted: "Erişim Kısıtlandı",
+      footerEnv: "Simülasyon Ortamı.",
+      btnHub: "Merkeze Dön",
+      btnStart: "Protokolü Başlat",
+      demos: {
+        creative: { title: "Aura Creative", category: "Mimarlık & Stüdyo", desc: "Lüks, minimal ve görsel odaklı portföy mimarisi. Pürüzsüz kaydırma ve büyük tipografi içerir." },
+        fintech: { title: "Aegis Finance", category: "Yeni Nesil Bankacılık & Varlık", desc: "Kurumsal düzeyde varlık yönetimi için tasarlanmış yüksek kontrastlı, İsviçre tarzı finansal arayüz." },
+        logistics: { title: "Node Logistics", category: "Küresel Takip & B2B", desc: "Hıza, yoğun veri tablolarına ve canlı harita takibine odaklanan operasyonel şirket panosu." },
+        quantum: { title: "Quantum Engine", category: "Uzamsal Bilişim & WebGL", desc: "Geliştiriciler ve Web3 girişimleri için karanlık mod ağırlıklı, 3D etkileşimli sinirsel API vitrini." }
+      }
+    },
+    statusPage: {
+      titleStatus: "Durumu",
+      subtitle: "Gerçek Zamanlı Temel Altyapı Kullanılabilirliği",
+      coreSystems: "Temel Altyapı",
+      autoUpdate: "Her 10 dakikada bir otomatik güncellenir",
+      lastCheck: "Son kontrol:",
+      global: {
+        operational: "Tüm Sistemler Çalışıyor",
+        outage: "Büyük Sistem Kesintisi",
+        degraded: "Kısmi Sistem Yavaşlaması"
+      },
+      badge: {
+        operational: "Aktif",
+        degraded: "Yavaş",
+        outage: "Kesinti"
+      }
     },
 
     gateway: {
@@ -1574,22 +1908,52 @@ export const translations = {
       termsAgree: "Okuduğumu ve kabul ettiğimi onaylıyorum: ",
       termsLink: "Novatrum Genel Hizmet Sözleşmesi",
       termsDesc: ". Bu kesin taslağın, işbirliğimizin teknik kapsamını ve faturalandırma şartlarını oluşturduğunu anlıyorum.",
+      
+      // --- PREMIUM ARCHITECTURE OPTIONS ---
+      architectures: {
+        landing: { label: "Landing Mimarisi", desc: "Yüksek performanslı, tek sayfalık dijital varlık. Özel tasarım, saniyenin altında yükleme süreleri ve dönüşüm odaklı yönlendirme içerir." },
+        corporate: { label: "Kurumsal Platform", desc: "Çok sayfalı otoriter bir yapı. Ölçeklenebilir CMS mimarisi, kusursuz SEO yapıları ve dinamik yönlendirme sunar." },
+        ecommerce: { label: "Dijital Vitrin", desc: "Özel bir dönüşüm motoru. Özel envanter mantığı, sürtünmesiz ödeme akışları ve güvenli ödeme mimarileri." },
+        saas: { label: "Özel Yazılım (SaaS)", desc: "Tescilli dijital altyapı. Gelişmiş veritabanı tasarımı, karmaşık kullanıcı doğrulama ve sıfırdan tasarlanmış özel iş mantığı." }
+      },
+
+      // --- PREMIUM SETUP FEE ---
+      setupFee: {
+        title: "Başlatma Ücreti",
+        desc: "Her Novatrum mimarisi standart bir operasyonel kurulumla başlar. Bu zorunlu ücret, ilk günden itibaren kurumsal düzeyde performans ve güvenlik sağlar.",
+        includesTitle: "Novatrum Standardı Şunları İçerir:",
+        items: {
+          i1: "Vercel Edge Ağı (Network) Dağıtımı",
+          i2: "SSL Şifreleme ve Güvenlik Başlıkları",
+          i3: "Küresel CDN Yapılandırması",
+          i4: "100/100 Lighthouse Performans Optimizasyonu"
+        }
+      },
+
+      // --- PREMIUM MAINTENANCE OPTIONS ---
+      maintenance: {
+        none: { title: "Sürekli Destek Yok", desc: "Müşteri, lansman sonrası sunucu güvenliği, API değişiklikleri ve bakım için tüm sorumluluğu üstlenir." },
+        essential: { title: "Altyapı Yönetimi", desc: "Proaktif güvenlik yamaları, çalışma süresi izleme, günlük veritabanı yedeklemeleri ve temel sistem güncellemeleri." },
+        growth: { title: "Büyüme Mühendisliği", desc: "Altyapı paketi + aylık 5 saat sürekli geliştirme ve UI/UX iterasyonları." },
+        scale: { title: "Özel Teknoloji Lideri (Tech Lead)", desc: "Büyüme paketi + 15 saat geliştirme. Öncelikli Slack kanalı ve özel mühendislik desteği." }
+      },
+
       integrations: {
-        stripe: "Stripe Ödeme Altyapısı",
-        auth: "Kullanıcı Doğrulama ve Yetkilendirme",
-        crm: "CRM / Hubspot Senkronizasyonu",
-        mail: "Bülten ve E-posta Senkronizasyonu",
-        analytics: "Gelişmiş Olay Analitiği",
-        ai: "Özel AI / ML Entegrasyonu",
-        sockets: "Gerçek Zamanlı Veri / Sockets",
-        cms: "Özel İçerik Yönetimi (CMS)",
-        multilang: "Çok Dilli Altyapı"
+        stripe: "Ödeme Altyapısı",
+        auth: "Kimlik Doğrulama & Roller",
+        crm: "CRM Senkronizasyonu",
+        mail: "İşlemsel E-posta (Transactional)",
+        analytics: "Telemetri & Analitik",
+        ai: "AI & LLM Veri Hatları",
+        sockets: "Gerçek Zamanlı WebSockets",
+        cms: "Özel Admin Kontrolü",
+        multilang: "Çoklu Dil (i18n)"
       },
       designStyles: {
-        minimal: "Minimal & Tipografi Odaklı",
-        bold: "Cesur, Premium & Marka Odaklı",
-        corporate: "Profesyonel & Kurumsal Yapı",
-        interactive: "Yüksek Etkileşimli & Karmaşık UI"
+        minimal: "İskandinav Minimalizmi",
+        bold: "Cesur & Editoryal",
+        corporate: "Modern Kurumsal",
+        interactive: "Ödüllü Sürükleyici UI"
       },
       fontPrefs: {
         sans: "Modern Sans-Serif",
@@ -1601,9 +1965,9 @@ export const translations = {
         advanced: "Gelişmiş / Teknik SEO"
       },
       timelines: {
-        standard: "Standart (4-6 Hafta)",
-        relaxed: "Esnek (8-10 Hafta)",
-        expedited: "Hızlandırılmış (1-2 Hafta)"
+        standard: "Standart Takvim",
+        relaxed: "Esnek Teslimat",
+        expedited: "Hızlandırılmış Öncelik"
       },
       constraint: {
         title: "Mühendislik Kısıtlaması",
@@ -1611,46 +1975,46 @@ export const translations = {
       },
       form: {
         credentials: "Kimlik Bilgileri",
-        entity: "Kurum / Marka Adı *",
-        website: "Mevcut URL",
-        goals: "Temel Hedef ve Amaçlar *",
-        goalsPlace: "Bu platformun nihai amacını açıklayın...",
-        competitors: "Rakipler veya İlham Kaynakları",
-        architecture: "Mimari",
-        archDesc: "Uygulamanız için mühendislik çerçevesini seçin.",
-        pages: "Tahmini Sayfa/Ekran Sayısı",
-        design: "Estetik",
-        designDesc: "Platform nasıl hissettirmeli? Markanıza özel tasarım sistemleri geliştiriyoruz.",
+        entity: "Kurumsal Varlık / Marka Adı *",
+        website: "Mevcut Alan Adı (Opsiyonel)",
+        goals: "Birincil Hedef *",
+        goalsPlace: "Hangi spesifik iş problemini çözüyoruz? (Örn: Randevuları otomatikleştirmek, B2B müşteri adaylarını artırmak)",
+        competitors: "Doğrudan Rakipler / Karşılaştırmalar",
+        architecture: "Mimari.",
+        archDesc: "Dağıtımınız için temel teknik yapıyı seçin.",
+        pages: "Ölçek Gereksinimi (Sayfa Sayısı)",
+        design: "Estetik.",
+        designDesc: "Görsel mühendisliği ve marka parametrelerini tanımlayın.",
         color: "Ana Renk",
         accent: "Vurgu Rengi",
-        hasAccent: "Vurgu Rengi mi?",
-        fonts: "Tipografi Tercihi",
-        content: "İçerik ve Copy",
-        copy: "Profesyonel Copywriting Dahil",
-        assets: "Marka Varlıkları / Brief (Maks 100MB)",
-        integrations: "Entegrasyonlar ve İşlevsellik",
-        intDesc: "Karmaşık özellikleri ve üçüncü taraf API senkronizasyonlarını seçin.",
+        hasAccent: "Vurgu Rengi Eklensin mi?",
+        fonts: "Tipografi Tabanı",
+        content: "Varlıklar.",
+        copy: "Novatrum SEO Metin Yazarlığı",
+        assets: "Varlık Yükleme Merkezi",
+        integrations: "Matris.",
+        intDesc: "Backend yeteneklerini ve API entegrasyonlarını seçin.",
         seo: "Görünürlük",
         seoDesc: "İçerik mühendisliği ve indeksleme stratejisini seçin.",
-        timeline: "Lojistik",
-        timelineDesc: "Gerekli lansman takvimini belirleyelim.",
-        maintenance: "Sürekli Destek",
-        maintenanceDesc: "Lansman sonrası bakım ve güvenlik desteği dahil.",
-        maintenanceCheck: "Öncelikli bakım dahil",
-        client: "Kimlik Doğrulama",
-        clientSub: "Bu keşfi sistemlerimize güvenli bir şekilde kaydetmek için fatura bilgilerinizi girin.",
-        name: "Tam Ad / İletişim Kişisi *",
-        email: "Kurumsal E-posta Adresi *",
-        phone: "Kurumsal Telefon Numarası *",
-        address: "Fatura Adresi (Şehir, Ülke) *",
-        vat: "Vergi Numarası (Opsiyonel)",
+        timeline: "Lojistik.",
+        timelineDesc: "Teslimat takvimini ve devam eden mühendislik sözleşmesini belirleyin.",
+        maintenance: "Sürekli Mühendislik",
+        maintenanceDesc: "Lansman sonrası altyapı yönetimini dahil edin.",
+        maintenanceCheck: "Öncelikli bakımı dahil et",
+        client: "Yetkilendirme.",
+        clientSub: "Resmi teknik planı oluşturmak için fatura bilgilerini kesinleştirin.",
+        name: "Yetkili İmza Sahibi *",
+        email: "Kurumsal E-posta *",
+        phone: "Telefon Numarası",
+        address: "Fatura Adresi *",
+        vat: "Vergi / KDV Numarası",
         notes: "Tasarım Notları",
         notesPlace: "Belirli görsel yönlendirmeleri veya teknik notları paylaşın...",
         transparencyTitle: "Operasyonel Şeffaflık",
-        transparencyDesc: "Fiyatlandırma modelimiz, mühendislik değerini zorunlu operasyonel maliyetlerden (lisanslar, bulut altyapısı ve yasal uyumluluk) ayırır. Bu, tam bir şeffaflık sağlar.",
-        exclVat: "Hariç: KDV & Altyapı Bedeli",
-        twoMonthsFreeBadge: "2 Ay Ücretsiz Dahil",
-        pdfDisclaimer: "* Tahmin mühendislik değerini temsil eder. Operasyonel giderler (Altyapı/Uyum) ve KDV kayıt aşamasında hesaplanır.",
+        transparencyDesc: "Fiyatlandırma modelimiz, mühendislik değerini zorunlu operasyonel maliyetlerden (lisanslar, bulut altyapısı) ayırır. Bu, tam bir şeffaflık sağlar.",
+        exclVat: "KDV Hariç",
+        twoMonthsFreeBadge: "İlk 2 Ay Ücretsiz",
+        pdfDisclaimer: "* Tahmin mühendislik değerini temsil eder. Operasyonel giderler ve KDV kayıt aşamasında hesaplanır.",
       },
       summary: {
         title: "Zeka Özeti",
@@ -1668,18 +2032,17 @@ export const translations = {
       btn: {
         prev: "Önceki Aşama",
         next: "Sonraki Aşama",
-        submit: "Planı ve Taslağı Kilitle",
-        encrypting: "Şifreleniyor...",
+        submit: "İnceleme İçin Gönder",
+        encrypting: "Protokol Şifreleniyor...",
         finish: "Kesin Keşfi Başlat",
-        pdf: "PDF Üret ve İndir",
+        pdf: "Blueprint PDF İndir",
         hub: "Merkeze Dön"
-
       },
       success: {
-        title: "Plan Kilitlendi.",
+        title: "Protokol Kaydedildi.",
         sub: "Kesin Keşif Süreci",
-        desc: "Güvenli referans kimliğiniz kaydedildi. Blueprint'inizi inceleyeceğiz ve 24-48 saat içinde size Kesin Teklif ile e-postayla ulaşacağız.",
-        dsNumber: "DS Numarası"
+        desc: "Mimari özellikler güvenceye alındı. Mühendislik incelemesi bekleniyor.",
+        dsNumber: "Dağıtım Referansı"
       }
     },
 

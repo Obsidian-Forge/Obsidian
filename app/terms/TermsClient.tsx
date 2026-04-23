@@ -1,14 +1,20 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import FadeUp from '../components/FadeUp';
 import Link from 'next/link';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function TermsPage() {
   const { t } = useLanguage();
+  const [mounted, setMounted] = useState(false);
 
-  if (!t.terms) return <div className="min-h-screen bg-white"></div>;
+  // Hydration hatasını önlemek için mounted kontrolü
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || !t.terms) return <div className="min-h-screen bg-white"></div>;
 
   return (
     <main className="w-full bg-white min-h-screen relative overflow-hidden selection:bg-zinc-900 selection:text-white font-sans">
