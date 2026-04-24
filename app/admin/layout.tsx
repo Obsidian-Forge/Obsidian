@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
     LayoutDashboard, Users, Rocket, Compass, Activity, 
-    FileCheck, Mail, Receipt, LogOut, Command 
+    FileCheck, Mail, Receipt, LogOut, Command, ShieldAlert 
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -151,13 +151,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <main className="lg:pl-24 min-h-screen flex flex-col relative">
                 <header className={`h-16 lg:h-20 flex items-center justify-between px-6 lg:px-12 sticky top-0 z-50 backdrop-blur-md border-b transition-colors duration-500
                     ${isDark ? 'bg-black/40 border-white/5' : 'bg-white/60 border-black/[0.02]'}`}>
+                    
+                    {/* SOL TARAF: Sayfa Başlığı */}
                     <div className="flex items-center gap-3">
                         <Command size={14} className={isDark ? 'text-zinc-500' : 'text-zinc-400'} />
-                        <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Command Center</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>Admin Portal</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30">
-                        <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Core Online</span>
+
+                    {/* SAĞ TARAF: Command Center Butonu + Core Online */}
+                    <div className="flex items-center gap-4 lg:gap-6">
+                        
+                        {/* 🔴 YENİ EKLENEN: COMMAND CENTER (KILL SWITCH) BUTONU 🔴 */}
+                        <Link 
+                            href="/admin/command-center" 
+                            className="group relative flex items-center gap-2 px-5 py-2 bg-black dark:bg-white text-white dark:text-black rounded-full hover:scale-105 transition-all shadow-lg overflow-hidden border border-black/10 dark:border-white/10"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <ShieldAlert size={14} className="relative z-10 text-emerald-400 dark:text-emerald-600 group-hover:animate-pulse" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] relative z-10">Command Center</span>
+                        </Link>
+
+                        {/* MEVCUT CORE ONLINE IŞIĞI */}
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30">
+                            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                            <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Core Online</span>
+                        </div>
                     </div>
                 </header>
 
