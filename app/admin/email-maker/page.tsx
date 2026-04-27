@@ -6,14 +6,19 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ArrowLeft, Send, Trash2, X, Paperclip, Save, Edit, RefreshCw } from 'lucide-react';
 
+const SIGNATURES = {
+    EN: "Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum",
+    NL: "Met vriendelijke groet,\n\nYasin Can Koç | Oprichter & Digitaal Architect bij Novatrum",
+    FR: "Cordialement,\n\nYasin Can Koç | Fondateur & Architecte Numérique chez Novatrum",
+    TR: "Saygılarımla,\n\nYasin Can Koç | Kurucu & Dijital Mimar, Novatrum"
+};
+
 export default function EmailEnginePage() {
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
     const [emails, setEmails] = useState<any[]>([]);
     const [drafts, setDrafts] = useState<any[]>([]);
     const [activeTab, setActiveTab] = useState<'sent' | 'drafts'>('drafts');
-    
     const [loading, setLoading] = useState(false);
     const [savingDraft, setSavingDraft] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -30,7 +35,7 @@ export default function EmailEnginePage() {
         bcc: '',
         subject: '',
         content: '',
-        signature: 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum',
+        signature: SIGNATURES.EN,
         attachments: [] as { name: string, url: string }[]
     });
 
@@ -48,13 +53,12 @@ export default function EmailEnginePage() {
         setTimeout(() => setToast(null), 3000);
     };
 
-    // Hem gönderilenleri hem taslakları çekiyoruz [cite: 242, 243]
+    // Hem gönderilenleri hem taslakları çekiyoruz
     async function fetchHistory() {
         const [sentRes, draftRes] = await Promise.all([
             supabase.from('sent_emails').select('*').order('created_at', { ascending: false }),
             supabase.from('email_drafts').select('*').order('created_at', { ascending: false })
         ]);
-        
         if (sentRes.data) setEmails(sentRes.data);
         if (draftRes.data) setDrafts(draftRes.data);
     }
@@ -62,12 +66,12 @@ export default function EmailEnginePage() {
     const clearForm = () => {
         setFormData(prev => ({
             ...prev,
-            to: '', cc: '', bcc: '', subject: '', content: '', attachments: []
+            to: '', cc: '', bcc: '', subject: '', content: '', signature: SIGNATURES.EN, attachments: []
         }));
         setCurrentDraftId(null);
     };
 
-    // Dosya Yükleme (Vault Bucket) [cite: 244, 250]
+    // Dosya Yükleme (Vault Bucket)
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         setUploading(true);
@@ -145,14 +149,14 @@ export default function EmailEnginePage() {
             bcc: Array.isArray(draft.bcc_emails) ? draft.bcc_emails.join(', ') : '',
             subject: draft.subject || '',
             content: draft.content || '',
-            signature: draft.signature || 'Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum',
+            signature: draft.signature || SIGNATURES.EN,
             attachments: draft.attachments || []
         });
         setCurrentDraftId(draft.id);
         showToast("Draft loaded into workspace.");
     };
 
-    // --- E-POSTA GÖNDERME --- [cite: 251, 260]
+    // --- E-POSTA GÖNDERME ---
     async function handleSend() {
         if (!formData.to || !formData.subject || !formData.content) {
             return showToast("To, Subject and Message are required to dispatch!", "error");
@@ -175,7 +179,6 @@ export default function EmailEnginePage() {
 
             if (res.ok) {
                 showToast("Email dispatched securely.");
-                
                 // Eğer gönderilen mail bir taslaksa, veritabanından taslağı sil
                 if (currentDraftId) {
                     await supabase.from('email_drafts').delete().eq('id', currentDraftId);
@@ -195,7 +198,7 @@ export default function EmailEnginePage() {
         }
     }
 
-    // --- SİLME İŞLEMLERİ --- [cite: 260, 262]
+    // --- SİLME İŞLEMLERİ ---
     async function deleteLog(id: string, isDraft: boolean) {
         if (!confirm(`Delete this ${isDraft ? 'draft' : 'log'}?`)) return;
         const table = isDraft ? 'email_drafts' : 'sent_emails';
@@ -298,6 +301,26 @@ export default function EmailEnginePage() {
                             <div>
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Message Content</label>
                                 <textarea rows={8} value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none resize-none focus:border-black transition-colors" />
+                            </div>
+
+                            {/* SIGNATURE SECTION ADDED HERE */}
+                            <div>
+                                <div className="flex justify-between items-end mb-2 ml-1">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block">Signature</label>
+                                    <div className="flex gap-2">
+                                        {(Object.keys(SIGNATURES) as Array<keyof typeof SIGNATURES>).map(lang => (
+                                            <button 
+                                                key={lang} 
+                                                type="button" 
+                                                onClick={() => setFormData(prev => ({ ...prev, signature: SIGNATURES[lang] }))}
+                                                className={`text-[8px] font-bold uppercase tracking-widest px-2 py-1 rounded-md border transition-colors ${formData.signature === SIGNATURES[lang] ? 'bg-zinc-800 text-white border-zinc-800' : 'bg-white text-zinc-500 border-zinc-200 hover:border-zinc-400'}`}
+                                            >
+                                                {lang}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <textarea rows={3} value={formData.signature} onChange={e => setFormData({ ...formData, signature: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none resize-none focus:border-black transition-colors" />
                             </div>
 
                             <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
