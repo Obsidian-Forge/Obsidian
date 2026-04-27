@@ -5,7 +5,12 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ArrowLeft, Building, FileText, CheckCircle2, DownloadCloud, FileOutput, LayoutList, ChevronDown, Euro, CheckSquare, Square, Box, BrainCircuit } from 'lucide-react';
-import { Document, Page, Text, View, StyleSheet, Image as PDFImage, PDFViewer, pdf, PDFDownloadLink } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image as PDFImage, pdf } from '@react-pdf/renderer';
+import dynamic from 'next/dynamic';
+
+// --- SSR FIX: Dynamically import browser-dependent PDF components ---
+const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false });
+const PDFDownloadLink = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFDownloadLink), { ssr: false });
 
 // --- PREMIUM PDF STİLLERİ ---
 const styles = StyleSheet.create({
@@ -161,7 +166,9 @@ const InvoiceDocument = ({ data, client, options }: { data: any, client: any, op
       <View style={styles.disclaimerBox}>
         <Text style={styles.disclaimerTitle}>Important Payment Notice</Text>
         <Text style={styles.disclaimerText}>
-          This document serves as a detailed breakdown of the agreed architecture and services. It is not the final tax invoice. The official invoice will be issued and processed by our financial partner, Tentoo. Please hold all payments until you receive the official Tentoo invoice and follow the specific payment instructions provided therein.
+          This document serves as a detailed breakdown of the agreed architecture and services. It is not the final tax invoice.
+          The official invoice will be issued and processed by our financial partner, Tentoo.
+          Please hold all payments until you receive the official Tentoo invoice and follow the specific payment instructions provided therein.
         </Text>
       </View>
 
@@ -202,12 +209,12 @@ export default function InvoiceGeneratorPage() {
         invoice_number: `INV-${Date.now().toString().slice(-6)}`
     });
 
-    // YENİ: CHECKBOX & SERVICES STATE'LERİ
     const [includeItems, setIncludeItems] = useState({
         project: true,
         maintenance: false,
         services: false
     });
+
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
     const [neuralPlan, setNeuralPlan] = useState<string>('node');
     const [calculatedTotal, setCalculatedTotal] = useState<number>(0);
@@ -222,7 +229,6 @@ export default function InvoiceGeneratorPage() {
         fetchInitialData();
     }, []);
 
-    // TOPLAM FİYATI CANLI HESAPLAMA EFEKTİ
     useEffect(() => {
         let total = 0;
         if (includeItems.project && form.amount) total += parseFloat(form.amount);
@@ -249,8 +255,11 @@ export default function InvoiceGeneratorPage() {
             ]);
             if (clientsRes.data) setClients(clientsRes.data);
             if (discRes.data) setDiscoveries(discRes.data);
-        } catch (error) { console.error(error); } 
-        finally { setLoading(false); }
+        } catch (error) { 
+            console.error(error);
+        } finally { 
+            setLoading(false);
+        }
     };
 
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
@@ -347,7 +356,6 @@ export default function InvoiceGeneratorPage() {
     const handleConfirmAndUpload = async () => {
         if (!selectedClientObj) return;
         setIsGenerating(true);
-
         const pdfOptions = { includeItems, selectedServices, neuralPlan, calculatedTotal };
 
         try {
@@ -357,20 +365,24 @@ export default function InvoiceGeneratorPage() {
             const { error: uploadError } = await supabase.storage
                 .from('vault')
                 .upload(filePath, pdfBlob, { contentType: 'application/pdf', upsert: true });
+
             if (uploadError) throw uploadError;
 
             const { data: publicUrlData } = supabase.storage.from('vault').getPublicUrl(filePath);
             const fileSize = (pdfBlob.size / 1024 / 1024).toFixed(2) + ' MB';
+
+            // Fixed: Targets client_invoices, uncomments file data, and ensures status is compliant
             const { error: dbError } = await supabase.from('client_invoices').insert([{
                 client_id: selectedClientObj.id,
+                amount: calculatedTotal,
+                status: 'draft', 
                 file_name: safeFileName,
                 file_url: publicUrlData.publicUrl,
                 file_size: fileSize,
-                amount: calculatedTotal, // DÜZELTME: SADECE SEÇİLENLERİN TOPLAMI YAZILIYOR
                 invoice_type: 'system',
-                status: 'unpaid',
                 details: { title: form.project_title, features: form.features_text, discovery_id: form.discovery_id, inclusions: includeItems }
             }]);
+
             if (dbError) throw dbError;
 
             showToast("Document Safely Vaulted!");
@@ -382,7 +394,6 @@ export default function InvoiceGeneratorPage() {
     };
 
     if (loading || !isClientSide) return <div className="h-[50vh] flex items-center justify-center text-[10px] uppercase font-bold text-zinc-400">Loading Generator...</div>;
-    
     const pdfOptions = { includeItems, selectedServices, neuralPlan, calculatedTotal };
 
     return (
@@ -406,7 +417,6 @@ export default function InvoiceGeneratorPage() {
                         {step === 'form' ? 'Link intelligence, auto-fill parameters, and compile.' : 'Review True-PDF rendering before pushing to vault.'}
                     </p>
                 </div>
-                {/* CANLI TOPLAM FİYAT GÖSTERGESİ */}
                 {step === 'form' && (
                     <div className="hidden md:flex flex-col items-end">
                         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400 mb-1">Live Total</span>
@@ -498,7 +508,6 @@ export default function InvoiceGeneratorPage() {
                         </div>
                     </div>
 
-                    {/* YENİ: FATURA İÇERİK SEÇİCİSİ (INCLUSIONS) */}
                     <div className="bg-black p-8 rounded-[32px] text-white shadow-xl space-y-6">
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border-b border-white/10 pb-4 flex items-center gap-2">
                             <Box size={14}/> Invoice Inclusions
@@ -525,7 +534,6 @@ export default function InvoiceGeneratorPage() {
                             </label>
                         </div>
 
-                        {/* YENİ: HİZMET & YAPAY ZEKA AÇILIR MENÜSÜ */}
                         <AnimatePresence>
                             {includeItems.services && (
                                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden pt-4">
@@ -543,7 +551,6 @@ export default function InvoiceGeneratorPage() {
                                             ))}
                                         </div>
 
-                                        {/* NEURAL AI TOKEN LIMIT SEÇİCİSİ */}
                                         <AnimatePresence>
                                             {selectedServices.includes('neural_ai') && (
                                                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-4 border-t border-white/10 mt-4">

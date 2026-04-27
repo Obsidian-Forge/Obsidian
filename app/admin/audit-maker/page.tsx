@@ -8,7 +8,6 @@ import {
   ExternalLink, Trash2, FileJson, Sparkles, Globe, Zap, 
   ShieldCheck, Search, BarChart3, ArrowRight, X, Layout, Plus
 } from 'lucide-react';
-
 import { supabase } from '@/lib/supabase';
 import { extractWappalyzerData } from '@/lib/csvParser';
 import { TechnicalAudit } from '../../types/audit';
@@ -73,7 +72,6 @@ export default function AuditMakerPage() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `audit-heroes/${fileName}`;
-
       const { error: uploadError } = await supabase.storage.from('vault').upload(filePath, file);
       if (uploadError) throw uploadError;
 
@@ -101,7 +99,11 @@ export default function AuditMakerPage() {
               body: JSON.stringify(formData)
           });
           
-          if (!response.ok) throw new Error("AI Engine failed to generate summary.");
+          // Enhanced error handling to surface exact backend errors
+          if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(errorData.error || "AI Engine failed to generate summary.");
+          }
           
           const data = await response.json();
           setFormData(prev => ({ ...prev, ai_summary: data.summary }));
@@ -316,7 +318,8 @@ export default function AuditMakerPage() {
                 <div className="p-3 bg-emerald-500 text-white rounded-2xl w-fit"><ShieldCheck size={20}/></div>
                 <h4 className="text-sm font-bold text-emerald-900">Audit Strategy</h4>
                 <p className="text-xs text-emerald-700 leading-relaxed">
-                    Always focus on <b>conversion loss</b>. Tell the client that every second of delay reduces revenue by 7%. Use the AI Summary to make it personal.
+                    Always focus on <b>conversion loss</b>.
+                    Tell the client that every second of delay reduces revenue by 7%. Use the AI Summary to make it personal.
                 </p>
                 <div className="pt-2">
                     <button className="text-[9px] font-bold uppercase tracking-widest text-emerald-600 flex items-center gap-2 hover:gap-3 transition-all">Read Guide <ArrowRight size={12}/></button>
