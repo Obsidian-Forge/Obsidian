@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, ArrowLeft, Send, Trash2, X, Paperclip, Save, Edit, RefreshCw } from 'lucide-react';
+import { Mail, ArrowLeft, Send, Trash2, X, Paperclip, Save, Edit, RefreshCw, AlertTriangle } from 'lucide-react';
 
 const SIGNATURES = {
     EN: "Best regards,\n\nYasin Can Koç | Founder & Digital Architect at Novatrum",
@@ -25,7 +25,10 @@ export default function EmailEnginePage() {
     const [viewEmail, setViewEmail] = useState<any | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
     
+    // --- UI State ---
     const [currentDraftId, setCurrentDraftId] = useState<string | null>(null);
+    const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; isDraft: boolean } | null>(null);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
     const [formData, setFormData] = useState({
         senderName: 'Yasin Can Koç | Novatrum',
@@ -71,7 +74,27 @@ export default function EmailEnginePage() {
         setCurrentDraftId(null);
     };
 
-    // Dosya Yükleme (Vault Bucket)
+    // --- RECIPIENT AUTO-COMPLETE LOGIC ---
+    // Extract unique emails from past drafts and sent logs
+    const allUniqueEmails = Array.from(new Set([
+        ...emails.flatMap(e => Array.isArray(e.to_emails) ? e.to_emails : String(e.to_emails || '').split(',').map(s => s.trim())),
+        ...drafts.flatMap(d => Array.isArray(d.to_emails) ? d.to_emails : String(d.to_emails || '').split(',').map(s => s.trim()))
+    ].filter(Boolean)));
+
+    const currentSearch = formData.to.split(',').pop()?.trim().toLowerCase() || '';
+    const filteredEmails = currentSearch 
+        ? allUniqueEmails.filter(e => e.toLowerCase().includes(currentSearch) && e.toLowerCase() !== currentSearch)
+        : allUniqueEmails.slice(0, 5); // Show top 5 recent if input is empty
+
+    const addSuggestedEmail = (email: string) => {
+        const parts = formData.to.split(',');
+        parts.pop(); // Remove the partial string they were currently typing
+        const newTo = [...parts, email].map(p => p.trim()).filter(Boolean).join(', ');
+        setFormData(prev => ({ ...prev, to: newTo + (newTo ? ', ' : '') }));
+        setShowSuggestions(false);
+    };
+
+    // --- FILE UPLOAD ---
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) return;
         setUploading(true);
@@ -108,7 +131,7 @@ export default function EmailEnginePage() {
         };
     };
 
-    // --- TASLAK (DRAFT) KAYDETME ---
+    // --- SAVE DRAFT ---
     async function handleSaveDraft() {
         if (!formData.subject && !formData.to) {
             return showToast("Provide at least a subject or recipient to save a draft.", "error");
@@ -119,12 +142,10 @@ export default function EmailEnginePage() {
 
         try {
             if (currentDraftId) {
-                // Mevcut taslağı güncelle
                 const { error } = await supabase.from('email_drafts').update(payload).eq('id', currentDraftId);
                 if (error) throw error;
                 showToast("Draft updated successfully.");
             } else {
-                // Yeni taslak oluştur
                 const { data, error } = await supabase.from('email_drafts').insert([payload]).select().single();
                 if (error) throw error;
                 setCurrentDraftId(data.id);
@@ -139,7 +160,7 @@ export default function EmailEnginePage() {
         }
     }
 
-    // --- TASLAĞI FORMA YÜKLEME ---
+    // --- LOAD DRAFT ---
     const loadDraft = (draft: any) => {
         setFormData({
             senderName: draft.sender_name || 'Yasin Can Koç | Novatrum',
@@ -156,7 +177,7 @@ export default function EmailEnginePage() {
         showToast("Draft loaded into workspace.");
     };
 
-    // --- E-POSTA GÖNDERME ---
+    // --- SEND EMAIL ---
     async function handleSend() {
         if (!formData.to || !formData.subject || !formData.content) {
             return showToast("To, Subject and Message are required to dispatch!", "error");
@@ -179,7 +200,6 @@ export default function EmailEnginePage() {
 
             if (res.ok) {
                 showToast("Email dispatched securely.");
-                // Eğer gönderilen mail bir taslaksa, veritabanından taslağı sil
                 if (currentDraftId) {
                     await supabase.from('email_drafts').delete().eq('id', currentDraftId);
                 }
@@ -198,9 +218,15 @@ export default function EmailEnginePage() {
         }
     }
 
-    // --- SİLME İŞLEMLERİ ---
-    async function deleteLog(id: string, isDraft: boolean) {
-        if (!confirm(`Delete this ${isDraft ? 'draft' : 'log'}?`)) return;
+    // --- DELETE LOGIC (MODAL TRIGGER) ---
+    const handleDeleteRequest = (e: React.MouseEvent, id: string, isDraft: boolean) => {
+        e.stopPropagation(); // Prevent opening the draft/email view
+        setDeleteModal({ isOpen: true, id, isDraft });
+    };
+
+    async function confirmDelete() {
+        if (!deleteModal) return;
+        const { id, isDraft } = deleteModal;
         const table = isDraft ? 'email_drafts' : 'sent_emails';
         
         const { error } = await supabase.from(table).delete().eq('id', id);
@@ -214,10 +240,12 @@ export default function EmailEnginePage() {
             showToast("Record erased.");
             if (viewEmail?.id === id) setViewEmail(null);
         }
+        setDeleteModal(null); // Close Modal
     }
 
     return (
         <div className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans pb-20">
+            {/* Notification Toast */}
             <AnimatePresence>
                 {toast && (
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`fixed top-4 left-1/2 -translate-x-1/2 z-[9999] px-6 py-3 rounded-full shadow-2xl border flex items-center gap-2 backdrop-blur-xl ${toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-red-50 border-red-200 text-red-600'}`}>
@@ -226,7 +254,26 @@ export default function EmailEnginePage() {
                 )}
             </AnimatePresence>
 
-            {/* Email Modal */}
+            {/* Custom Deletion Modal */}
+            <AnimatePresence>
+                {deleteModal && (
+                    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl border border-zinc-100">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-3 bg-red-50 text-red-600 rounded-full"><AlertTriangle size={24} /></div>
+                                <h3 className="text-xl font-bold text-zinc-900">Delete Record</h3>
+                            </div>
+                            <p className="text-sm text-zinc-500 mb-8 leading-relaxed">Are you sure you want to permanently erase this {deleteModal.isDraft ? 'draft' : 'log'}? This action cannot be undone.</p>
+                            <div className="flex gap-3 justify-end">
+                                <button type="button" onClick={() => setDeleteModal(null)} className="px-6 py-3 rounded-xl text-xs font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-colors">Cancel</button>
+                                <button type="button" onClick={confirmDelete} className="px-6 py-3 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20">Delete</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* View Email Modal */}
             <AnimatePresence>
                 {viewEmail && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm">
@@ -288,9 +335,34 @@ export default function EmailEnginePage() {
                                 </div>
                             </div>
 
-                            <div>
+                            {/* RECIPIENT AUTOCOMPLETE INPUT */}
+                            <div className="relative">
                                 <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block mb-2 ml-1">Recipient(s) (Comma separated)</label>
-                                <input value={formData.to} onChange={e => setFormData({ ...formData, to: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none focus:border-black transition-colors" />
+                                <input 
+                                    value={formData.to} 
+                                    onChange={e => {
+                                        setFormData({ ...formData, to: e.target.value });
+                                        setShowSuggestions(true);
+                                    }} 
+                                    onFocus={() => setShowSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} // slight delay to allow click on suggestion
+                                    className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none focus:border-black transition-colors" 
+                                />
+                                <AnimatePresence>
+                                    {showSuggestions && filteredEmails.length > 0 && (
+                                        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="absolute z-50 left-0 right-0 mt-2 bg-white border border-zinc-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                            {filteredEmails.map(email => (
+                                                <div 
+                                                    key={email} 
+                                                    onClick={() => addSuggestedEmail(email)}
+                                                    className="px-4 py-3 text-sm font-mono text-zinc-700 hover:bg-zinc-50 cursor-pointer border-b border-zinc-100 last:border-0"
+                                                >
+                                                    {email}
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
                             <div>
@@ -303,7 +375,6 @@ export default function EmailEnginePage() {
                                 <textarea rows={8} value={formData.content} onChange={e => setFormData({ ...formData, content: e.target.value })} className="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl text-sm outline-none resize-none focus:border-black transition-colors" />
                             </div>
 
-                            {/* SIGNATURE SECTION ADDED HERE */}
                             <div>
                                 <div className="flex justify-between items-end mb-2 ml-1">
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 block">Signature</label>
@@ -367,7 +438,7 @@ export default function EmailEnginePage() {
                                             <div key={draft.id} onClick={() => loadDraft(draft)} className={`group bg-zinc-50 border p-5 rounded-3xl cursor-pointer hover:border-black transition-all relative ${currentDraftId === draft.id ? 'border-zinc-400' : 'border-zinc-100'}`}>
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className="text-[9px] font-bold bg-white border border-zinc-200 px-2 py-1 rounded-md text-amber-600 flex items-center gap-1"><Edit size={10}/> DRAFT</span>
-                                                    <button onClick={(e) => { e.stopPropagation(); deleteLog(draft.id, true); }} className="text-zinc-300 hover:text-red-500 bg-white p-1.5 rounded-lg border border-zinc-200 transition-colors"><Trash2 size={12}/></button>
+                                                    <button onClick={(e) => handleDeleteRequest(e, draft.id, true)} className="text-zinc-300 hover:text-red-500 bg-white p-1.5 rounded-lg border border-zinc-200 transition-colors"><Trash2 size={12}/></button>
                                                 </div>
                                                 <h4 className="font-bold text-sm text-zinc-900 truncate mb-1">{draft.subject || "No Subject"}</h4>
                                                 <p className="text-[10px] font-mono text-zinc-500 truncate">{draft.to_emails?.join ? draft.to_emails.join(', ') : draft.to_emails || 'No Recipient'}</p>
@@ -382,7 +453,7 @@ export default function EmailEnginePage() {
                                             <div key={email.id} onClick={() => setViewEmail(email)} className="group bg-white border border-zinc-100 p-5 rounded-3xl cursor-pointer hover:border-black transition-all relative shadow-sm">
                                                 <div className="flex justify-between items-start mb-2">
                                                     <span className="text-[9px] font-bold bg-zinc-50 border border-zinc-200 px-2 py-1 rounded-md text-zinc-500">{new Date(email.created_at).toLocaleDateString()}</span>
-                                                    <button onClick={(e) => { e.stopPropagation(); deleteLog(email.id, false); }} className="text-zinc-300 hover:text-red-500 bg-zinc-50 p-1.5 rounded-lg border border-zinc-200 transition-colors"><Trash2 size={12}/></button>
+                                                    <button onClick={(e) => handleDeleteRequest(e, email.id, false)} className="text-zinc-300 hover:text-red-500 bg-zinc-50 p-1.5 rounded-lg border border-zinc-200 transition-colors"><Trash2 size={12}/></button>
                                                 </div>
                                                 <h4 className="font-bold text-sm text-zinc-900 truncate mb-1">{email.subject}</h4>
                                                 <p className="text-[10px] font-mono text-zinc-500 truncate">{email.to_emails?.join ? email.to_emails.join(', ') : email.to_emails}</p>

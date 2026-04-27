@@ -34,9 +34,7 @@ export async function POST(req: Request) {
             </div>
           </div>
 
-          <div style="padding: 40px 0; line-height: 1.7; font-size: 15px; white-space: pre-wrap;">
-            ${content}
-          </div>
+          <div style="padding: 40px 0; line-height: 1.7; font-size: 15px; white-space: pre-wrap;">${content}</div>
 
           <div style="padding-bottom: 40px;">
             <p style="margin: 0; color: #52525b; font-style: italic; white-space: pre-wrap;">${signature}</p>
