@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
     LayoutDashboard, Users, Rocket, Compass, Activity, 
-    FileCheck, Mail, Receipt, LogOut, Command, ShieldAlert 
+    FileCheck, Mail, Receipt, LogOut, Command, ShieldAlert, BrainCircuit 
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -89,7 +89,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { href: "/admin/discoveries", icon: <Compass size={20} strokeWidth={1.5} />, label: "Discoveries", isMobile: true },
         { href: "/admin/status", icon: <Activity size={20} strokeWidth={1.5} />, label: "Infra", isMobile: true },
         
-        // OPERASYONEL ARAÇLAR (Sadece Desktop'ta tam görünür, mobilde Overview'dan girilir)
+        // OPERASYONEL ARAÇLAR & AI (Sadece Desktop'ta tam görünür, mobilde Overview'dan girilir)
+        { href: "/admin/neural", icon: <BrainCircuit size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform duration-700" />, label: "Neural AI", isMobile: false },
         { href: "/admin/audit-maker", icon: <FileCheck size={20} strokeWidth={1.5} />, label: "Audit Maker", isMobile: false },
         { href: "/admin/email-maker", icon: <Mail size={20} strokeWidth={1.5} />, label: "Email Maker", isMobile: false },
         { href: "/admin/invoice-generator", icon: <Receipt size={20} strokeWidth={1.5} />, label: "Invoice Maker", isMobile: false },
@@ -121,7 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     
                     <div className="w-8 h-px bg-zinc-200 dark:bg-zinc-800 mx-auto my-2" />
                     
-                    {/* Tool Makers */}
+                    {/* Tool Makers & AI */}
                     {navItems.slice(5).map(item => (
                         <NavItem key={item.href} {...item} active={isActive(item.href)} isDark={isDark} />
                     ))}
