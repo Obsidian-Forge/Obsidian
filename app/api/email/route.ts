@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
+// Resend'i başlatıyoruz
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
     try {
@@ -7,14 +10,6 @@ export async function POST(request: Request) {
         
         // Gelen temel verileri alıyoruz
         const { type, email, clientName } = body;
-
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.SMTP_EMAIL,
-                pass: process.env.SMTP_PASSWORD,
-            },
-        });
 
         let finalHtml = '';
         let finalSubject = '';
@@ -37,9 +32,8 @@ export async function POST(request: Request) {
                 `;
                 break;
 
-            // DÜZELTİLEN YER: YENİ CALCULATOR MANTIĞI
             case 'calculator':
-                finalSubject = 'Novatrum - Your Quick Project Estimate';
+                finalSubject = 'Novatrum - Your Quick Estimate';
                 const { minPrice, maxPrice, projectType } = body;
                 
                 finalHtml = `
@@ -115,38 +109,51 @@ export async function POST(request: Request) {
                 `;
                 break;
 
-                case 'support_reminder':
-    finalSubject = `Update on your support ticket: ${body.ticketSubject}`;
-    finalHtml = `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 10px;">
-            <h2 style="color: #000; text-transform: uppercase; font-weight: 900; letter-spacing: -1px;">Support Update</h2>
-            <p style="color: #52525b; font-size: 14px;">Hello <strong>${clientName}</strong>,</p>
-            <p style="color: #52525b; font-size: 14px;">You have a new unread message regarding your ticket: <strong>${body.ticketSubject}</strong></p>
-            
-            <div style="background-color: #f4f4f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <p style="font-size: 12px; font-style: italic; color: #71717a;">"${body.messagePreview}"</p>
-            </div>
-            
-            <a href="${process.env.NEXT_PUBLIC_SITE_URL}/client/support" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase;">View Full Thread</a>
-        </div>
-    `;
-    break;
+            case 'support_reminder':
+                finalSubject = `Update on your support ticket: ${body.ticketSubject}`;
+                finalHtml = `
+                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e4e4e7; border-radius: 10px;">
+                        <h2 style="color: #000; text-transform: uppercase; font-weight: 900; letter-spacing: -1px;">Support Update</h2>
+                        <p style="color: #52525b; font-size: 14px;">Hello <strong>${clientName}</strong>,</p>
+                        <p style="color: #52525b; font-size: 14px;">You have a new unread message regarding your ticket: <strong>${body.ticketSubject}</strong></p>
+                        
+                        <div style="background-color: #f4f4f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                            <p style="font-size: 12px; font-style: italic; color: #71717a;">"${body.messagePreview}"</p>
+                        </div>
+                        
+                        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://novatrum.eu'}/client/support" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase;">View Full Thread</a>
+                    </div>
+                `;
+                break;
 
             default:
                 throw new Error("Geçersiz e-posta türü belirtildi: " + type);
         }
 
-        // MAİLİ GÖNDERME AYARLARI
-        const mailOptions = {
-            from: `"Novatrum" <${process.env.SMTP_EMAIL}>`,
-            to: type === 'contact' ? process.env.SMTP_EMAIL : email, 
+        const isAdminNotification = type === 'contact' || type === 'discovery_notification';
+        const recipientEmail = isAdminNotification ? 'core@novatrum.eu' : email;
+
+        // YANITLA (Reply-To) KİME GİDECEK?
+        let replyToAddress = 'core@novatrum.eu';
+        if (type === 'contact') replyToAddress = email;
+        // Eğer discovery ise, yanıtla dediğinde formdaki 'clientEmail' adresine gitsin
+        if (type === 'discovery_notification') replyToAddress = body.clientEmail; 
+
+        // RESEND İLE GÖNDERİM
+        const { data, error } = await resend.emails.send({
+            from: 'Novatrum <core@novatrum.eu>', 
+            to: [recipientEmail], 
             subject: finalSubject,
             html: finalHtml,
-            replyTo: type === 'contact' ? email : undefined 
-        };
+            replyTo: replyToAddress
+        });
 
-        await transporter.sendMail(mailOptions);
-        return NextResponse.json({ success: true });
+        if (error) {
+            console.error("Resend API Error:", error);
+            return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+
+        return NextResponse.json({ success: true, data });
 
     } catch (error: any) {
         console.error("Backend Mail Error:", error);

@@ -1,163 +1,247 @@
-import { notFound } from 'next/navigation';
-import { ShieldAlert, Lock, Activity, Globe, Layout, Zap, CheckCircle2, ArrowRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase'; // Yollar projene uygun olarak güncellendi
+"use client";
 
-export const revalidate = 60;
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
+import { 
+    Globe, Activity, Layout, ArrowRight, Zap, ShieldCheck, 
+    Server, Sun, Moon, Gauge, Leaf, Lock 
+} from 'lucide-react';
 
-// YENİ: Veritabanı yapımıza tam uyumlu arayüz
-interface AuditData {
-    id: string;
-    created_at: string;
-    slug: string;
-    client_name: string;
-    target_url: string;
-    legacy_stack: string;
-    perf: number;
-    a11y: number;
-    bp: number;
-    seo: number;
-    hero_image: string;
-    ai_summary: string;
-}
+// --- TRANSLATION DICTIONARY ---
+const TRANSLATIONS: Record<string, any> = {
+    EN: { 
+        exec: "Executive Summary", 
+        diag: "Lighthouse Diagnostics", 
+        detailed: "Detailed Core Web Vitals", 
+        infra: "Infrastructure Stack",
+        visual: "Visual Capture",
+        carbon: "Carbon Footprint", 
+        ssl: "SSL Certificate Quality", 
+        request: "Request Architecture Upgrade",
+        perfDesc: "Overall site speed and resource optimization.",
+        a11yDesc: "Usability for people with disabilities.",
+        bpDesc: "Compliance with modern web security standards.",
+        seoDesc: "Search engine visibility and ranking potential.",
+        fcpDesc: "Time until the first text or image appears.",
+        lcpDesc: "Time until the main content is fully visible.",
+        tbtDesc: "Duration the page is unresponsive to input.",
+        clsDesc: "Measures visual stability and layout jumps.",
+        speedDesc: "Overall visual load speed of the viewport."
+    },
+    FR: { 
+        exec: "Résumé Exécutif", 
+        diag: "Diagnostics Lighthouse", 
+        detailed: "Signaux Web Essentiels", 
+        infra: "Pile d'Infrastructure",
+        visual: "Capture Visuelle",
+        carbon: "Empreinte Carbone", 
+        ssl: "Qualité du Certificat SSL", 
+        request: "Demander une mise à niveau",
+        perfDesc: "Vitesse globale et optimisation des ressources.",
+        a11yDesc: "Accessibilité pour les personnes handicapées.",
+        bpDesc: "Conformité aux normes de sécurité modernes.",
+        seoDesc: "Visibilité et potentiel de classement SEO.",
+        fcpDesc: "Temps d'affichage du premier texte ou image.",
+        lcpDesc: "Temps d'affichage du contenu principal.",
+        tbtDesc: "Temps d'inactivité pendant le chargement.",
+        clsDesc: "Stabilité visuelle et sauts de mise en page.",
+        speedDesc: "Vitesse globale de chargement visuel."
+    },
+    NL: { 
+        exec: "Managementsamenvatting", 
+        diag: "Lighthouse Diagnostiek", 
+        detailed: "Detailed Core Web Vitals", 
+        infra: "Infrastructuur Stack",
+        visual: "Visuele Weergave",
+        carbon: "Ecologische Voetafdruk", 
+        ssl: "SSL-Certificaatkwaliteit", 
+        request: "Upgrade Aanvragen",
+        perfDesc: "Algehele snelheid en optimalisatie.",
+        a11yDesc: "Bruikbaarheid voor mensen met bir beperking.",
+        bpDesc: "Naleving van moderne beveiligingsnormen.",
+        seoDesc: "Zichtbaarheid in zoekmachines.",
+        fcpDesc: "Tijd tot eerste tekst of afbeelding verschijnt.",
+        lcpDesc: "Tijd tot hoofdinhoud volledig zichtbaar is.",
+        tbtDesc: "Duur dat de pagina niet reageert op input.",
+        clsDesc: "Meet visuele stabiliteit en lay-outverschuivingen.",
+        speedDesc: "Algehele visuele laadsnelheid."
+    },
+    TR: { 
+        exec: "Yönetici Özeti", 
+        diag: "Lighthouse Analizi", 
+        detailed: "Detaylı Temel Web Verileri", 
+        infra: "Altyapı Teknolojileri",
+        visual: "Görsel Yakalama",
+        carbon: "Karbon Ayak İzi", 
+        ssl: "SSL Sertifika Kalitesi", 
+        request: "Mimari Yükseltme Talep Et",
+        perfDesc: "Genel site hızı ve kaynak optimizasyonu.",
+        a11yDesc: "Engelli bireyler için kullanım kolaylığı.",
+        bpDesc: "Modern güvenlik standartlarına uygunluk.",
+        seoDesc: "Arama motoru görünürlüğü ve sıralama gücü.",
+        fcpDesc: "İlk metin veya görselin görünme süresi.",
+        lcpDesc: "Ana içeriğin tam görünür olma süresi.",
+        tbtDesc: "Sayfanın girişe tepki vermediği süre.",
+        clsDesc: "Görsel kararlılık ve düzen kayması ölçümü.",
+        speedDesc: "Sayfanın görsel olarak dolma hızı."
+    }
+};
 
-// DÜZELTME: technical_audits yerine doğru tablo olan audits kullanıldı
-async function getAudit(slug: string): Promise<AuditData | null> {
-  const { data, error } = await supabase.from('audits').select('*').eq('slug', slug).single();
-  if (error) console.error("Fetch error:", error);
-  return data;
-}
+const CircularGauge = ({ value, label, color, desc }: { value: number, label: string, color: string, desc: string }) => {
+    const radius = 35;
+    const circumference = 2 * Math.PI * radius;
+    const safeValue = typeof value === 'number' && !isNaN(value) ? value : 0; 
+    const strokeDashoffset = circumference - (safeValue / 100) * circumference;
 
-export default async function VaultPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const audit = await getAudit(slug);
-
-  // Veri bulunamazsa 404 sayfasına at
-  if (!audit) return notFound();
-
-  // Basit bir güvenlik/eskilik kontrolü (jQuery, PHP vb. varsa uyarı ver)
-  const hasSecurityIssue = audit.legacy_stack?.toLowerCase().includes('jquery') ||
-                           audit.legacy_stack?.toLowerCase().includes('wordpress') ||
-                           audit.legacy_stack?.toLowerCase().includes('php') ||
-                           audit.bp < 70;
-
-  const getScoreColor = (score: number) => {
-      if (score >= 90) return 'text-emerald-500 bg-emerald-50 border-emerald-100';
-      if (score >= 50) return 'text-amber-500 bg-amber-50 border-amber-100';
-      return 'text-red-500 bg-red-50 border-red-100';
-  };
-
-  return (
-    <main className="min-h-screen bg-[#FAFAFA] text-zinc-900 font-sans selection:bg-black selection:text-white pb-32">
-      {/* Üst Güvenlik Barı */}
-      <div className="w-full bg-black text-white px-6 py-3 flex justify-between items-center text-[10px] font-bold uppercase tracking-widest">
-        <span>Novatrum Intelligence</span>
-        <span className="text-emerald-400 flex items-center gap-2"><Lock size={12} /> Encrypted Vault Access</span>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-6 pt-16">
-        {/* Başlık Alanı */}
-        <header className="mb-16 border-b border-zinc-200 pb-12">
-          <h1 className="text-5xl font-light tracking-tighter text-zinc-900 mb-4">{audit.client_name}</h1>
-          <div className="flex items-center gap-4 text-xs font-mono text-zinc-500">
-            <span className="flex items-center gap-1.5"><Globe size={14} /> {audit.target_url}</span>
-            <span>•</span>
-            <span>Report Generated: {new Date(audit.created_at).toLocaleDateString()}</span>
-          </div>
-        </header>
-
-        {/* AI SUMMARY (YAPAY ZEKA YÖNETİCİ ÖZETİ) */}
-        {audit.ai_summary && (
-            <section className="mb-16 bg-black text-white p-10 rounded-[32px] shadow-2xl relative overflow-hidden">
-                <div className="absolute -right-10 -top-10 text-white/5 pointer-events-none">
-                    <Activity size={160} />
+    return (
+        <div className="flex flex-col items-center text-center">
+            <div className="relative w-24 h-24 flex items-center justify-center">
+                <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="48" cy="48" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-zinc-200 dark:text-zinc-800 transition-colors duration-500" />
+                    <circle 
+                        cx="48" cy="48" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" 
+                        strokeDasharray={circumference}
+                        style={{ strokeDashoffset, transition: 'stroke-dashoffset 1.5s ease-out' }}
+                        className={color} strokeLinecap="round"
+                    />
+                </svg>
+                <div className="absolute flex items-center justify-center text-zinc-900 dark:text-white text-xl font-bold font-mono transition-colors duration-500">
+                    {safeValue}
                 </div>
-                <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400 mb-6 flex items-center gap-2 relative z-10">
-                    <CheckCircle2 size={16} /> Executive Summary
-                </h2>
-                <p className="text-base md:text-lg font-light leading-relaxed text-zinc-300 relative z-10 whitespace-pre-wrap">
-                    {audit.ai_summary}
-                </p>
-            </section>
-        )}
+            </div>
+            <span className="text-[11px] uppercase tracking-widest text-zinc-900 dark:text-zinc-100 mt-4 font-bold">{label}</span>
+            {/* INCREASED FONT SIZE & READABILITY */}
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1.5 max-w-[140px] leading-tight font-medium">{desc}</p>
+        </div>
+    );
+};
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            {/* SOL KOLON: Skorlar ve Teknoloji */}
-            <div className="space-y-10">
-                {/* Core Web Vitals */}
-                <div className="bg-white p-8 rounded-[32px] border border-zinc-200 shadow-sm">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-100 pb-4 mb-6 flex items-center gap-2">
-                        <Zap size={14} /> Core Web Vitals
-                    </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        {[
-                            { label: 'Performance', score: audit.perf },
-                            { label: 'Accessibility', score: audit.a11y },
-                            { label: 'Best Practices', score: audit.bp },
-                            { label: 'SEO', score: audit.seo }
-                        ].map((item, idx) => (
-                            <div key={idx} className={`p-6 rounded-2xl border flex flex-col items-center justify-center text-center ${getScoreColor(item.score)}`}>
-                                <span className="text-4xl font-light font-mono mb-2">{item.score}</span>
-                                <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">{item.label}</span>
-                            </div>
-                        ))}
+export default function VaultPage() {
+    const params = useParams();
+    const [isDark, setIsDark] = useState(false);
+    const rawSlug = params?.slug;
+    const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+    
+    const [audit, setAudit] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!slug) return;
+        const fetchAudit = async () => {
+            try {
+                const { data, error } = await supabase.from('audits').select('*').eq('slug', slug).single();
+                setAudit(data || null);
+            } catch (err) {
+                setAudit(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchAudit();
+    }, [slug]);
+
+    if (loading) return <div className={isDark ? "dark" : ""}><div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex items-center justify-center text-[10px] text-zinc-500 uppercase tracking-widest transition-colors duration-500"><div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-3"/> Decrypting...</div></div>;
+    if (!audit) return <div className={isDark ? "dark" : ""}><div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] flex flex-col items-center justify-center text-zinc-900 dark:text-white transition-colors duration-500"><ShieldCheck size={48} className="text-red-500 mb-4" /><h1 className="text-2xl font-light tracking-tighter">404 | Vault Not Found</h1></div></div>;
+
+    const t = TRANSLATIONS[audit.language || 'EN'] || TRANSLATIONS['EN'];
+    const stackList = audit.legacy_stack?.split(',').filter(Boolean) || [];
+
+    return (
+        <div className={isDark ? "dark" : ""}>
+            <div className="min-h-screen bg-[#FAFAFA] dark:bg-[#0A0A0A] text-zinc-900 dark:text-white font-sans pb-20 transition-colors duration-500 selection:bg-emerald-500 selection:text-white">
+                
+                <header className="border-b border-zinc-200 dark:border-white/10 px-6 py-4 md:px-8 md:py-6 flex justify-between items-center bg-white/80 dark:bg-black/50 backdrop-blur-md sticky top-0 z-50 transition-colors duration-500">
+                    <div className="flex items-center gap-3">
+                        <img src={isDark ? "/logo-white.png" : "/logo.png"} alt="Novatrum Logo" className="w-8 h-8 object-contain transition-opacity duration-300" />
+                        <span className="hidden md:inline text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">Novatrum Intelligence</span>
                     </div>
-                </div>
-
-                {/* Legacy Stack */}
-                <div className="bg-white p-8 rounded-[32px] border border-zinc-200 shadow-sm">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-100 pb-4 mb-6 flex items-center gap-2">
-                        <Layout size={14} /> Identified Infrastructure
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                        {audit.legacy_stack ? audit.legacy_stack.split(',').map((tech, idx) => (
-                            <span key={idx} className="px-4 py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-600">
-                                {tech.trim()}
-                            </span>
-                        )) : <span className="text-sm text-zinc-400 italic">No specific legacy stack identified.</span>}
-                    </div>
-                </div>
-
-                {/* Güvenlik Uyarısı (Şartlı Gösterim) */}
-                {hasSecurityIssue && (
-                    <div className="p-8 border border-red-200 bg-red-50 rounded-[32px] shadow-sm flex items-start gap-4">
-                        <div className="p-3 bg-red-100 text-red-600 rounded-2xl shrink-0"><ShieldAlert size={20} /></div>
-                        <div>
-                            <h4 className="text-sm font-bold text-red-900 mb-1">Security & Modernization Risk</h4>
-                            <p className="text-xs text-red-700 leading-relaxed">
-                                The identified tech stack contains legacy components (e.g., outdated libraries or monolithic CMS) that pose security vulnerabilities and performance bottlenecks. An upgrade to a modern Node/React architecture is highly recommended.
-                            </p>
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setIsDark(!isDark)} className="p-2 rounded-full text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/10 transition-all">
+                            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                        </button>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-full transition-colors duration-500">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"/>
+                            <span className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-500 tracking-widest uppercase">Encrypted</span>
                         </div>
                     </div>
-                )}
-            </div>
+                </header>
 
-            {/* SAĞ KOLON: Müşterinin Sitesinin Ekran Görüntüsü */}
-            <div>
-                <div className="bg-white p-4 rounded-[32px] border border-zinc-200 shadow-sm h-full flex flex-col min-h-[400px]">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-100 pb-4 mb-6 px-4 flex items-center gap-2">
-                        <Layout size={14} /> Visual Capture
-                    </h3>
-                    <div className="flex-1 bg-zinc-50 rounded-[24px] border border-zinc-100 overflow-hidden flex items-center justify-center">
-                        {audit.hero_image ? (
-                            <img src={audit.hero_image} alt="Site Hero" className="w-full h-full object-cover object-top" />
-                        ) : (
-                            <span className="text-xs text-zinc-400 uppercase tracking-widest font-bold px-6 text-center">No Visual Captured</span>
-                        )}
+                <main className="max-w-5xl mx-auto px-6 pt-16 space-y-12">
+                    <div className="text-center space-y-4 mb-16">
+                        <h1 className="text-5xl md:text-7xl font-light tracking-tighter transition-colors duration-500">Architecture Audit</h1>
+                        <p className="text-xs md:text-sm text-zinc-500 dark:text-zinc-400 font-mono flex flex-wrap items-center justify-center gap-2 uppercase tracking-widest transition-colors duration-500">
+                            <Globe size={14}/> {audit.target_url} <span className="text-zinc-300 dark:text-zinc-600 hidden md:inline">|</span> <span className="text-emerald-600 dark:text-emerald-400">Node: {audit.client_name}</span>
+                        </p>
                     </div>
-                </div>
+
+                    {audit.ai_summary && (
+                        <div className="bg-indigo-50/50 dark:bg-white/5 border border-indigo-100 dark:border-white/10 p-8 md:p-12 rounded-[32px] relative overflow-hidden shadow-sm dark:shadow-2xl transition-colors duration-500">
+                            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-indigo-500 to-purple-500"/>
+                            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400 mb-6 flex items-center gap-2"><Activity size={14}/> {t.exec}</h3>
+                            <div className="text-zinc-700 dark:text-zinc-300 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-light transition-colors duration-500">{audit.ai_summary}</div>
+                        </div>
+                    )}
+
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 shadow-sm dark:shadow-none p-8 rounded-[32px] transition-colors duration-500">
+                        <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400 mb-8 flex items-center gap-2 border-b border-zinc-100 dark:border-white/5 pb-4"><Zap size={14}/> {t.diag}</h3>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+                            <CircularGauge value={audit.perf} label="Performance" color={audit.perf >= 90 ? "text-emerald-500" : audit.perf >= 50 ? "text-amber-500" : "text-red-500"} desc={t.perfDesc} />
+                            <CircularGauge value={audit.a11y} label="Accessibility" color={audit.a11y >= 90 ? "text-emerald-500" : audit.a11y >= 50 ? "text-amber-500" : "text-red-500"} desc={t.a11yDesc} />
+                            <CircularGauge value={audit.bp} label="Best Practices" color={audit.bp >= 90 ? "text-emerald-500" : audit.bp >= 50 ? "text-amber-500" : "text-red-500"} desc={t.bpDesc} />
+                            <CircularGauge value={audit.seo} label="SEO" color={audit.seo >= 90 ? "text-emerald-500" : audit.seo >= 50 ? "text-amber-500" : "text-red-500"} desc={t.seoDesc} />
+                        </div>
+
+                        <div className="pt-10 border-t border-zinc-100 dark:border-white/5">
+                            <h4 className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-8 flex items-center gap-2"><Gauge size={12}/> {t.detailed}</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                                {[
+                                    { key: 'fcp', label: 'FCP', desc: t.fcpDesc },
+                                    { key: 'lcp', label: 'LCP', desc: t.lcpDesc },
+                                    { key: 'tbt', label: 'TBT', desc: t.tbtDesc },
+                                    { key: 'cls', label: 'CLS', desc: t.clsDesc },
+                                    { key: 'speed_index', label: 'Speed Index', desc: t.speedDesc }
+                                ].map((item) => {
+                                    const rawVal = audit[item.key] || 'N/A';
+                                    const isBad = typeof rawVal === 'string' && (rawVal.includes('s') || rawVal.includes('ms')) && parseFloat(rawVal) > 3; 
+                                    return (
+                                        <div key={item.key} className="p-5 bg-zinc-50 dark:bg-black rounded-3xl border border-zinc-200 dark:border-white/10 text-center transition-all shadow-sm">
+                                            <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold mb-2">{item.label}</p>
+                                            <p className={`text-base md:text-xl font-mono font-bold transition-colors mb-2 ${rawVal === 'N/A' || !rawVal ? 'text-zinc-400 dark:text-zinc-700' : isBad ? 'text-amber-500' : 'text-zinc-900 dark:text-white'}`}>
+                                                {rawVal || 'N/A'}
+                                            </p>
+                                            {/* READABLE DETAILED TEXT */}
+                                            <p className="text-[10px] text-zinc-500 dark:text-zinc-500 leading-tight font-medium">{item.desc}</p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 shadow-sm dark:shadow-none p-10 rounded-[40px] flex flex-col items-center justify-center text-center transition-colors duration-500">
+                            <Leaf size={32} strokeWidth={1.5} className={audit.carbon ? "text-emerald-500 mb-5" : "text-zinc-300 dark:text-zinc-700 mb-5"} />
+                            <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 transition-colors duration-500">{t.carbon}</h4>
+                            <p className="text-2xl md:text-3xl font-mono font-bold text-zinc-900 dark:text-white">{audit.carbon || 'N/A'}</p>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-500 mt-3 max-w-[180px] leading-relaxed">The estimated ecological footprint generated by each page visit.</p>
+                        </div>
+                        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/5 shadow-sm dark:shadow-none p-10 rounded-[40px] flex flex-col items-center justify-center text-center transition-colors duration-500">
+                            <Lock size={32} strokeWidth={1.5} className={audit.ssl ? "text-emerald-500 mb-5" : "text-zinc-300 dark:text-zinc-700 mb-5"} />
+                            <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2 transition-colors duration-500">{t.ssl}</h4>
+                            <p className="text-2xl md:text-3xl font-mono font-bold text-zinc-900 dark:text-white">{audit.ssl || 'N/A'}</p>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-500 mt-3 max-w-[180px] leading-relaxed">Validation of encryption strength and security communication headers.</p>
+                        </div>
+                    </div>
+
+                    <div className="pt-16 pb-12 text-center border-t border-zinc-200 dark:border-white/5 transition-colors duration-500">
+                        <a href="mailto:info@novatrum.eu" className="inline-flex bg-black text-white dark:bg-white dark:text-black px-10 py-6 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:scale-105 transition-all items-center justify-center gap-4 mx-auto shadow-xl dark:shadow-white/10">
+                            {t.request} <ArrowRight size={16}/>
+                        </a>
+                    </div>
+                </main>
             </div>
         </div>
-
-        {/* Footer / Call To Action */}
-        <div className="mt-20 text-center">
-            <a href="mailto:info@novatrum.eu" className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white rounded-full text-xs font-bold uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-xl">
-                Request Architecture Upgrade <ArrowRight size={14} />
-            </a>
-            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-zinc-400 mt-12 pb-10">
-                Novatrum Engineering © 2026 — Confidential Report
-            </p>
-        </div>
-      </div>
-    </main>
-  );
+    );
 }
