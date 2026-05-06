@@ -11,18 +11,8 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     const { language, setLanguage, t } = useLanguage();
     const pathname = usePathname();
 
-    // 1. TEMİZ SAYFA KONTROLÜ (Header/Footer Gizlenecek Sayfalar)
-    const isCleanPage = 
-        pathname?.startsWith('/demo') ||
-        pathname?.startsWith('/showroom') || 
-        pathname?.startsWith('/admin') || 
-        pathname?.startsWith('/client') ||
-        pathname?.startsWith('/v');
-
-    // 2. TEMA KONTROLÜ (Products sayfası karanlık mı olsun?)
     const isProductsPage = pathname === '/products';
 
-    // NAVİGASYON LİNKLERİ (Tamamen Dinamik)
     const navLinks = [
         { name: t.nav.home, href: "/" },
         { name: t.nav.services, href: "/services" },
@@ -39,20 +29,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         }
     }, [isOpen]);
 
-    // EĞER TEMİZ BİR SAYFADAYSAK SADECE ÇOCUKLARI GÖSTER
-    if (isCleanPage) {
-        return (
-            <div className="min-h-screen font-sans relative bg-white">
-                {children}
-            </div>
-        );
-    }
-
-    // NORMAL WEB SİTESİ SAYFALARI İÇİN DİNAMİK LAYOUT
     return (
         <div className={`min-h-screen font-sans flex flex-col relative transition-colors duration-500 selection:bg-emerald-500 selection:text-white ${isProductsPage ? 'bg-[#0A0A0A] text-white' : 'bg-white text-black selection:bg-black'}`}>
 
-            {/* HEADER - DİNAMİK (Dark/Light) */}
+            {/* HEADER */}
             <header className={`sticky top-0 w-full z-[100] backdrop-blur-xl transition-all duration-300 ${isProductsPage ? 'bg-[#0A0A0A]/90 border-b border-white/5' : 'bg-white/90'}`}>
                 <div className="w-full px-6 md:px-12 h-20 md:h-24 flex items-center justify-between relative">
 
@@ -73,37 +53,29 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                         ))}
                     </nav>
 
-                    <div className="flex items-center gap-5 relative z-[110]">
-                        {/* DİNAMİK MASAÜSTÜ BUTONU */}
-                        <Link href="/client/login" className={`hidden md:inline-flex items-center gap-2.5 px-8 py-3.5 text-[9px] font-bold uppercase tracking-widest rounded-full hover:scale-105 transition-all shadow-sm ${isProductsPage ? 'bg-white text-black hover:bg-zinc-200' : 'bg-black text-white hover:bg-zinc-800'}`}>
-                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                            {t.nav.gateway}
-                        </Link>
-
-                        {/* HAMBURGER MENÜ */}
-                        <button
-                            onClick={() => setIsOpen(!isOpen)}
-                            className="flex md:hidden flex-col justify-center items-center w-10 h-10 gap-1.5 focus:outline-none relative"
-                            aria-label="Toggle Menu"
-                        >
-                            <motion.span
-                                animate={isOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-                                className={`w-6 h-[2px] block origin-center rounded-full ${isProductsPage ? 'bg-white' : 'bg-black'}`}
-                            />
-                            <motion.span
-                                animate={isOpen ? { opacity: 0, x: 20 } : { opacity: 1, x: 0 }}
-                                className={`w-6 h-[2px] block rounded-full ${isProductsPage ? 'bg-white' : 'bg-black'}`}
-                            />
-                            <motion.span
-                                animate={isOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-                                className={`w-6 h-[2px] block origin-center rounded-full ${isProductsPage ? 'bg-white' : 'bg-black'}`}
-                            />
-                        </button>
-                    </div>
+                    {/* Hamburger - sadece mobil */}
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="flex md:hidden flex-col justify-center items-center w-10 h-10 gap-1.5 focus:outline-none relative z-[110]"
+                        aria-label="Toggle Menu"
+                    >
+                        <motion.span
+                            animate={isOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+                            className={`w-6 h-[2px] block origin-center rounded-full ${isProductsPage ? 'bg-white' : 'bg-black'}`}
+                        />
+                        <motion.span
+                            animate={isOpen ? { opacity: 0, x: 20 } : { opacity: 1, x: 0 }}
+                            className={`w-6 h-[2px] block rounded-full ${isProductsPage ? 'bg-white' : 'bg-black'}`}
+                        />
+                        <motion.span
+                            animate={isOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+                            className={`w-6 h-[2px] block origin-center rounded-full ${isProductsPage ? 'bg-white' : 'bg-black'}`}
+                        />
+                    </button>
                 </div>
             </header>
 
-            {/* MOBILE MENU OVERLAY */}
+            {/* MOBILE MENU */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -131,22 +103,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                                     </Link>
                                 </motion.div>
                             ))}
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + navLinks.length * 0.05 }}
-                                className="w-full mt-10 px-4"
-                            >
-                                <Link
-                                    href="/client/login"
-                                    onClick={() => setIsOpen(false)}
-                                    className={`inline-flex items-center justify-center gap-3 w-full max-w-[280px] py-5 font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-transform shadow-xl mx-auto ${isProductsPage ? 'bg-white text-black' : 'bg-black text-white'}`}
-                                >
-                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                                    {t.nav.gateway}
-                                </Link>
-                            </motion.div>
                         </div>
                     </motion.div>
                 )}
@@ -156,11 +112,10 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                 {children}
             </main>
 
-            {/* FOOTER - DİNAMİK */}
+            {/* FOOTER */}
             <footer className={`w-full py-20 px-6 md:px-12 mt-12 transition-colors duration-500 ${isProductsPage ? 'bg-[#0A0A0A] border-t border-white/5' : 'bg-white'}`}>
                 <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row items-start justify-between gap-16">
 
-                    {/* Şirket Bilgileri */}
                     <div className="flex flex-col gap-6 max-w-sm">
                         <div className="flex items-center gap-3">
                             <div className="w-7 h-7 flex items-center justify-center">
@@ -185,10 +140,8 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                         </div>
                     </div>
 
-                    {/* Link Sütunları */}
                     <div className="flex flex-col sm:flex-row gap-12 md:gap-24 w-full md:w-auto">
 
-                        {/* Navigasyon (Company) */}
                         <div className="flex flex-col gap-6">
                             <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>{t.footer.company || "Company"}</span>
                             <div className="flex flex-col gap-4">
@@ -200,7 +153,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                             </div>
                         </div>
 
-                        {/* Dökümantasyonlar (Resources) */}
                         <div className="flex flex-col gap-6">
                             <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>{t.footer.resources || "Resources"}</span>
                             <div className="flex flex-col gap-4">
@@ -210,16 +162,9 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                                 <Link href="/docs" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
                                     {t.nav.documentation || "Documentation"}
                                 </Link>
-                                <Link href="/status" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
-                                    {t.nav.systemStatus || "System Status"}
-                                </Link>
-                                <Link href="/client/login" className={`text-[10px] font-bold text-zinc-400 uppercase tracking-widest transition-colors ${isProductsPage ? 'hover:text-white' : 'hover:text-black'}`}>
-                                    {t.nav.gateway}
-                                </Link>
                             </div>
                         </div>
 
-                        {/* Ayarlar ve Sosyal (Connect) */}
                         <div className="flex flex-col gap-6">
                             <span className={`text-[9px] font-bold uppercase tracking-widest ${isProductsPage ? 'text-white' : 'text-black'}`}>{t.footer.connect || "Connect"}</span>
                             <div className="flex flex-col gap-4">
@@ -228,7 +173,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                                 </a>
                             </div>
 
-                            {/* DİNAMİK DİL SEÇİCİ */}
                             <div className="relative inline-block text-left mt-4 group">
                                 <select
                                     value={language}
