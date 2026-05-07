@@ -70,7 +70,6 @@ export default function DocumentationClient() {
             <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
               <h3 className="text-base font-light tracking-tight text-black mb-4">{step.title}</h3>
               <p className="text-sm text-zinc-500 font-light leading-relaxed whitespace-pre-line">{step.content}</p>
-              {step.image && <div className="mt-6 rounded-2xl overflow-hidden border border-zinc-100"><img src={step.image} alt={step.title} className="w-full h-auto" /></div>}
               {step.warning && <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3"><AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" /><p className="text-sm text-red-600 font-light">{step.warning}</p></div>}
             </motion.div>
           ))}

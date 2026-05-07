@@ -3,12 +3,13 @@
 export type DocType = "dns" | "email" | "troubleshooting";
 export type Language = "en" | "nl" | "fr" | "tr";
 
+// lib/docs-content.ts
 export interface DocContent {
   title: string;
   description: string;
   checklistTitle: string;
   checklistItems: string[];
-  steps: { title: string; content: string; warning?: string }[];
+  steps: { title: string; content: string; warning?: string; image?: string }[];
 }
 
 export const contentData: Record<DocType, Record<Language, DocContent>> = {
