@@ -8,36 +8,6 @@ import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import AnnouncementBar from '@/app/components/AnnouncementBar';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } },
-};
-
-const services = [
-  {
-    num: '01', title: 'Frontend Architecture',
-    desc: 'We craft pixel-perfect interfaces with React, Next.js, and Tailwind CSS. Every component is designed for performance, accessibility, and beauty.',
-    features: ['React & Next.js', 'Tailwind CSS', 'Motion & Framer', 'Responsive Design', 'SEO Optimized'],
-  },
-  {
-    num: '02', title: 'Custom Software',
-    desc: 'From internal tools to SaaS platforms, we build scalable backend systems, APIs, and database architectures that grow with your business.',
-    features: ['API Development', 'Database Design', 'SaaS Platforms', 'Supabase & PostgreSQL', 'Maintenance'],
-  },
-  {
-    num: '03', title: 'Technical Consulting',
-    desc: 'Get clarity on your tech stack, architecture decisions, and digital strategy. We help startups and enterprises make the right technical moves.',
-    features: ['Stack Advisory', 'Architecture Review', 'MVP Planning', 'Code Audit', 'Team Scaling'],
-  },
-];
-
-const processSteps = [
-  { step: '01', title: 'Discovery', desc: 'We dive deep into your business, users, and goals. No assumptions — just clarity.', timeline: 'Week 1' },
-  { step: '02', title: 'Architecture', desc: 'We design the system blueprint, choose the tech stack, and create wireframes.', timeline: 'Week 2' },
-  { step: '03', title: 'Development', desc: 'We build in transparent sprints with weekly demos. You see progress in real-time.', timeline: 'Weeks 3–8' },
-  { step: '04', title: 'Launch & Support', desc: 'We deploy, test thoroughly, and provide 30-day warranty plus optional ongoing support.', timeline: 'Week 9+' },
-];
-
 const techStack = [
   { name: 'Next.js', icon: '/icons/nextjs.svg' },
   { name: 'TypeScript', icon: '/icons/typescript.svg' },
@@ -51,6 +21,35 @@ const techStack = [
 
 export default function HomePage() {
   const { t } = useLanguage();
+  const h = t.home;
+
+  const services = [
+    {
+      num: '01',
+      title: h.service1Title,
+      desc: h.service1Desc,
+      features: [h.service1Feat1, h.service1Feat2, h.service1Feat3, h.service1Feat4, h.service1Feat5],
+    },
+    {
+      num: '02',
+      title: h.service2Title,
+      desc: h.service2Desc,
+      features: [h.service2Feat1, h.service2Feat2, h.service2Feat3, h.service2Feat4, h.service2Feat5],
+    },
+    {
+      num: '03',
+      title: h.service3Title,
+      desc: h.service3Desc,
+      features: [h.service3Feat1, h.service3Feat2, h.service3Feat3, h.service3Feat4, h.service3Feat5],
+    },
+  ];
+
+  const processSteps = [
+    { step: '01', title: h.processStep1Title, desc: h.processStep1Desc, timeline: h.processStep1Timeline },
+    { step: '02', title: h.processStep2Title, desc: h.processStep2Desc, timeline: h.processStep2Timeline },
+    { step: '03', title: h.processStep3Title, desc: h.processStep3Desc, timeline: h.processStep3Timeline },
+    { step: '04', title: h.processStep4Title, desc: h.processStep4Desc, timeline: h.processStep4Timeline },
+  ];
 
   return (
     <div className="w-full bg-white font-sans selection:bg-black selection:text-white">
@@ -58,22 +57,27 @@ export default function HomePage() {
 
       {/* HERO */}
       <section className="max-w-6xl mx-auto px-6 pt-40 md:pt-52 pb-32 md:pb-40">
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="max-w-3xl space-y-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="max-w-3xl space-y-8"
+        >
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-400">
-            {t.hero?.badge || "Premium Software Studio"}
+            {h.heroBadge}
           </p>
           <h1 className="text-5xl md:text-7xl font-light tracking-tighter text-black leading-[1.05]">
-            We engineer digital products that define brands.
+            {h.heroTitle}
           </h1>
           <p className="text-base md:text-lg text-zinc-500 font-light leading-relaxed max-w-xl">
-            From startups to enterprises, we build software that's fast, beautiful, and built to last — always with clean code and clear communication.
+            {h.heroDesc}
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
             <Link href="/services" className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-800 transition-all">
-              Explore Services <ArrowRight size={14} />
+              {h.heroBtnServices} <ArrowRight size={14} />
             </Link>
             <Link href="/contact" className="inline-flex items-center gap-3 px-8 py-4 border border-zinc-200 text-black text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-50 transition-all">
-              Get in Touch
+              {h.heroBtnContact}
             </Link>
           </div>
         </motion.div>
@@ -81,15 +85,15 @@ export default function HomePage() {
 
       {/* TECH STACK */}
       <motion.section
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
         className="py-24 md:py-32"
       >
         <div className="max-w-4xl mx-auto px-6 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-12">
-            Built with modern tools
+            {h.techTitle}
           </p>
           <div className="flex flex-wrap justify-center gap-x-14 gap-y-8">
             {techStack.map(tech => (
@@ -104,16 +108,16 @@ export default function HomePage() {
 
       {/* SERVICES */}
       <motion.section
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
         className="py-24 md:py-32"
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-light tracking-tighter text-black mb-3">What we do</h2>
-            <p className="text-sm text-zinc-400 font-light">Three core services, endlessly adaptable.</p>
+            <h2 className="text-3xl md:text-4xl font-light tracking-tighter text-black mb-3">{h.servicesTitle}</h2>
+            <p className="text-sm text-zinc-400 font-light">{h.servicesSubtitle}</p>
           </div>
           <div className="space-y-8">
             {services.map((s, i) => (
@@ -149,16 +153,16 @@ export default function HomePage() {
 
       {/* PROCESS */}
       <motion.section
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
         className="py-24 md:py-32"
       >
         <div className="max-w-4xl mx-auto px-6">
           <div className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-light tracking-tighter text-black mb-3">How we work</h2>
-            <p className="text-sm text-zinc-400 font-light">Transparent, iterative, on your timeline.</p>
+            <h2 className="text-3xl md:text-4xl font-light tracking-tighter text-black mb-3">{h.processTitle}</h2>
+            <p className="text-sm text-zinc-400 font-light">{h.processSubtitle}</p>
           </div>
           <div className="relative">
             <div className="hidden md:block absolute left-[19px] top-3 bottom-3 w-px bg-zinc-100" />
@@ -190,22 +194,18 @@ export default function HomePage() {
 
       {/* CTA */}
       <motion.section
-        variants={fadeUp}
-        initial="hidden"
-        whileInView="visible"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
         className="py-24 md:py-32"
       >
         <div className="max-w-6xl mx-auto px-6">
           <div className="max-w-xl">
-            <h2 className="text-3xl md:text-4xl font-light tracking-tighter text-black mb-4">
-              Ready to start your project?
-            </h2>
-            <p className="text-sm text-zinc-400 font-light mb-8 leading-relaxed">
-              Tell us about your idea. We'll respond within 24 hours with a clear plan and timeline.
-            </p>
+            <h2 className="text-3xl md:text-4xl font-light tracking-tighter text-black mb-4">{h.ctaTitle}</h2>
+            <p className="text-sm text-zinc-400 font-light mb-8 leading-relaxed">{h.ctaDesc}</p>
             <Link href="/contact" className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-800 transition-all">
-              Get in Touch <ArrowRight size={14} />
+              {h.ctaBtn} <ArrowRight size={14} />
             </Link>
           </div>
         </div>

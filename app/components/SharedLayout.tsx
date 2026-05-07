@@ -14,7 +14,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     const navLinks = [
         { name: t.nav.home, href: "/" },
         { name: t.nav.services, href: "/services" },
-        { name: t.nav.products || "Products", href: "/products" },
+        { name: t.nav.products, href: "/products" },
         { name: t.nav.process, href: "/process" },
         { name: t.nav.contact, href: "/contact" },
     ];
@@ -25,13 +25,9 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
 
     const handleScroll = useCallback(() => {
         const currentScrollY = window.scrollY;
-        if (currentScrollY < 20) {
-            setVisible(true);
-        } else if (currentScrollY > lastScrollY && currentScrollY > 80) {
-            setVisible(false);
-        } else {
-            setVisible(true);
-        }
+        if (currentScrollY < 20) setVisible(true);
+        else if (currentScrollY > lastScrollY && currentScrollY > 80) setVisible(false);
+        else setVisible(true);
         setLastScrollY(currentScrollY);
     }, [lastScrollY]);
 
@@ -102,7 +98,6 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
             <footer className="w-full py-20 px-6 md:px-12 bg-white">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start justify-between gap-16">
                     
-                    {/* Sol - Logo ve info */}
                     <div className="flex flex-col gap-6 max-w-sm">
                         <div className="flex items-center gap-3">
                             <img src="/logo.png" alt="Novatrum" className="w-7 h-7 object-contain opacity-80" />
@@ -112,17 +107,15 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                             &copy;{new Date().getFullYear()} Novatrum. {t.footer.rights}
                         </p>
                         <div className="flex gap-6">
-                            <Link href="/terms" className="text-[9px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">Terms</Link>
-                            <Link href="/privacy" className="text-[9px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">Privacy</Link>
+                            <Link href="/terms" className="text-[9px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">{t.footer.terms}</Link>
+                            <Link href="/privacy" className="text-[9px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">{t.footer.privacy}</Link>
                         </div>
                     </div>
 
-                    {/* Sağ - Link sütunları */}
                     <div className="flex gap-12 md:gap-20">
                         
-                        {/* Company */}
                         <div className="flex flex-col gap-4">
-                            <span className="text-[9px] font-medium uppercase tracking-widest text-black">Company</span>
+                            <span className="text-[9px] font-medium uppercase tracking-widest text-black">{t.footer.company}</span>
                             {navLinks.map(link => (
                                 <Link key={link.name} href={link.href} className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">
                                     {link.name}
@@ -130,22 +123,16 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                             ))}
                         </div>
 
-                        {/* Resources */}
                         <div className="flex flex-col gap-4">
-                            <span className="text-[9px] font-medium uppercase tracking-widest text-black">Resources</span>
-                            <Link href="/showroom" className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">
-                                Showroom
-                            </Link>
-                            <Link href="/docs" className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">
-                                Documentation
-                            </Link>
+                            <span className="text-[9px] font-medium uppercase tracking-widest text-black">{t.footer.resources}</span>
+                            <Link href="/showroom" className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">{t.footer.showroom}</Link>
+                            <Link href="/docs" className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">{t.footer.documentation}</Link>
                         </div>
 
-                        {/* Connect */}
                         <div className="flex flex-col gap-4">
-                            <span className="text-[9px] font-medium uppercase tracking-widest text-black">Connect</span>
+                            <span className="text-[9px] font-medium uppercase tracking-widest text-black">{t.footer.connect}</span>
                             <a href="https://linkedin.com/company/novatrum" target="_blank" className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest hover:text-black">
-                                LinkedIn
+                                {t.footer.linkedin}
                             </a>
                             <div className="mt-2">
                                 <select value={language} onChange={(e) => setLanguage(e.target.value as any)} className="appearance-none rounded-full px-4 py-2 text-[9px] font-medium uppercase tracking-widest bg-zinc-50 border border-zinc-200 text-zinc-500 cursor-pointer">
