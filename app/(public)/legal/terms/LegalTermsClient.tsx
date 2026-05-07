@@ -6,11 +6,6 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
-};
-
 export default function LegalTermsClient() {
   const { t } = useLanguage();
 
@@ -30,8 +25,12 @@ export default function LegalTermsClient() {
       
       <div className="max-w-3xl mx-auto px-6 pt-36 pb-32">
 
-        {/* Başlık */}
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="mb-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="mb-20"
+        >
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-4">
             {t?.legal?.pageTitle || "Legal Blueprint"}
           </p>
@@ -43,15 +42,14 @@ export default function LegalTermsClient() {
           </p>
         </motion.div>
 
-        {/* Maddeler */}
         <div className="space-y-16">
           {activeSections.map((section: any, index: number) => (
             <motion.section
               key={index}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
               className="flex gap-5"
             >
               <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 shrink-0 mt-1">
@@ -69,12 +67,11 @@ export default function LegalTermsClient() {
           ))}
         </div>
 
-        {/* CTA */}
         <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
           className="mt-24 text-center"
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-6">

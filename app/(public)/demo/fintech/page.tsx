@@ -137,7 +137,7 @@ export default function FintechDemoPage() {
                             <motion.div
                                 initial={{ opacity: 0, x: 100, rotateY: -30 }}
                                 animate={{ opacity: 1, x: 0, rotateY: 0 }}
-                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                transition={{ duration: 1.5, ease: [0.42, 0, 0.58, 1] }}
                                 className="flex-1 flex justify-center perspective-[1000px] w-full"
                             >
                                 <motion.div

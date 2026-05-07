@@ -6,10 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
-};
 
 const demos = [
   {
@@ -49,7 +45,7 @@ export default function ShowroomPage() {
       <div className="max-w-6xl mx-auto px-6 pt-36 pb-32">
 
         {/* Header */}
-        <motion.div variants={fadeUp} initial="hidden" animate="visible" className="mb-20">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mb-20">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-4">
             Showroom
           </p>
@@ -64,14 +60,7 @@ export default function ShowroomPage() {
         {/* Demo Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {demos.map((demo, i) => (
-            <motion.div
-              key={demo.name}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
+            <motion.div key={demo.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}>
               <Link
                 href={demo.path}
                 className="group block rounded-3xl border border-zinc-100 overflow-hidden hover:border-zinc-200 transition-all hover:shadow-sm"
@@ -114,13 +103,7 @@ export default function ShowroomPage() {
         </div>
 
         {/* CTA */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="mt-24 text-center"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="mt-24 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-6">
             Want something like this?
           </p>

@@ -8,7 +8,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7 } },
 };
 
 export default function PrivacyPage() {
