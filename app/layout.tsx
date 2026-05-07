@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   },
   description: "We engineer bespoke web applications and enterprise digital architectures.",
   metadataBase: new URL('https://novatrum.eu'),
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({

@@ -1,22 +1,21 @@
-// app/(public)/layout.tsx
-import type { Metadata } from "next";
+"use client";
+
+import React from 'react';
+import { usePathname } from 'next/navigation';
 import { LanguageProvider } from "../../context/LanguageContext";
 import { ThemeProvider } from "../../context/ThemeContext";
 import AnnouncementBar from "../components/AnnouncementBar";
 import SharedLayout from "../components/SharedLayout";
 
-export const metadata: Metadata = {
-  icons: {
-    icon: '/logo.png',
-    apple: '/logo.png',
-  },
-};
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isDemoPage = pathname?.startsWith('/demo');
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+  // Demo sayfalarında sadece içerik, header/footer yok
+  if (isDemoPage) {
+    return <>{children}</>;
+  }
+
   return (
     <LanguageProvider>
       <ThemeProvider>

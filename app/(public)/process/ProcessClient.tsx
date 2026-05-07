@@ -1,89 +1,106 @@
 "use client";
 
 import React from 'react';
-import FadeUp from '@/app/components/FadeUp'; // /app/ eklendi
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { useLanguage } from '@/context/LanguageContext';
+import { ArrowRight } from 'lucide-react';
+
+const steps = [
+  {
+    num: '01',
+    title: 'Discovery',
+    desc: 'We start with a deep dive into your business goals, user needs, and technical requirements. This phase sets the foundation for everything that follows.',
+  },
+  {
+    num: '02',
+    title: 'Architecture',
+    desc: 'We design the system architecture, choose the right tech stack, and create wireframes. You get a clear blueprint before any code is written.',
+  },
+  {
+    num: '03',
+    title: 'Development',
+    desc: 'We build your product in transparent sprints with weekly updates. You see progress in real-time and can provide feedback at every stage.',
+  },
+  {
+    num: '04',
+    title: 'Launch & Support',
+    desc: 'We deploy, test thoroughly, and launch. Every project includes 30-day warranty and optional ongoing maintenance.',
+  },
+];
 
 export default function ProcessPage() {
-  const { t } = useLanguage();
-  const pData = t.processPage;
-
-  if (!pData) return <div className="pt-40 text-center text-zinc-500 font-mono text-xs uppercase tracking-widest bg-white h-screen">Initializing Architecture...</div>;
-
   return (
-    <main className="w-full bg-white min-h-screen relative overflow-hidden font-sans selection:bg-black selection:text-white">
+    <main className="w-full bg-white min-h-screen font-sans selection:bg-black selection:text-white">
       
-      {/* BACKGROUND GLOWS (Maintained for depth) */}
-      <div className="absolute top-[10%] left-[-5%] w-[500px] h-[500px] bg-indigo-100/40 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
-      <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-purple-100/30 rounded-full blur-[120px] pointer-events-none -z-10 mix-blend-multiply" />
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-32">
+        
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="space-y-4 mb-24"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">
+            How We Work
+          </p>
+          <h1 className="text-4xl md:text-5xl font-light tracking-tighter text-black leading-[1.1] max-w-lg">
+            A process built for clarity and speed.
+          </h1>
+          <p className="text-sm text-zinc-400 font-light max-w-md leading-relaxed">
+            From first contact to launch, every step is designed to keep you informed and your project moving forward.
+          </p>
+        </motion.div>
 
-      <div className="max-w-7xl mx-auto px-6 pt-32 pb-40 overflow-hidden space-y-40 relative z-10">
-
-        {/* Page Header - High Contrast Typography */}
-        <FadeUp>
-          <div className="text-center space-y-8 max-w-4xl mx-auto mt-10">
-            <h1 className="text-5xl md:text-8xl font-light tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-zinc-900 via-slate-800 to-indigo-900 leading-[1.1] pb-2">
-              {pData.title} <br />
-              <span className="text-zinc-400 italic font-light">{pData.subtitle}</span>
-            </h1>
-            <p className="text-lg md:text-xl text-zinc-500 font-medium leading-relaxed max-w-2xl mx-auto">
-              {pData.desc}
-            </p>
-          </div>
-        </FadeUp>
-
-        {/* Process Steps (Premium Timeline) */}
-        <div className="space-y-12 relative max-w-5xl mx-auto">
-          {/* Vertical connecting line */}
-          <div className="hidden md:block absolute left-[3.25rem] top-10 bottom-10 w-px bg-gradient-to-b from-transparent via-indigo-200 to-transparent z-0 opacity-50" />
-
-          {pData.steps.map((step: any, index: number) => (
-            <FadeUp key={index} delay={index * 100}>
-              <div className="relative z-10 flex flex-col md:flex-row gap-8 md:gap-16 items-start group">
-
-                {/* Step Number Circle */}
-                <div className="flex-shrink-0 flex md:flex-col items-center gap-6 relative">
-                  <div className="w-24 h-24 rounded-full bg-white/80 backdrop-blur-sm border border-zinc-200/60 flex items-center justify-center text-3xl font-light text-zinc-300 group-hover:bg-gradient-to-br group-hover:from-zinc-900 group-hover:to-indigo-950 group-hover:text-white group-hover:border-transparent group-hover:shadow-[0_0_30px_rgba(49,46,129,0.3)] transition-all duration-500 shadow-sm z-10">
-                    {step.num}
-                  </div>
-                </div>
-
-                {/* Content Card (Glassmorphism) */}
-                <div className="flex-1 p-10 md:p-14 rounded-[40px] bg-white/60 backdrop-blur-xl border border-zinc-200/60 hover:bg-white hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-900/5 transition-all duration-500 w-full relative overflow-hidden">
-                  
-                  {/* Subtle inner glow */}
-                  <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-purple-50 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-                  <div className="space-y-4 text-left relative z-10">
-                    <span className="text-indigo-400 text-[10px] font-bold tracking-[0.2em] uppercase">
-                      {step.subtitle}
-                    </span>
-                    <h2 className="text-3xl md:text-4xl font-light text-black tracking-tighter group-hover:text-indigo-950 transition-colors">
-                      {step.title}
-                    </h2>
-                    <p className="text-zinc-500 text-lg font-medium leading-relaxed max-w-2xl">
-                      {step.desc}
-                    </p>
-                  </div>
-                </div>
+        {/* Steps */}
+        <div className="space-y-20">
+          {steps.map((step, index) => (
+            <motion.div
+              key={step.num}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="flex flex-col md:flex-row gap-6 md:gap-12 items-start group"
+            >
+              {/* Number */}
+              <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-sm font-light text-zinc-400 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-300">
+                {step.num}
               </div>
-            </FadeUp>
+
+              {/* Content */}
+              <div className="flex-1 space-y-2 pt-1">
+                <h3 className="text-xl font-light tracking-tight text-black group-hover:text-black transition-colors">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-zinc-400 font-light leading-relaxed max-w-xl">
+                  {step.desc}
+                </p>
+              </div>
+            </motion.div>
           ))}
         </div>
 
-        {/* CTA Section */}
-        <FadeUp>
-          <div className="text-center pt-20 border-t border-zinc-100/50 mt-20">
-            <h3 className="text-4xl md:text-6xl font-light text-black mb-12 tracking-tighter">{pData.ctaTitle}</h3>
-            <Link href="/gateway" className="inline-flex items-center gap-4 px-12 py-5 bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-full hover:shadow-2xl hover:shadow-indigo-900/20 transition-all hover:scale-105 active:scale-95 group">
-              {pData.ctaButton}
-              <svg className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </Link>
-          </div>
-        </FadeUp>
+        {/* Timeline line (mobile hidden) */}
+        <div className="hidden md:block absolute left-[75px] top-[280px] bottom-32 w-px bg-zinc-100 -z-10" />
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-24 pt-16 border-t border-zinc-100 text-center"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-4">
+            Ready to start your project?
+          </p>
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-3 px-10 py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] rounded-xl hover:bg-zinc-800 transition-all"
+          >
+            Get in Touch <ArrowRight size={14} />
+          </Link>
+        </motion.div>
 
       </div>
     </main>
