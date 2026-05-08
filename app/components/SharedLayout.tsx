@@ -43,7 +43,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
             <motion.header
                 animate={{ y: visible ? 0 : -100 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="fixed top-0 w-full z-[100] bg-white/90 backdrop-blur-xl"
+                className="fixed top-0 w-full z-[100] bg-white border-b border-zinc-100"
             >
                 <div className="w-full px-6 md:px-12 h-20 md:h-24 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
@@ -77,7 +77,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className="fixed inset-0 z-[90] bg-white/95 backdrop-blur-3xl md:hidden flex flex-col pt-24"
+                        className="fixed inset-0 z-[90] bg-white md:hidden flex flex-col pt-24"
                     >
                         <div className="flex flex-col items-center justify-center gap-6 px-8 pb-32">
                             {navLinks.map((link, i) => (
