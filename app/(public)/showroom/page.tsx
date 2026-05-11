@@ -4,7 +4,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, ExternalLink, Palette, CreditCard, Truck, Cpu, UtensilsCrossed, Scale } from 'lucide-react';
+import { ArrowRight, ExternalLink, Palette, CreditCard, UtensilsCrossed, Scale, Home, BarChart3 } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 const demos = [
@@ -25,22 +25,6 @@ const demos = [
     category: 'Neo-Banking & Wealth',
   },
   {
-    name: 'Node Logistics',
-    descKey: 'demo3Desc',
-    tech: 'Next.js • Mapbox • WebSocket',
-    path: '/demo/logistics',
-    Icon: Truck,
-    category: 'Global Tracking & B2B',
-  },
-  {
-    name: 'Quantum Engine',
-    descKey: 'demo4Desc',
-    tech: 'Next.js • Three.js • WebGL',
-    path: '/demo/quantum',
-    Icon: Cpu,
-    category: 'Spatial Computing & WebGL',
-  },
-  {
     name: 'Lumière Dining',
     descKey: 'demo5Desc',
     tech: 'Next.js • Tailwind CSS • Supabase',
@@ -55,6 +39,22 @@ const demos = [
     path: '/demo/legal',
     Icon: Scale,
     category: 'Legal & Corporate',
+  },
+  {
+    name: 'Studio V',
+    descKey: 'demo7Desc',
+    tech: 'Next.js • GSAP • Sanity CMS',
+    path: '/demo/architecture',
+    Icon: Home,
+    category: 'Architecture & Design',
+  },
+  {
+    name: 'MetricFlow',
+    descKey: 'demo8Desc',
+    tech: 'Next.js • D3.js • PostgreSQL',
+    path: '/demo/saas',
+    Icon: BarChart3,
+    category: 'SaaS & Analytics',
   },
 ];
 
@@ -73,7 +73,7 @@ export default function ShowroomPage() {
           <p className="text-sm text-zinc-400 font-light mt-4 max-w-md leading-relaxed">{s.subtitle}</p>
         </motion.div>
 
-        {/* Demo Grid - Siyah İkonlu Kartlar */}
+        {/* Demo Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {demos.map((demo, i) => (
             <motion.div
@@ -87,7 +87,7 @@ export default function ShowroomPage() {
                 href={demo.path}
                 className="group block rounded-3xl border border-zinc-100 overflow-hidden hover:border-zinc-200 transition-all hover:shadow-sm h-full"
               >
-                {/* Siyah İkon Alanı */}
+                {/* İkon Alanı */}
                 <div className="aspect-[4/3] bg-zinc-50 relative overflow-hidden flex items-center justify-center">
                   <demo.Icon size={48} strokeWidth={1} className="text-black group-hover:scale-110 transition-transform duration-500" />
                   

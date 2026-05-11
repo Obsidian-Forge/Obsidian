@@ -1,3 +1,4 @@
+// app/components/SharedLayout.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -17,6 +18,12 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
         { name: t.nav.contact, href: "/contact" },
     ];
 
+    // Mobil menü için ekstra linkler
+    const mobileExtraLinks = [
+        { name: t.footer.showroom, href: "/showroom" },
+        { name: t.footer.documentation, href: "/docs" },
+    ];
+
     useEffect(() => {
         const handleScroll = () => {
             setShowScrollTop(window.scrollY > 400);
@@ -32,7 +39,7 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
     return (
         <div className="min-h-screen font-sans flex flex-col bg-white text-black selection:bg-black selection:text-white">
 
-            {/* HEADER - Basit sticky, hep görünür */}
+            {/* HEADER */}
             <header className="sticky top-0 w-full z-[100] bg-white">
                 <div className="w-full px-6 md:px-12 h-16 md:h-20 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-3" onClick={() => setIsOpen(false)}>
@@ -60,11 +67,32 @@ export default function SharedLayout({ children }: { children: React.ReactNode }
                 </div>
             </header>
 
-            {/* MOBILE MENU */}
+            {/* MOBILE MENU - Nav linkleri + Showroom + Documentation */}
             <div className={`fixed inset-0 z-[90] bg-white md:hidden flex flex-col pt-20 transition-all duration-300 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
                 <div className="flex flex-col items-center justify-center gap-6 px-8 pb-32">
+                    {/* Ana nav linkleri */}
                     {navLinks.map(link => (
-                        <Link key={link.name} href={link.href} onClick={() => setIsOpen(false)} className="text-4xl font-light uppercase tracking-tighter text-black hover:text-zinc-400 transition-colors">
+                        <Link
+                            key={link.name}
+                            href={link.href}
+                            onClick={() => setIsOpen(false)}
+                            className="text-4xl font-light uppercase tracking-tighter text-black hover:text-zinc-400 transition-colors"
+                        >
+                            {link.name}
+                        </Link>
+                    ))}
+                    
+                    {/* Ayraç */}
+                    <div className="w-12 h-[1px] bg-zinc-200 my-4" />
+                    
+                    {/* Ekstra linkler - sadece mobilde */}
+                    {mobileExtraLinks.map(link => (
+                        <Link
+                            key={link.name}
+                            href={link.href}
+                            onClick={() => setIsOpen(false)}
+                            className="text-2xl font-light uppercase tracking-tighter text-zinc-400 hover:text-black transition-colors"
+                        >
                             {link.name}
                         </Link>
                     ))}

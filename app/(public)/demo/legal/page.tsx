@@ -32,16 +32,6 @@ export default function LegalDemo() {
 
   return (
     <main className="w-full bg-[#fafaf9] text-[#1a1a1a] font-sans selection:bg-[#1a1a1a] selection:text-white">
-      
-      {/* Floating Close Bar */}
-      <div className="fixed top-6 right-6 z-50">
-        <Link 
-          href="/showroom" 
-          className="flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-[#e5e5e0] rounded-full px-4 py-2.5 shadow-lg text-[10px] font-bold uppercase tracking-widest text-[#8a8a80] hover:text-[#1a1a1a] hover:border-[#1a1a1a] transition-all"
-        >
-          <X size={14} /> Close Demo
-        </Link>
-      </div>
 
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-[#fafaf9]/80 backdrop-blur-xl border-b border-[#e5e5e0]">

@@ -45,16 +45,6 @@ export default function RestaurantDemo() {
 
   return (
     <main className="w-full bg-[#0a0a06] text-white font-sans selection:bg-amber-500 selection:text-black">
-      
-      {/* Floating Close Bar - Sağda */}
-      <div className="fixed top-6 right-6 z-50">
-        <Link 
-          href="/showroom" 
-          className="flex items-center gap-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-full px-4 py-2.5 shadow-2xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white hover:border-white/30 transition-all"
-        >
-          <X size={14} /> Close Demo
-        </Link>
-      </div>
 
       {/* NAVBAR */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0a0a06]/80 backdrop-blur-xl border-b border-white/5">

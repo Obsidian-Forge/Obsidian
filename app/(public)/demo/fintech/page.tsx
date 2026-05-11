@@ -63,47 +63,6 @@ export default function FintechDemoPage() {
 
             {/* --- SAĞ İÇERİK ALANI (Sol menünün genişliği kadar sağa itilir) --- */}
             <div className="flex-1 ml-[80px] md:ml-[100px] relative w-full">
-
-                {/* --- UPDATED VERTICAL FLOATING ISLAND (FINTECH THEME) --- */}
-                <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[100] bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-full py-8 px-3 flex flex-col items-center gap-6 transition-all duration-500">
-
-                    {/* Node Status */}
-                    <div className="relative group cursor-pointer flex flex-col items-center">
-                        <span className="w-3 h-3 bg-[#D4FF00] rounded-full shadow-[0_0_15px_rgba(212,255,0,0.5)] animate-pulse" />
-                        <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-[#0A0A0A] border border-white/10 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none flex items-center gap-2 shadow-xl">
-                            <span className="w-1.5 h-1.5 bg-[#D4FF00] rounded-full" />
-                            Novatrum Node: Active
-                        </div>
-                    </div>
-
-                    <div className="w-4 h-[1px] bg-black/10" />
-
-                    {/* START PROJECT BUTTON - FINTECH MODE */}
-                    <button
-                        onClick={() => router.push('/get-quote?demo=fintech')}
-                        className="group flex flex-col items-center gap-4 outline-none"
-                    >
-                        <div className="w-8 h-8 bg-black text-[#D4FF00] rounded-full flex items-center justify-center group-hover:scale-110 group-hover:bg-[#D4FF00] group-hover:text-black transition-all duration-300 shadow-md">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"></path></svg>
-                        </div>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black group-hover:text-[#D4FF00] transition-colors duration-300 pt-2" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                            Start Project
-                        </span>
-                    </button>
-
-                    <div className="w-4 h-[1px] bg-black/10" />
-
-                    {/* CLOSE DEMO BUTTON */}
-                    <button onClick={() => router.push('/showroom')} className="group flex flex-col items-center gap-4 outline-none">
-                        <div className="w-8 h-8 bg-white text-black border border-black/10 rounded-full flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-300 shadow-sm">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </div>
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-black group-hover:text-[#D4FF00] transition-colors duration-300 pt-2" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                            Close Demo
-                        </span>
-                    </button>
-                </div>
-
                 {/* --- ANA İÇERİK (Z-20, Footer'ın üstünde kayar) --- */}
                 {/* YENİ: mb-[80vh] md:mb-[70vh] footer yüksekliğiyle birebir aynıdır, bu sayede hatasız perde efekti oluşur */}
                 <main className="relative z-20 bg-[#FAFAFA] rounded-b-[40px] md:rounded-b-[80px] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,1)] mb-[80vh] md:mb-[70vh]">

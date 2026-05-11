@@ -61,47 +61,6 @@ export default function CreativeDemoPage() {
     return (
         <div className="min-h-screen bg-[#F4F4F4] text-black font-sans selection:bg-black selection:text-white relative" ref={containerRef}>
 
-            {/* --- UPDATED VERTICAL FLOATING ISLAND --- */}
-            <div className="fixed right-6 top-1/2 -translate-y-1/2 z-[100] bg-white/80 backdrop-blur-xl border border-zinc-200 shadow-[0_20px_40px_rgba(0,0,0,0.05)] rounded-full py-8 px-3 flex flex-col items-center gap-6">
-
-                {/* Status Indicator */}
-                <div className="relative group cursor-pointer flex flex-col items-center">
-                    <span className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                    <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 bg-zinc-950 px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none flex items-center gap-2 shadow-xl">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                        Novatrum Node: Operational
-                    </div>
-                </div>
-
-                <div className="w-4 h-[1px] bg-zinc-200" />
-
-                {/* YENİ: START PROJECT BUTONU (Teklif Formuna Gider) */}
-                {/* Buradaki 'demo_id' kısmını her sayfa için o demonun adıyla (quantum, fintech vb.) değiştirmeyi unutma */}
-                <button
-                    onClick={() => router.push('/get-quote?demo=quantum')}
-                    className="group flex flex-col items-center gap-4 outline-none"
-                >
-                    <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-600 transition-all shadow-md">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"></path></svg>
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-600 group-hover:text-emerald-700 transition-colors pt-2" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        Start Project
-                    </span>
-                </button>
-
-                <div className="w-4 h-[1px] bg-zinc-200" />
-
-                {/* CLOSE DEMO BUTONU */}
-                <button onClick={() => router.push('/showroom')} className="group flex flex-col items-center gap-4 outline-none">
-                    <div className="w-8 h-8 bg-zinc-950 text-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-md">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-950 group-hover:text-zinc-500 transition-colors pt-2" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                        Close Demo
-                    </span>
-                </button>
-            </div>
-
             {/* MOBİL MENÜ OVERLAY */}
             <AnimatePresence>
                 {isMenuOpen && (
