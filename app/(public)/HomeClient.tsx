@@ -56,31 +56,26 @@ export default function HomePage() {
       <AnnouncementBar />
 
       {/* HERO */}
-      <section className="max-w-6xl mx-auto px-6 pt-40 md:pt-52 pb-32 md:pb-40">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="max-w-3xl space-y-8"
-        >
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-400">
+      <section className="max-w-6xl mx-auto px-6 pt-32 md:pt-52 pb-24 md:pb-40">
+        <div className="max-w-3xl space-y-6 md:space-y-8">
+          <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.3em] text-zinc-400">
             {h.heroBadge}
           </p>
-          <h1 className="text-5xl md:text-7xl font-light tracking-tighter text-black leading-[1.05]">
+          <h1 className="text-4xl md:text-7xl font-light tracking-tighter text-black leading-[1.05]">
             {h.heroTitle}
           </h1>
-          <p className="text-base md:text-lg text-zinc-500 font-light leading-relaxed max-w-xl">
+          <p className="text-sm md:text-lg text-zinc-500 font-light leading-relaxed max-w-xl">
             {h.heroDesc}
           </p>
-          <div className="flex flex-wrap gap-4 pt-2">
-            <Link href="/services" className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-800 transition-all">
-              {h.heroBtnServices} <ArrowRight size={14} />
+          <div className="flex flex-wrap gap-3 md:gap-4 pt-2">
+            <Link href="/services" className="inline-flex items-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 bg-black text-white text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-800 transition-all">
+              {h.heroBtnServices}
             </Link>
-            <Link href="/contact" className="inline-flex items-center gap-3 px-8 py-4 border border-zinc-200 text-black text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-50 transition-all">
+            <Link href="/contact" className="inline-flex items-center gap-2 md:gap-3 px-6 md:px-8 py-3 md:py-4 border border-zinc-200 text-black text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-50 transition-all">
               {h.heroBtnContact}
             </Link>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* TECH STACK */}
