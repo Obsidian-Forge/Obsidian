@@ -1,132 +1,169 @@
+// app/(public)/products/page.tsx
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe, Building2, ShoppingCart, Store, Wrench, Search, Palette, Code2, Shield, Zap, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/context/LanguageContext';
 
-const icons: Record<string, () => React.ReactNode> = {
-  Cpu: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>,
-  ShieldCheck: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
-  BrainCircuit: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>,
-  Network: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-};
-
 export default function ProductsPage() {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const p = t.productsPage;
-  const [dbProducts, setDbProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProducts();
-    const interval = setInterval(fetchProducts, 5000);
-    const channel = supabase.channel('public:modules')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'modules' }, fetchProducts)
-      .subscribe();
-    return () => { clearInterval(interval); supabase.removeChannel(channel); };
-  }, []);
+  const websites = [
+    { key: 'landing', icon: Globe },
+    { key: 'corporate', icon: Building2 },
+    { key: 'ecommerce', icon: ShoppingCart },
+    { key: 'saas', icon: Store },
+  ];
 
-  const fetchProducts = async () => {
-    const { data } = await supabase.from('modules').select('*').order('display_order', { ascending: true });
-    if (data) setDbProducts(data);
-    setLoading(false);
-  };
+  const maintenancePlans = [
+    { key: 'basic', icon: Shield, highlight: false },
+    { key: 'pro', icon: Wrench, highlight: true },
+    { key: 'enterprise', icon: Zap, highlight: false },
+  ];
+
+  const addOns = [
+    { key: 'seo', icon: Search },
+    { key: 'ui', icon: Palette },
+    { key: 'custom', icon: Code2 },
+  ];
 
   return (
     <main className="w-full bg-white min-h-screen font-sans selection:bg-black selection:text-white">
-      
       <div className="max-w-6xl mx-auto px-6 pt-32 pb-32">
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center space-y-4 mb-24"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">{p.heroTag}</p>
-          <h1 className="text-4xl md:text-6xl font-light tracking-tighter text-black leading-[1.1] max-w-2xl mx-auto">
-            {p.heroTitleLine1}{' '}
-            <span className="text-zinc-300">{p.heroTitleLine2}</span>
-          </h1>
-          <p className="text-sm text-zinc-400 font-light max-w-lg mx-auto leading-relaxed">{p.heroDesc}</p>
+
+        {/* HEADER */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-24">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400 mb-4">{p.heroTag}</p>
+          <h1 className="text-4xl md:text-6xl font-light tracking-tighter text-black leading-[1.05]">{p.heroTitleLine1}</h1>
+          <h2 className="text-4xl md:text-6xl font-light tracking-tighter text-zinc-300 leading-[1.05] mt-1">{p.heroTitleLine2}</h2>
+          <p className="text-sm text-zinc-500 font-light mt-6 max-w-md mx-auto leading-relaxed">{p.heroDesc}</p>
         </motion.div>
 
-        <div className="space-y-24">
-          {dbProducts.length === 0 && !loading && (
-            <p className="text-center text-zinc-400 text-xs font-light tracking-widest uppercase">{p.emptyText}</p>
-          )}
-
-          {dbProducts.map((product, index) => {
-            const content = product.content[language] || product.content['en'];
-            const Icon = icons[product.icon_name] || icons.Network;
-            const isComingSoon = product.status === 'coming-soon';
-
-            return (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center"
-              >
-                <div className={`order-2 ${index % 2 === 1 ? 'md:order-1' : 'md:order-2'}`}>
-                  <div className="relative aspect-[4/3] rounded-2xl bg-zinc-50 border border-zinc-100 overflow-hidden flex items-center justify-center group">
-                    {product.image_url ? (
-                      <img src={product.image_url} alt={content.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
-                    ) : (
-                      <div className="text-zinc-200 group-hover:text-zinc-400 transition-colors duration-500"><Icon /></div>
-                    )}
-                    {isComingSoon && (
-                      <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full">
-                        <Clock size={12} /> {p.comingSoon}
-                      </div>
-                    )}
+        {/* SECTION 1: WEBSITE TYPES */}
+        <section className="mb-24">
+          <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-400 mb-8 text-center">{p.websitesTitle}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            {websites.map((web, i) => {
+              const data = (p as any)[web.key];
+              return (
+                <motion.div
+                  key={web.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                  className="group relative p-5 rounded-3xl border border-zinc-100 hover:border-zinc-300 hover:shadow-lg transition-all duration-300 flex flex-col"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-500 group-hover:bg-black group-hover:text-white transition-all duration-300 mb-4">
+                    <web.icon size={20} strokeWidth={1.5} />
                   </div>
-                </div>
+                  <div className="mb-3">
+                    <h3 className="text-sm font-light tracking-tight text-black">{data?.name}</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5">{data?.tagline}</p>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 font-light leading-relaxed mb-4 flex-1">{data?.description}</p>
+                  <div className="pt-4 border-t border-zinc-100">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-light text-black leading-tight">{data?.price}</span>
+                      <Link href="/contact" className="inline-flex items-center gap-1.5 px-3 py-2 bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-zinc-800 transition-all shrink-0">
+                        {p.btnRequest} <ArrowRight size={11} />
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
 
-                <div className={`order-1 ${index % 2 === 1 ? 'md:order-2' : 'md:order-1'} space-y-5`}>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">{content.tagline}</p>
-                  <h2 className="text-2xl md:text-3xl font-light tracking-tight text-black">{content.name}</h2>
-                  <p className="text-sm text-zinc-500 font-light leading-relaxed">{content.description}</p>
-                  <ul className="space-y-2 pt-2">
-                    {(content.features || []).slice(0, 4).map((f: string, i: number) => (
-                      <li key={i} className="flex items-center gap-2.5 text-xs text-zinc-500 font-light">
-                        <CheckCircle2 size={14} className="text-zinc-300 shrink-0" /> {f}
+        {/* SECTION 2: MAINTENANCE PACKAGES */}
+        <section className="mb-24 pt-8 border-t border-zinc-100">
+          <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-400 mb-8 text-center">{p.maintenanceTitle}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            {maintenancePlans.map((plan, i) => {
+              const data = (p as any)[plan.key];
+              const features = [data?.feature1, data?.feature2, data?.feature3, data?.feature4].filter(Boolean);
+              return (
+                <motion.div
+                  key={plan.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  className={`relative p-6 rounded-3xl border transition-all duration-300 flex flex-col ${
+                    plan.highlight ? 'border-black shadow-lg bg-zinc-50' : 'border-zinc-100 hover:border-zinc-300 hover:shadow-lg'
+                  }`}
+                >
+                  {plan.highlight && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-black text-white text-[9px] font-bold uppercase tracking-widest rounded-full">
+                      {p.mostPopular}
+                    </span>
+                  )}
+                  <div className="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-500 group-hover:bg-black group-hover:text-white transition-all duration-300 mb-4">
+                    <plan.icon size={20} strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-sm font-light tracking-tight text-black mb-1">{data?.name}</h3>
+                  <p className="text-2xl font-light text-black mb-1">{data?.price}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-4">{data?.tagline}</p>
+                  <ul className="space-y-2 mb-6 flex-1">
+                    {features.map((f: string, j: number) => (
+                      <li key={j} className="flex items-center gap-2 text-[11px] text-zinc-500 font-light">
+                        <CheckCircle2 size={12} className="text-zinc-300 shrink-0" /> {f}
                       </li>
                     ))}
                   </ul>
-                  <div className="flex items-center gap-4 pt-4">
-                    <Link href="/contact" className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white text-xs font-bold uppercase tracking-[0.15em] rounded-xl hover:bg-zinc-800 transition-all">
-                      {p.btnRequest} <ArrowRight size={13} />
-                    </Link>
-                    {!isNaN(Number(product.price)) && (
-                      <span className="text-xs text-zinc-400 font-light">
-                        {p.fromText} <span className="text-black font-medium">€{product.price}</span>{p.perMo}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                  <Link href="/contact" className={`block text-center py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    plan.highlight ? 'bg-black text-white hover:bg-zinc-800' : 'border border-zinc-200 text-black hover:bg-zinc-50'
+                  }`}>
+                    {p.btnRequest}
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-32 pt-16 border-t border-zinc-100 text-center"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-4">{p.ctaTitle}</p>
-          <Link href="/contact" className="inline-flex items-center gap-3 px-10 py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] rounded-xl hover:bg-zinc-800 transition-all">
+        {/* SECTION 3: ADD-ON SERVICES */}
+        <section className="pt-8 border-t border-zinc-100">
+          <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-zinc-400 mb-8 text-center">{p.servicesTitle}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
+            {addOns.map((svc, i) => {
+              const data = (p as any)[svc.key];
+              return (
+                <motion.div
+                  key={svc.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  className="group relative p-6 rounded-3xl border border-zinc-100 hover:border-zinc-300 hover:shadow-lg transition-all duration-300 text-center flex flex-col"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-zinc-50 border border-zinc-100 flex items-center justify-center text-zinc-500 group-hover:bg-black group-hover:text-white transition-all duration-300 mx-auto mb-4">
+                    <svc.icon size={20} strokeWidth={1.5} />
+                  </div>
+                  <h3 className="text-sm font-light tracking-tight text-black mb-1">{data?.name}</h3>
+                  <p className="text-[11px] text-zinc-500 font-light leading-relaxed mb-4 flex-1">{data?.description}</p>
+                  <div className="flex items-center justify-center mt-auto pt-4 border-t border-zinc-100">
+                    <span className="px-3 py-1.5 bg-zinc-50 border border-zinc-200 text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded-full">
+                      <Clock size={11} className="inline mr-1" />{p.comingSoon}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* FOOTER CTA */}
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="mt-24 pt-12 border-t border-zinc-100 text-center">
+          <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-8">{p.ctaHeading}</h2>
+          <Link href="/contact" className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-xs font-bold uppercase tracking-[0.2em] rounded-full hover:bg-zinc-800 transition-all">
             {p.btnConsult} <ArrowRight size={14} />
           </Link>
         </motion.div>
-
       </div>
     </main>
   );
