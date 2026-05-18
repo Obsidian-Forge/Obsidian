@@ -23,7 +23,7 @@ const projects = [
     title: "Nordic Pavilion",
     category: "Cultural",
     desc: "A museum expansion blending Scandinavian minimalism with the existing historic structure.",
-    image: "https://images.unsplash.com/photo-1497366753798-4e1b68b2d2a6?q=80&w=800&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=800&auto=format&fit=crop",
   },
   {
     title: "Eco-Loop Tower",
